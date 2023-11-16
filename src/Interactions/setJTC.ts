@@ -1,18 +1,52 @@
 import Client from '../Client'
-import { Interaction } from 'discord.js'
-import { BaseInteraction } from '../Classes'
+import { MainInteraction } from '../Classes'
+import { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelSelectMenuComponentData, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentType, VoiceChannel } from 'discord.js'
+import { updateJTC } from '../Database/databaseUtils'
 
-export default class HelpInteraction extends BaseInteraction {
+export default class SetJTC extends MainInteraction {
     constructor(client: Client) {
         super(client, 'setjtc', {
             name: 'setjtc',
-            description: 'Sets a voice channel into a join to create voice channel',
+            description: 'shows jtc menu',
             type: 1,
             options: null
         })
     }
 
-    async run(interaction: Interaction) {
-        
+    async run(interaction: ChatInputCommandInteraction, ...args: string[]): Promise<void> {
+        try {
+            const data: ChannelSelectMenuComponentData = {
+                customId: `followUp_${interaction.id}_setjtc`,
+                type: ComponentType.ChannelSelect,
+                channelTypes: [ChannelType.GuildVoice]
+            }
+
+            const selectMenu = new ActionRowBuilder<ChannelSelectMenuBuilder>()
+                .addComponents(new ChannelSelectMenuBuilder(data))
+
+            const reply = await interaction.reply({
+                components: [selectMenu]
+            })
+
+            this.client.followUps.set(reply.id, interaction)
+        } catch (error) {
+            console.log(error)
+            await interaction.reply('There was an error, please try again later')
+        }
+    }
+    
+    async followUp(interaction: ChannelSelectMenuInteraction, ...args: string[]): Promise<void> {
+        try {
+            if (interaction.channels && interaction.channels?.size <= 0) {
+                await interaction.reply('Please select a channel')
+                return
+            }
+            const channel = interaction.channels?.first() as VoiceChannel
+            await updateJTC(channel, true)
+            await interaction.reply(`Enabled join to create module and successfully set ${channel.name} as \`Join to create\` Channel`)
+        } catch (error) {
+            console.log(error)
+            await interaction.reply('There was an error, please try again later') 
+        }
     }
 }

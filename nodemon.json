@@ -2,5 +2,8 @@
     "watch": ["src"],
     "ext": ".ts,.js",
     "ignore": [],
-    "exec": "npx ts-node ./client.ts"
+    "exec": "npx ts-node ./client.ts",
+    "events": {
+        "start": "clear"
+    }
 }

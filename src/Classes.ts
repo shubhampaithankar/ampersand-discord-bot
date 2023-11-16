@@ -1,8 +1,8 @@
 import Client from './Client'
-import { Interaction, Message } from 'discord.js'
-import { InteractionConfig } from './Types'
+import { ChatInputCommandInteraction, Message, Permissions } from 'discord.js'
+import { InteractionConfig, InteractionTypes } from './Types'
 
-export class BaseCommand {
+export class MainCommand {
     client: Client
     name: any
     aliases: any
@@ -27,26 +27,40 @@ export class BaseCommand {
 
 }
 
-export class BaseInteraction {
+export class MainInteraction {
     client: Client
     name: string
     type: number
-    description: string
+    description?: string
+    permissions?: Permissions
 
     constructor(client: Client, name: string, config: InteractionConfig) {
         this.client = client
         this.name = config.name || name
         this.type = config.type
-        this.description = config.description || 'No description provided.'
+        this.description = config.description
+        this.permissions = config.permissions
     }
 
-    async run(interaction: Interaction, ...args: string[]) {
-        throw new Error(`Interaction ${this.name} doesn't provide a run method!`)
+    async run(interaction: InteractionTypes, ...args: string[]) {
+        try {
+            throw new Error(`Interaction ${this.name} doesn't provide a run method!`)
+        } catch (error) {}
+    }
+
+    async followUp(interaction: any, ...args: string[]) {
+        try {
+            throw new Error(`Interaction ${this.name} doesn't provide a run method!`)
+        } catch (error) {}
+    }
+
+    async reject(interaction: any, message: string) {
+        await interaction.reply(message)
     }
 
 }
 
-export class BaseEvent {
+export class MainEvent {
     client: Client
     name: string
     type: string

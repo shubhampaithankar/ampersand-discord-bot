@@ -1,5 +1,5 @@
 {
-  "name": "jhaing-discord-client",
+  "name": "ampersand-discord-client",
   "version": "1.0.0",
   "description": "",
   "main": "./client.ts",

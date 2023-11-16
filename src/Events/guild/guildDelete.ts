@@ -1,10 +1,10 @@
 import { Guild } from 'discord.js'
-import { BaseEvent } from '../../Classes'
+import { MainEvent } from '../../Classes'
 import Client from '../../Client'
 import { addGuildData, getGuildData, updateGuildData } from '../../Database/databaseUtils'
 
 // Emitted whenever a guild kicks the client or the guild is deleted/left.
-export default class GuildDeleteEvent extends BaseEvent {
+export default class GuildDeleteEvent extends MainEvent {
     constructor (client: Client) {
         super(client, 'guildDelete')
     }

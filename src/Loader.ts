@@ -1,10 +1,10 @@
 import Client from './Client'
-import { Routes } from 'discord.js'
+import { Guild, Routes } from 'discord.js'
 import mongoose from 'mongoose'
 import { readdirSync, lstatSync } from 'fs'
 import path from 'path'
 
-import { BaseCommand, BaseEvent, BaseInteraction } from './Classes'
+import { MainCommand, MainEvent, MainInteraction } from './Classes'
 
 export default class Loader {
     client: Client
@@ -25,8 +25,8 @@ export default class Loader {
             await this.loadCommandHandler('./Commands')
             console.log(`${this.commandCount} command(s) loaded`)
     
-            await this.loadInteractionHandler('./Interactions')
-            const interactions = [...this.client.interactions.values()]
+            await this.loadInteractionHandler('./Interactions') 
+            const interactions = await this.client.interactions.map(({ name, description, type }) => ({ name, description, type }))
             await this.client.rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID!), {
                 body: interactions
             })
@@ -34,6 +34,8 @@ export default class Loader {
     
             await this.loadEventHandler('./Events')
             console.log(`${this.eventCount} event(s) loaded`)
+
+            await this.initJTC()
         } catch (error) {
             console.log('Loader Error:\n', error)
         }
@@ -49,7 +51,7 @@ export default class Loader {
                 if (cmdFile.endsWith('.ts')) {
                     const { name } = path.parse(cmdFile)
                     const Command = await import(path.join(filePath, cmdFile))
-                    if (Command.prototype instanceof BaseCommand) {
+                    if (Command.prototype instanceof MainCommand) {
                         const command = new Command(this.client, name)
                         this.client.commands.set(command.name.toLowerCase(), command)
                         if (command.aliases.length) {
@@ -76,8 +78,9 @@ export default class Loader {
                 if (intFile.endsWith('.ts')) {
                     const { name } = path.parse(intFile)
                     const Interaction = await import(path.join(filePath, intFile))
-                    if (Interaction.default?.prototype instanceof BaseInteraction) {
-                        const interaction = (({ name, type, description }) => ({ name, type, description }))(new Interaction.default(this.client, name))
+                    if (Interaction.default?.prototype instanceof MainInteraction) {
+                        // const interaction = (({ name, type, description }) => ({ name, type, description }))(new Interaction.default(this.client, name)) as MainInteraction
+                        const interaction = new Interaction.default(this.client, name) as MainInteraction
                         this.client.interactions.set(interaction.name.toLowerCase(), interaction)
                         this.interactionCount++
                     }
@@ -98,7 +101,7 @@ export default class Loader {
                 if (eventFile.endsWith('.ts')) {
                     const { name } = path.parse(eventFile)
                     const Event = await import(path.join(filePath, eventFile))
-                    if (Event.default?.prototype instanceof BaseEvent) {
+                    if (Event.default?.prototype instanceof MainEvent) {
                         const event = new Event.default(this.client, name)
                         event.emitter[event.type](name, (...args: any[]) => event.run(...args))
                         this.eventCount++
@@ -117,5 +120,11 @@ export default class Loader {
         } catch (error) {
             console.log('There was en error while connecting to database:\n',error)
         }
+    }
+
+    initJTC = async () => {
+        this.client.guilds.cache.forEach((guild: Guild) => {
+            this.client.jtcChannels.set(guild.id, new Set([]))
+        })
     }
 }

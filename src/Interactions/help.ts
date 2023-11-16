@@ -1,8 +1,8 @@
 import Client from '../Client'
-import { Interaction } from 'discord.js'
-import { BaseInteraction } from '../Classes'
+import { MainInteraction } from '../Classes'
+import { ChatInputCommandInteraction } from 'discord.js'
 
-export default class HelpInteraction extends BaseInteraction {
+export default class HelpInteraction extends MainInteraction {
     constructor(client: Client) {
         super(client, 'help', {
             name: 'help',
@@ -12,7 +12,7 @@ export default class HelpInteraction extends BaseInteraction {
         })
     }
 
-    async run(interaction: Interaction, ...args: string[]) {
-        console.log('Hello world')
+    async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
+        interaction.reply('Hello World')
     }
 }
