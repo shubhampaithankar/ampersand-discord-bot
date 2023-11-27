@@ -27,36 +27,55 @@ export default class VoiceStateUpdateEvent extends MainEvent {
 
             // On joining the JTC channel
             if (newState.channelId === jtcData.channelId) {
+
                 const jtcChannel = guild.channels.cache.get(jtcData.channelId) as VoiceChannel
-                if (jtcChannel) {
-                    let channel: VoiceChannel
-                    if (jtcChannel.parent) {
-                        channel = await jtcChannel.parent.children.create({
-                            name: `${newState.member?.user.displayName}\`s Channel`,
-                            type: ChannelType.GuildVoice
-                        })
-                    } else {
-                        channel = await guild.channels.create({
-                            name: `${newState.member?.user.displayName}\`s Channel`,
-                            type: ChannelType.GuildVoice
-                        })
-                    }
-                    
-                    setTimeout(async () => {
-                        try {
-                            if (channel && newState.member) {
-                                await newState.member.voice.setChannel(channel)
-                                if (guildJtc) {
-                                    guildJtc.add(channel.id)
-                                    this.client.jtcChannels.set(guild.id, guildJtc)
-                                }
-                            }
-                        } catch (error) {
-                            console.log(error)
-                            return
-                        }
-                    }, 200)
+                if (!jtcChannel) return
+
+                let channel: VoiceChannel
+
+                if (jtcChannel.parent) {
+                    channel = await jtcChannel.parent.children.create({
+                        name: `${newState.member?.user.displayName}\`s Channel`,
+                        type: ChannelType.GuildVoice
+                    })
+                } else {
+                    channel = await guild.channels.create({
+                        name: `${newState.member?.user.displayName}\`s Channel`,
+                        type: ChannelType.GuildVoice
+                    })
                 }
+
+                // Lock channel to prevent spam
+                await jtcChannel.permissionOverwrites.edit(guild.roles.everyone, {
+                    Connect: false
+                })
+  
+                setTimeout(async () => {
+                    try {
+                        if (channel && newState.member) {
+                            if (guildJtc) {
+                                await newState.member.voice.setChannel(channel)
+                                guildJtc.add(channel.id)
+                                this.client.jtcChannels.set(guild.id, guildJtc)
+                            }
+                        }
+                    } catch (error) {
+                        console.log(error)
+                        return
+                    }
+                }, 200)
+
+                setTimeout(async () => {
+                    try {
+                        if (!jtcChannel) return 
+                        await jtcChannel.permissionOverwrites.edit(guild.roles.everyone, {
+                            Connect: null
+                        })
+                    } catch (error) {
+                        console.log(error)
+                        return
+                    }
+                }, 5e3)
             }
 
             // On leaving channel created by jtc module

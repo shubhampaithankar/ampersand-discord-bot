@@ -3,14 +3,14 @@ import {
     ChatInputCommandInteraction, CommandInteraction, ContextMenuCommandInteraction, Emoji, 
     MentionableSelectMenuInteraction, Message, MessageComponentInteraction, MessageContextMenuCommandInteraction, 
     ModalSubmitInteraction, RoleSelectMenuInteraction, StringSelectMenuInteraction, 
-    UserContextMenuCommandInteraction, UserSelectMenuInteraction, VoiceChannel, Collection, Permissions
+    UserContextMenuCommandInteraction, UserSelectMenuInteraction, VoiceChannel, Collection, PermissionResolvable
 } from 'discord.js'
 
 export type InteractionConfig = {
     name: string
     type: number
     description?: string
-    permissions?: Permissions
+    permissions?: PermissionResolvable
     options: Array<object> | null
 }
 

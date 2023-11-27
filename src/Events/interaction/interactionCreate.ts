@@ -11,18 +11,14 @@ export default class InteractionCreate extends MainEvent {
         if (!commandName) return
         
         const interaction = this.client.interactions.get(commandName)
-        if (interaction) {
-            if (baseInteraction.customId && baseInteraction.customId !== '') {
-                if (baseInteraction.customId.startsWith('followUp_')) {
-                    interaction.followUp(baseInteraction)
-                }
-            } else {
-                if (interaction.permissions && interaction.permissions !== baseInteraction.member?.permissions) {
-                    interaction.reject(baseInteraction,'You do not have the required permissions to use this command.')
-                } else {
-                    interaction.run(baseInteraction)
-                }
-            }
+        if (!interaction) return 
+
+        if (baseInteraction.customId && baseInteraction.customId !== '' && baseInteraction.customId.startsWith('followUp_')) {
+            interaction.followUp(baseInteraction)
+        } else if (interaction.permissions && !baseInteraction.memberPermissions?.has(interaction.permissions)) {
+            interaction.reject(baseInteraction, `You do not have the required permissions: ${interaction.permissions.toString()} to use this command.`)
+        } else {
+            interaction.run(baseInteraction)
         }
     }
 }

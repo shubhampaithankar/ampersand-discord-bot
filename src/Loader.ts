@@ -9,10 +9,6 @@ import { MainCommand, MainEvent, MainInteraction } from './Classes'
 export default class Loader {
     client: Client
 
-    commandCount: number = 0
-    interactionCount: number = 0
-    eventCount: number = 0
-
     constructor (client: Client) {
         this.client = client
     }
@@ -22,19 +18,15 @@ export default class Loader {
             await this.connectToDB()
             console.log(`Connected to database: ${this.client.database?.databaseName}`)
     
-            await this.loadCommandHandler('./Commands')
-            console.log(`${this.commandCount} command(s) loaded`)
+            // await this.loadCommandHandler('./Commands')
     
             await this.loadInteractionHandler('./Interactions') 
             const interactions = await this.client.interactions.map(({ name, description, type }) => ({ name, description, type }))
             await this.client.rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID!), {
                 body: interactions
             })
-            console.log(`${this.interactionCount} interaction(s) loaded`)
     
             await this.loadEventHandler('./Events')
-            console.log(`${this.eventCount} event(s) loaded`)
-
             await this.initJTC()
         } catch (error) {
             console.log('Loader Error:\n', error)
@@ -59,7 +51,6 @@ export default class Loader {
                                 this.client.aliases.set(alias, command.name.toLowerCase())
                             })
                         }
-                        this.commandCount++
                     }
                 }
             }   
@@ -82,7 +73,6 @@ export default class Loader {
                         // const interaction = (({ name, type, description }) => ({ name, type, description }))(new Interaction.default(this.client, name)) as MainInteraction
                         const interaction = new Interaction.default(this.client, name) as MainInteraction
                         this.client.interactions.set(interaction.name.toLowerCase(), interaction)
-                        this.interactionCount++
                     }
                 }
             }
@@ -104,7 +94,7 @@ export default class Loader {
                     if (Event.default?.prototype instanceof MainEvent) {
                         const event = new Event.default(this.client, name)
                         event.emitter[event.type](name, (...args: any[]) => event.run(...args))
-                        this.eventCount++
+                        this.client.events.set(name, event)
                     }
                 }
             }
@@ -124,6 +114,7 @@ export default class Loader {
 
     initJTC = async () => {
         this.client.guilds.cache.forEach((guild: Guild) => {
+            if (this.client.jtcChannels.has(guild.id)) return
             this.client.jtcChannels.set(guild.id, new Set([]))
         })
     }

@@ -1,5 +1,5 @@
 import Client from './Client'
-import { ChatInputCommandInteraction, Message, Permissions } from 'discord.js'
+import { Message, PermissionResolvable } from 'discord.js'
 import { InteractionConfig, InteractionTypes } from './Types'
 
 export class MainCommand {
@@ -32,7 +32,7 @@ export class MainInteraction {
     name: string
     type: number
     description?: string
-    permissions?: Permissions
+    permissions?: PermissionResolvable
 
     constructor(client: Client, name: string, config: InteractionConfig) {
         this.client = client
@@ -55,7 +55,9 @@ export class MainInteraction {
     }
 
     async reject(interaction: any, message: string) {
-        await interaction.reply(message)
+        try {
+            await interaction.reply(message)
+        } catch (error) {}
     }
 
 }

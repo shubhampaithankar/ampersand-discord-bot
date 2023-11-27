@@ -9,11 +9,14 @@ export default class SetJTC extends MainInteraction {
             name: 'setjtc',
             description: 'shows jtc menu',
             type: 1,
-            options: null
+            options: null,
+            permissions: [
+                'Administrator'
+            ]
         })
     }
 
-    async run(interaction: ChatInputCommandInteraction, ...args: string[]): Promise<void> {
+    async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
         try {
             const data: ChannelSelectMenuComponentData = {
                 customId: `followUp_${interaction.id}_setjtc`,
@@ -35,15 +38,17 @@ export default class SetJTC extends MainInteraction {
         }
     }
     
-    async followUp(interaction: ChannelSelectMenuInteraction, ...args: string[]): Promise<void> {
+    async followUp(interaction: ChannelSelectMenuInteraction, ...args: string[]) {
         try {
             if (interaction.channels && interaction.channels?.size <= 0) {
                 await interaction.reply('Please select a channel')
                 return
             }
             const channel = interaction.channels?.first() as VoiceChannel
-            await updateJTC(channel, true)
-            await interaction.reply(`Enabled join to create module and successfully set ${channel.name} as \`Join to create\` Channel`)
+            if (channel) {
+                await updateJTC(channel, true)
+                await interaction.reply(`Enabled join to create module and successfully set ${channel.name} as \`Join to create\` Channel`)
+            }
         } catch (error) {
             console.log(error)
             await interaction.reply('There was an error, please try again later') 
