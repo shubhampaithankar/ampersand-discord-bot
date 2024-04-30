@@ -1,7 +1,7 @@
 import { ChannelType, VoiceChannel, VoiceState } from 'discord.js'
 import { MainEvent } from '../Classes'
 import Client from '../Client'
-import { getJTC } from '../Database/databaseUtils'
+import { getJTC } from '../database/databaseUtils'
 
 export default class VoiceStateUpdateEvent extends MainEvent {
     constructor (client: Client) {

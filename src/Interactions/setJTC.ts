@@ -1,7 +1,7 @@
 import Client from '../Client'
 import { MainInteraction } from '../Classes'
 import { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelSelectMenuComponentData, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentType, VoiceChannel } from 'discord.js'
-import { updateJTC } from '../Database/databaseUtils'
+import { updateJTC } from '../database/databaseUtils'
 
 export default class SetJTC extends MainInteraction {
     constructor(client: Client) {

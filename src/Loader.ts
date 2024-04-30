@@ -1,7 +1,7 @@
 import Client from './Client'
 import { Guild, Routes } from 'discord.js'
 import mongoose from 'mongoose'
-import { readdirSync, lstatSync } from 'fs'
+import { readdirSync, lstatSync, readdir } from 'fs'
 import path from 'path'
 
 import { MainCommand, MainEvent, MainInteraction } from './Classes'
@@ -18,18 +18,18 @@ export default class Loader {
             await this.connectToDB()
             console.log(`Connected to database: ${this.client.database?.databaseName}`)
     
-            // await this.loadCommandHandler('./Commands')
+            // await this.loadCommandHandler('./commands')
     
-            await this.loadInteractionHandler('./Interactions') 
+            await this.loadInteractionHandler('./interactions') 
             const interactions = await this.client.interactions.map(({ name, description, type }) => ({ name, description, type }))
             await this.client.rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID!), {
                 body: interactions
             })
             console.log(`Loaded ${this.client.interactions.size} Interaction(s)`)
     
-            await this.loadEventHandler('./Events')
+            await this.loadEventHandler('./events')
             console.log(`Loaded ${this.client.events.size} Event(s)`)
-            
+
             await this.initJTC()
         } catch (error) {
             console.log('Loader Error:\n', error)
@@ -42,7 +42,7 @@ export default class Loader {
             const files = await readdirSync(filePath)
             for (const cmdFile of files) {
                 const stat = await lstatSync(path.join(filePath, cmdFile))
-                if (stat.isDirectory()) this.loadCommandHandler(path.join(dir, cmdFile))
+                if (stat.isDirectory()) await this.loadCommandHandler(path.join(dir, cmdFile))
                 if (cmdFile.endsWith('.ts')) {
                     const { name } = path.parse(cmdFile)
                     const Command = await import(path.join(filePath, cmdFile))
@@ -68,19 +68,18 @@ export default class Loader {
             const files = await readdirSync(filePath)
             for (const intFile of files) {
                 const stat = await lstatSync(path.join(filePath, intFile))
-                if (stat.isDirectory()) this.loadInteractionHandler(path.join(dir, intFile))
+                if (stat.isDirectory()) await this.loadInteractionHandler(path.join(dir, intFile)) // Await recursive call
                 if (intFile.endsWith('.ts')) {
                     const { name } = path.parse(intFile)
                     const Interaction = await import(path.join(filePath, intFile))
                     if (Interaction.default?.prototype instanceof MainInteraction) {
-                        // const interaction = (({ name, type, description }) => ({ name, type, description }))(new Interaction.default(this.client, name)) as MainInteraction
                         const interaction = new Interaction.default(this.client, name) as MainInteraction
                         this.client.interactions.set(interaction.name.toLowerCase(), interaction)
                     }
                 }
             }
         } catch (error) {
-            console.log('There was en error loading interactions:\n',error)
+            console.log('There was an error loading interactions:\n', error)
         }
     }
 
@@ -90,7 +89,7 @@ export default class Loader {
             const files = await readdirSync(filePath)
             for (const eventFile of files) {
                 const stat = await lstatSync(path.join(filePath, eventFile))
-                if (stat.isDirectory()) this.loadEventHandler(path.join(dir, eventFile))
+                if (stat.isDirectory()) await this.loadEventHandler(path.join(dir, eventFile))
                 if (eventFile.endsWith('.ts')) {
                     const { name } = path.parse(eventFile)
                     const Event = await import(path.join(filePath, eventFile))
