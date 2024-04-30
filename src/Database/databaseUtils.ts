@@ -1,5 +1,5 @@
 import { Guild, VoiceChannel } from 'discord.js'
-import { guildSchema, jtcSchema } from '../database/schemas/'
+import { guildSchema, jtcSchema } from './schemas'
 
 export const getGuildData = async (guild: Guild) => {
     try {
