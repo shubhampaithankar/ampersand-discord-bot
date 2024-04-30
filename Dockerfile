@@ -1,23 +1,27 @@
-# Use an official Node.js runtime as a parent image
-FROM node:alpine
+# Use a lightweight Node.js base image
+FROM node:18-alpine AS builder
 
-# Set the working directory in the container
-WORKDIR /usr/src/app
+# Set working directory
+WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
+# Copy package.json and package-lock.json (or yarn.lock)
 COPY package*.json ./
 
-# Install app dependencies
+# Install dependencies
 RUN npm install
 
-# Bundle app source
+# Copy the rest of your bot code
 COPY . .
 
-# Build the TypeScript code
-RUN npm run build
+# Build a slimmer image for production
+FROM node:18-alpine
 
-# Expose the port your app runs on
+# Copy only the production dependencies and your bot code
+COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app .
+
+# Expose the port your bot listens on (adjust if needed)
 EXPOSE 3000
 
-# Command to run your application
-CMD ["npm", "run", "dev"]
+# Set the command to run your bot application
+CMD [ "npm", "start" ]
