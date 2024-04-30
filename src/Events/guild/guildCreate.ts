@@ -1,7 +1,7 @@
 import { Guild } from 'discord.js'
 import { MainEvent } from '../../Classes'
 import Client from '../../Client'
-import { addGuildData } from '../../database/databaseUtils'
+import { addGuildData } from '../../Database/databaseUtils'
 
 // Emitted whenever the client joins a guild.
 export default class GuildCreateEvent extends MainEvent {

@@ -7,10 +7,5 @@ export default class ReadyEvent extends MainEvent {
             once: true
         })
     }
-    async run() {
-        try {
-        } catch (error) {
-            console.log(error)
-        }
-    }
+    async run() {}
 }

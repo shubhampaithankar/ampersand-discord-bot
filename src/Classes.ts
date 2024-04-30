@@ -70,7 +70,7 @@ export class MainEvent {
     constructor(client: Client, name: string, config: any = {}) {
         this.client = client
         this.name = name 
-        this.type = config.once ? 'once' : 'on'
+        this.type = (config && config.once) ? 'once' : 'on'
         this.emitter = this.client
     }
     async run(...args: any[]) {

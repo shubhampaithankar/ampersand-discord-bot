@@ -1,7 +1,7 @@
 import Client from './Client'
 import { Guild, Routes } from 'discord.js'
 import mongoose from 'mongoose'
-import { readdirSync, lstatSync, readdir } from 'fs'
+import { readdirSync, lstatSync } from 'fs'
 import path from 'path'
 
 import { MainCommand, MainEvent, MainInteraction } from './Classes'
