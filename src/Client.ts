@@ -34,13 +34,9 @@ export default class BaseClient extends Client {
     async initialize () {
         try {
             await super.login(process.env.DISCORD_TOKEN)
-
             await this.loader.init()
-
+            
             console.log(`Bot Online: ${this.user?.tag}`)
-            // console.log(`Loaded ${this.client.commands.size} Command(s)`)
-            console.log(`Loaded ${this.interactions.size} Interaction(s)`)
-            console.log(`Loaded ${this.events.size} Event(s)`)
         } catch (error) {
             console.log(error)
         }

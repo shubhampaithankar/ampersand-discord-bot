@@ -25,8 +25,11 @@ export default class Loader {
             await this.client.rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID!), {
                 body: interactions
             })
+            console.log(`Loaded ${this.client.interactions.size} Interaction(s)`)
     
             await this.loadEventHandler('./Events')
+            console.log(`Loaded ${this.client.events.size} Event(s)`)
+            
             await this.initJTC()
         } catch (error) {
             console.log('Loader Error:\n', error)
