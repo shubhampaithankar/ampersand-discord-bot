@@ -1,8 +1,9 @@
-import Client from './Client'
-import { Guild, Routes } from 'discord.js'
-import mongoose from 'mongoose'
-import { readdirSync, lstatSync } from 'fs'
 import path from 'path'
+import Client from './Client'
+import mongoose from 'mongoose'
+import { Guild, Routes } from 'discord.js'
+import { readdirSync, lstatSync } from 'fs'
+import { Manager, Node } from 'erela.js'
 
 import { MainCommand, MainEvent, MainInteraction } from './Classes'
 
@@ -15,6 +16,8 @@ export default class Loader {
 
     init = async () => {
         try {
+            await this.initJTC()
+
             await this.connectToDB()
             console.log(`Connected to database: ${this.client.database?.databaseName}`)
     
@@ -30,9 +33,30 @@ export default class Loader {
             await this.loadEventHandler('./Events')
             console.log(`Loaded ${this.client.events.size} Event(s)`)
 
-            await this.initJTC()
+            await this.loadErelaJS()
+
         } catch (error) {
             console.log('Loader Error:\n', error)
+        }
+    }
+
+    initJTC = async () => {
+        try {
+            this.client.guilds.cache.forEach((guild: Guild) => {
+                if (this.client.jtcChannels.has(guild.id)) return
+                this.client.jtcChannels.set(guild.id, new Set([]))
+            })
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    connectToDB = async () => {
+        try {
+            const mongo = await mongoose.connect(process.env.MONGO_URL!)
+            this.client.database = mongo.connection.db
+        } catch (error) {
+            console.log('There was en error while connecting to database:\n',error)
         }
     }
 
@@ -105,23 +129,38 @@ export default class Loader {
         }
     }
 
-    connectToDB = async () => {
-        try {
-            const mongo = await mongoose.connect(process.env.MONGO_URL!)
-            this.client.database = mongo.connection.db
-        } catch (error) {
-            console.log('There was en error while connecting to database:\n',error)
-        }
+    loadErelaJS = async () => {
+        this.client.manager = new Manager({
+            clientId: `${process.env.DISCORD_CLIENT_ID!}`,
+            defaultSearchPlatform: 'youtube',
+            nodes: [{
+                host: '192.168.29.51',
+                port: 2333,
+                password: '12ka4',
+                secure: false,
+                retryAmount: 5
+            }],
+            clientName: 'ampersand-discord-client',
+            send: (id, payload) => {
+                const guild = this.client.guilds.cache.get(id)
+                if(!guild) return
+                guild.shard.send(payload)
+            },
+        })
+            .init()
+            .on('nodeConnect', (node: Node) => {
+                try {
+                    console.log(`ErelaJS: Node connected at ${node.address}`)
+                } catch (error) {
+                    console.log(error)
+                }
+            })
+
+
     }
 
-    initJTC = async () => {
-        try {
-            this.client.guilds.cache.forEach((guild: Guild) => {
-                if (this.client.jtcChannels.has(guild.id)) return
-                this.client.jtcChannels.set(guild.id, new Set([]))
-            })
-        } catch (error) {
-            console.log(error)
-        }
+    loadMusicEvents = (dir: string) => {
+
     }
+
 }

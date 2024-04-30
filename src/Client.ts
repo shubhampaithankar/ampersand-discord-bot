@@ -4,6 +4,7 @@ import mongoose from 'mongoose'
 import Loader from './Loader'
 import { MainCommand, MainEvent, MainInteraction } from './Classes'
 import { InteractionTypes } from './Types'
+import { Manager } from 'erela.js'
 
 export default class BaseClient extends Client {
     interactions: Collection<string, MainInteraction>
@@ -11,9 +12,10 @@ export default class BaseClient extends Client {
     aliases: Collection<string, MainCommand>
     events: Collection<string, MainEvent>
     
-    database: mongoose.mongo.Db | null = null
     loader = new Loader(this)
     rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!)
+    database: mongoose.mongo.Db | null = null
+    manager: Manager | null = null
 
     followUps: Collection<string, InteractionTypes>
     jtcChannels: Collection<string, Set<string>>

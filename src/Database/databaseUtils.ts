@@ -63,5 +63,3 @@ export const updateJTC = async (channel: VoiceChannel, value: boolean) => {
         console.log('Database Error: while updating JTC data:\n', error)
     }
 }
-
-console.log()
