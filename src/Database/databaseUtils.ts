@@ -1,5 +1,5 @@
 import { Guild, VoiceChannel } from 'discord.js'
-import { guildSchema, jtcSchema } from './schemas'
+import { guildSchema, jtcSchema } from './Schemas'
 
 export const getGuildData = async (guild: Guild) => {
     try {
@@ -63,3 +63,5 @@ export const updateJTC = async (channel: VoiceChannel, value: boolean) => {
         console.log('Database Error: while updating JTC data:\n', error)
     }
 }
+
+console.log()
