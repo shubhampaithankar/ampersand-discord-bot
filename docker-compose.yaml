@@ -7,3 +7,8 @@ services:
     ports:
       - "3000:3000"
     pull_policy: build
+    environment:
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DISCORD_PERMISSION_INTEGER: ${DISCORD_PERMISSION_INTEGER}
+      MONGO_URL: ${MONGO_URL}
