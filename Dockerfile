@@ -1,5 +1,5 @@
 # Use an official Node.js runtime as a parent image
-FROM node:14
+FROM node:alpine
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
@@ -13,9 +13,6 @@ RUN npm install
 # Bundle app source
 COPY . .
 
-# Copy the environment file
-COPY .env ./
-
 # Build the TypeScript code
 RUN npm run build
 
@@ -23,4 +20,4 @@ RUN npm run build
 EXPOSE 3000
 
 # Command to run your application
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]

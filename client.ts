@@ -1,7 +1,13 @@
 import { config } from 'dotenv'
 import Client from './src/Client'
 
-config()
+(() => {
+    try {
+        config()
 
-const client = new Client()
-client.initialize()
+        const client = new Client()
+        client.initialize()
+    } catch (error) {
+        console.log(error)
+    }
+})()

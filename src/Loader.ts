@@ -113,9 +113,13 @@ export default class Loader {
     }
 
     initJTC = async () => {
-        this.client.guilds.cache.forEach((guild: Guild) => {
-            if (this.client.jtcChannels.has(guild.id)) return
-            this.client.jtcChannels.set(guild.id, new Set([]))
-        })
+        try {
+            this.client.guilds.cache.forEach((guild: Guild) => {
+                if (this.client.jtcChannels.has(guild.id)) return
+                this.client.jtcChannels.set(guild.id, new Set([]))
+            })
+        } catch (error) {
+            console.log(error)
+        }
     }
 }

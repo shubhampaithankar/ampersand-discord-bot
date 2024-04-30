@@ -17,7 +17,7 @@ export const addGuildData = async (guild: Guild) => {
             const guildData = await guildSchema.create({
                 id: guild.id,
                 isDeleted: false,
-                joinedAt: Date.now,
+                joinedAt: Date.now(),
                 name: guild.name,
                 ownerId: guild.ownerId
             })

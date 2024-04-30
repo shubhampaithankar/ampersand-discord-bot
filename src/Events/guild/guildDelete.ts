@@ -9,10 +9,15 @@ export default class GuildDeleteEvent extends MainEvent {
         super(client, 'guildDelete')
     }
     async run(guild: Guild) {
-        const guildData = await getGuildData(guild)
-        if (guildData) {
-            guildData.isDeleted = true 
-            await updateGuildData(guild, guildData)
+        try {
+            const guildData = await getGuildData(guild)
+            if (guildData) {
+                guildData.isDeleted = true 
+                await updateGuildData(guild, guildData)
+            }
+        } catch (error) {
+            console.log(error)
         }
+
     }
 }

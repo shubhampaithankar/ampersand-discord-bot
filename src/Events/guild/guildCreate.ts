@@ -9,6 +9,10 @@ export default class GuildCreateEvent extends MainEvent {
         super(client, 'guildCreate')
     }
     async run(guild: Guild) {
-        await addGuildData(guild)
+        try {
+            await addGuildData(guild)
+        } catch (error) {
+            console.log(error)
+        }
     }
 }

@@ -80,14 +80,21 @@ export default class VoiceStateUpdateEvent extends MainEvent {
 
             // On leaving channel created by jtc module
             if (oldState.channelId && guildJtc && guildJtc.has(oldState.channelId)) {
-                const channel = guild.channels.cache.get(oldState.channelId) as VoiceChannel
-                if (channel && channel.members.size === 0) setTimeout(async () => {
-                    await channel.delete()
-                    if (guildJtc.has(channel.id)) {
-                        guildJtc.delete(channel.id)
-                        this.client.jtcChannels.set(guild.id, guildJtc)
+                try {            
+                    const channel = guild.channels.cache.get(oldState.channelId) as VoiceChannel
+                    if (channel && channel.members.size === 0) {
+                        setTimeout(async () => {
+                            await channel.delete()
+                            if (guildJtc.has(channel.id)) {
+                                guildJtc.delete(channel.id)
+                                this.client.jtcChannels.set(guild.id, guildJtc)
+                            }
+                        }, 200)
                     }
-                }, 200)
+                } catch (error) {
+                    console.log(error)
+                    return
+                }
             }
         } catch (error) {
             console.log(error)

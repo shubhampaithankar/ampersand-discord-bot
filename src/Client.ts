@@ -32,7 +32,11 @@ export default class BaseClient extends Client {
     }
 
     async initialize () {
-        super.login(process.env.DISCORD_TOKEN)
-        await this.loader.init()
+        try {
+            await super.login(process.env.DISCORD_TOKEN)
+            await this.loader.init()
+        } catch (error) {
+            console.log(error)
+        }
     }
 }
