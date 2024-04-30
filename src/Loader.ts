@@ -18,16 +18,16 @@ export default class Loader {
             await this.connectToDB()
             console.log(`Connected to database: ${this.client.database?.databaseName}`)
     
-            // await this.loadCommandHandler('./commands')
+            // await this.loadCommandHandler('./Commands')
     
-            await this.loadInteractionHandler('./interactions') 
+            await this.loadInteractionHandler('./Interactions') 
             const interactions = await this.client.interactions.map(({ name, description, type }) => ({ name, description, type }))
             await this.client.rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID!), {
                 body: interactions
             })
             console.log(`Loaded ${this.client.interactions.size} Interaction(s)`)
     
-            await this.loadEventHandler('./events')
+            await this.loadEventHandler('./Events')
             console.log(`Loaded ${this.client.events.size} Event(s)`)
 
             await this.initJTC()
