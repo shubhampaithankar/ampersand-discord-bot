@@ -1,21 +1,25 @@
 import { Client, Collection } from 'discord.js'
 import { REST } from '@discordjs/rest'
 import mongoose from 'mongoose'
-import Loader from './Loader'
+
 import { MainCommand, MainEvent, MainInteraction } from './Classes'
-import { InteractionTypes } from './Types'
+import Loader from './Loader'
+import Utils from './Utils'
 
 export default class BaseClient extends Client {
     interactions: Collection<string, MainInteraction>
     commands: Collection<string, MainCommand>
     aliases: Collection<string, MainCommand>
     events: Collection<string, MainEvent>
+
     
     database: mongoose.mongo.Db | null = null
-    loader = new Loader(this)
-    rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!)
 
-    followUps: Collection<string, InteractionTypes>
+    loader = new Loader(this)
+    utils = new Utils(this)
+
+    rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!) 
+    
     jtcChannels: Collection<string, Set<string>>
 
     constructor () {
@@ -26,8 +30,6 @@ export default class BaseClient extends Client {
         this.commands = new Collection()
         this.aliases = new Collection()
         this.events = new Collection()
-
-        this.followUps = new Collection()
         this.jtcChannels = new Collection()
     }
 

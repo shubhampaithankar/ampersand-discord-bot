@@ -19,7 +19,7 @@ export default class SetJTC extends MainInteraction {
     async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
         try {
             const data: ChannelSelectMenuComponentData = {
-                customId: `followUp_${interaction.id}_setjtc`,
+                customId: `${interaction.channelId}_${interaction.id}`,
                 type: ComponentType.ChannelSelect,
                 channelTypes: [ChannelType.GuildVoice]
             }
@@ -27,11 +27,13 @@ export default class SetJTC extends MainInteraction {
             const selectMenu = new ActionRowBuilder<ChannelSelectMenuBuilder>()
                 .addComponents(new ChannelSelectMenuBuilder(data))
 
-            const reply = await interaction.reply({
+            await interaction.reply({
                 components: [selectMenu]
             })
 
-            this.client.followUps.set(reply.id, interaction)
+            const collected = await this.client.utils.createInteractionCollector(interaction, ComponentType.ChannelSelect, 1) as ChannelSelectMenuInteraction
+            if (collected) await this.followUp(collected)
+
         } catch (error) {
             console.log(error)
             await interaction.reply('There was an error, please try again later')
