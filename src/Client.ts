@@ -2,7 +2,7 @@ import { Client, Collection } from 'discord.js'
 import { REST } from '@discordjs/rest'
 import mongoose from 'mongoose'
 import Loader from './Loader'
-import { MainCommand, MainEvent, MainInteraction } from './Classes'
+import { MainCommand, MainEvent, MainInteraction, MainMusicEvent } from './Classes'
 import { InteractionTypes } from './Types'
 import { Manager } from 'erela.js'
 
@@ -11,6 +11,7 @@ export default class BaseClient extends Client {
     commands: Collection<string, MainCommand>
     aliases: Collection<string, MainCommand>
     events: Collection<string, MainEvent>
+    musicEvents: Collection<string, MainMusicEvent>
     
     loader = new Loader(this)
     rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!)
@@ -28,6 +29,7 @@ export default class BaseClient extends Client {
         this.commands = new Collection()
         this.aliases = new Collection()
         this.events = new Collection()
+        this.musicEvents = new Collection()
 
         this.followUps = new Collection()
         this.jtcChannels = new Collection()

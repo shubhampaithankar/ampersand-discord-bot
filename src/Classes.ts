@@ -1,6 +1,7 @@
 import Client from './Client'
 import { Message, PermissionResolvable } from 'discord.js'
 import { InteractionConfig, InteractionTypes } from './Types'
+import { Manager } from 'erela.js'
 
 export class MainCommand {
     client: Client
@@ -72,6 +73,22 @@ export class MainEvent {
         this.name = name 
         this.type = (config && config.once) ? 'once' : 'on'
         this.emitter = this.client
+    }
+    async run(...args: any[]) {
+        throw new Error(`The run method has not been implemented in ${this.name}`)
+    }
+}
+
+export class MainMusicEvent {
+    client: Client
+    name: string
+    type: string
+    emitter: Manager | null
+    constructor(client: Client, name: string, config: any = {}) {
+        this.client = client
+        this.name = name 
+        this.type = (config && config.once) ? 'once' : 'on'
+        this.emitter = client.manager || null
     }
     async run(...args: any[]) {
         throw new Error(`The run method has not been implemented in ${this.name}`)

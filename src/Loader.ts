@@ -5,7 +5,7 @@ import { Guild, Routes } from 'discord.js'
 import { readdirSync, lstatSync } from 'fs'
 import { Manager, Node } from 'erela.js'
 
-import { MainCommand, MainEvent, MainInteraction } from './Classes'
+import { MainCommand, MainEvent, MainInteraction, MainMusicEvent } from './Classes'
 
 export default class Loader {
     client: Client
@@ -20,8 +20,14 @@ export default class Loader {
 
             await this.connectToDB()
             console.log(`Connected to database: ${this.client.database?.databaseName}`)
-    
-            // await this.loadCommandHandler('./Commands')
+
+            await this.loadManager()
+
+            await this.loadEventHandler('./Events')
+            console.log(`Loaded ${this.client.events.size} Event(s)`)
+
+            await this.loadMusicEventHandler('./MusicEvents')
+            console.log(`Loaded ${this.client.musicEvents.size} Music Event(s)`)
     
             await this.loadInteractionHandler('./Interactions') 
             const interactions = await this.client.interactions.map(({ name, description, type }) => ({ name, description, type }))
@@ -29,11 +35,10 @@ export default class Loader {
                 body: interactions
             })
             console.log(`Loaded ${this.client.interactions.size} Interaction(s)`)
-    
-            await this.loadEventHandler('./Events')
-            console.log(`Loaded ${this.client.events.size} Event(s)`)
 
-            await this.loadErelaJS()
+            // await this.loadCommandHandler('./Commands')
+
+            await this.client.manager?.init()
 
         } catch (error) {
             console.log('Loader Error:\n', error)
@@ -58,6 +63,26 @@ export default class Loader {
         } catch (error) {
             console.log('There was en error while connecting to database:\n',error)
         }
+    }
+
+    loadManager = async () => {
+        this.client.manager = new Manager({
+            clientId: `${process.env.DISCORD_CLIENT_ID!}`,
+            defaultSearchPlatform: 'youtube',
+            nodes: [{
+                host: `${process.env.LAVALINK_HOST!}`,
+                port: Number(process.env.LAVALINK_PORT),
+                password: `${process.env.LAVALINK_PASSWORD}`,
+                secure: false,
+                retryAmount: 5
+            }],
+            clientName: 'ampersand-discord-client',
+            send: (id, payload) => {
+                const guild = this.client.guilds.cache.get(id)
+                if(!guild) return
+                guild.shard.send(payload)
+            },
+        })
     }
 
     loadCommandHandler = async (dir: string) => {
@@ -129,38 +154,26 @@ export default class Loader {
         }
     }
 
-    loadErelaJS = async () => {
-        this.client.manager = new Manager({
-            clientId: `${process.env.DISCORD_CLIENT_ID!}`,
-            defaultSearchPlatform: 'youtube',
-            nodes: [{
-                host: '192.168.29.51',
-                port: 2333,
-                password: '12ka4',
-                secure: false,
-                retryAmount: 5
-            }],
-            clientName: 'ampersand-discord-client',
-            send: (id, payload) => {
-                const guild = this.client.guilds.cache.get(id)
-                if(!guild) return
-                guild.shard.send(payload)
-            },
-        })
-            .init()
-            .on('nodeConnect', (node: Node) => {
-                try {
-                    console.log(`ErelaJS: Node connected at ${node.address}`)
-                } catch (error) {
-                    console.log(error)
+    loadMusicEventHandler = async (dir: string) => {
+        try {
+            const filePath = path.join(__dirname, dir)
+            const files = await readdirSync(filePath)
+            for (const eventFile of files) {
+                const stat = await lstatSync(path.join(filePath, eventFile))
+                if (stat.isDirectory()) await this.loadMusicEventHandler(path.join(dir, eventFile))
+                if (eventFile.endsWith('.ts')) {
+                    const { name } = path.parse(eventFile)
+                    const Event = await import(path.join(filePath, eventFile))
+                    if (Event.default?.prototype instanceof MainMusicEvent) {
+                        const event = new Event.default(this.client, name)
+                        event.emitter[event.type](name, (...args: any[]) => event.run(...args))
+                        this.client.musicEvents.set(name, event)
+                    }
                 }
-            })
-
-
-    }
-
-    loadMusicEvents = (dir: string) => {
-
+            }
+        } catch (error) {
+            console.log('There was en error loading events:\n',error)
+        }
     }
 
 }
