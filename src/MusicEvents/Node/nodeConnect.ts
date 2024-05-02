@@ -9,7 +9,7 @@ export default class NodeConnectEvent extends MainMusicEvent {
 
     async run(node: Node) {
         try {
-            console.log(`Manager connected: ${node.connected}`)
+            console.log(`Node connected: ${node.connected}`)
         } catch (error) {
             console.log(error)
         }

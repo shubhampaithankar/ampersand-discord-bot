@@ -8,6 +8,6 @@ export default class RawEvent extends MainEvent {
     }
 
     async run(d: any) {
-        if (this.client.manager) this.client.manager.updateVoiceState(d)
+        if (this.client.music) this.client.music.updateVoiceState(d)
     }
 }

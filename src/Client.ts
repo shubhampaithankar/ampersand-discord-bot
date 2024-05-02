@@ -16,7 +16,7 @@ export default class BaseClient extends Client {
     
     
     database: mongoose.mongo.Db | null = null
-    manager: Manager | null = null
+    music: Manager | null = null
 
     loader = new Loader(this)
     utils = new Utils(this)

@@ -88,7 +88,7 @@ export class MainMusicEvent {
         this.client = client
         this.name = name 
         this.type = (config && config.once) ? 'once' : 'on'
-        this.emitter = client.manager || null
+        this.emitter = client.music || null
     }
     async run(...args: any[]) {
         throw new Error(`The run method has not been implemented in ${this.name}`)

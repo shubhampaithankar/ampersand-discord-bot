@@ -21,7 +21,7 @@ export default class Loader {
             await this.connectToDB()
             console.log(`Connected to database: ${this.client.database?.databaseName}`)
 
-            await this.loadManager()
+            await this.loadMusic()
 
             await this.loadEventHandler('./Events')
             console.log(`Loaded ${this.client.events.size} Event(s)`)
@@ -38,7 +38,7 @@ export default class Loader {
 
             // await this.loadCommandHandler('./Commands')
 
-            await this.client.manager?.init()
+            if (this.client.music) this.client.music.init()
 
         } catch (error) {
             console.log('Loader Error:\n', error)
@@ -65,24 +65,28 @@ export default class Loader {
         }
     }
 
-    loadManager = async () => {
-        this.client.manager = new Manager({
-            clientId: `${process.env.DISCORD_CLIENT_ID!}`,
-            defaultSearchPlatform: 'youtube',
-            nodes: [{
-                host: `${process.env.LAVALINK_HOST!}`,
-                port: Number(process.env.LAVALINK_PORT),
-                password: `${process.env.LAVALINK_PASSWORD}`,
-                secure: false,
-                retryAmount: 5
-            }],
-            clientName: 'ampersand-discord-client',
-            send: (id, payload) => {
-                const guild = this.client.guilds.cache.get(id)
-                if(!guild) return
-                guild.shard.send(payload)
-            },
-        })
+    loadMusic = async () => {
+        try {
+            this.client.music = new Manager({
+                clientId: `${process.env.DISCORD_CLIENT_ID!}`,
+                defaultSearchPlatform: 'youtube',
+                nodes: [{
+                    host: `${process.env.LAVALINK_HOST!}`,
+                    port: Number(process.env.LAVALINK_PORT),
+                    password: `${process.env.LAVALINK_PASSWORD}`,
+                    secure: false,
+                    retryAmount: 5
+                }],
+                clientName: 'ampersand-discord-client',
+                send: (id, payload) => {
+                    const guild = this.client.guilds.cache.get(id)
+                    if(!guild) return
+                    guild.shard.send(payload)
+                },
+            })
+        } catch (error) {
+            console.log('There was en error loading ErelaJS:\n',error)
+        }
     }
 
     loadCommandHandler = async (dir: string) => {
@@ -172,7 +176,7 @@ export default class Loader {
                 }
             }
         } catch (error) {
-            console.log('There was en error loading events:\n',error)
+            console.log('There was en error loading music events:\n',error)
         }
     }
 
