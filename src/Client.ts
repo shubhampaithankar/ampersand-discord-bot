@@ -1,8 +1,8 @@
-import { Client, Collection } from 'discord.js'
+import { Client, Collection, ShardingManager } from 'discord.js'
 import { REST } from '@discordjs/rest'
 import mongoose from 'mongoose'
 
-import { MainCommand, MainEvent, MainInteraction } from './Classes'
+import { MainCommand, MainEvent, MainInteraction, MainShardEvent } from './Classes'
 import Loader from './Loader'
 import Utils from './Utils'
 
@@ -11,9 +11,10 @@ export default class BaseClient extends Client {
     commands: Collection<string, MainCommand>
     aliases: Collection<string, MainCommand>
     events: Collection<string, MainEvent>
-
+    shardEvents: Collection<string, MainShardEvent>
     
     database: mongoose.mongo.Db | null = null
+    manager: ShardingManager | null = null
 
     loader = new Loader(this)
     utils = new Utils(this)
@@ -25,11 +26,13 @@ export default class BaseClient extends Client {
     constructor () {
         super({
             intents: ['Guilds', 'GuildMembers', 'GuildMessages', 'GuildMessageReactions','GuildVoiceStates', 'MessageContent', 'DirectMessageTyping', 'DirectMessageReactions'],
+            shards: 'auto'
         })
         this.interactions = new Collection()
         this.commands = new Collection()
         this.aliases = new Collection()
         this.events = new Collection()
+        this.shardEvents = new Collection()
         this.jtcChannels = new Collection()
     }
 
