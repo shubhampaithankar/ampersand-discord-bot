@@ -1,5 +1,5 @@
 import Client from './Client'
-import { Message, PermissionResolvable } from 'discord.js'
+import { Message, PermissionResolvable, ShardingManager } from 'discord.js'
 import { InteractionConfig, InteractionTypes } from './Types'
 import { Manager } from 'erela.js'
 
@@ -73,6 +73,22 @@ export class MainEvent {
         this.name = name 
         this.type = (config && config.once) ? 'once' : 'on'
         this.emitter = this.client
+    }
+    async run(...args: any[]) {
+        throw new Error(`The run method has not been implemented in ${this.name}`)
+    }
+}
+
+export class MainShardEvent {
+    client: Client
+    name: string
+    type: string
+    emitter: ShardingManager | null
+    constructor(client: Client, name: string, config: any = {}) {
+        this.client = client
+        this.name = name 
+        this.type = (config && config.once) ? 'once' : 'on'
+        this.emitter = this.client.manager
     }
     async run(...args: any[]) {
         throw new Error(`The run method has not been implemented in ${this.name}`)

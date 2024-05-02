@@ -1,11 +1,11 @@
 import path from 'path'
 import Client from './Client'
 import mongoose from 'mongoose'
-import { Guild, Routes } from 'discord.js'
+import { Guild, Routes, ShardingManager } from 'discord.js'
 import { readdirSync, lstatSync } from 'fs'
 import { Manager, Node } from 'erela.js'
 
-import { MainCommand, MainEvent, MainInteraction, MainMusicEvent } from './Classes'
+import { MainCommand, MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Classes'
 
 export default class Loader {
     client: Client
@@ -28,6 +28,9 @@ export default class Loader {
 
             await this.loadMusicEventHandler('./MusicEvents')
             console.log(`Loaded ${this.client.musicEvents.size} Music Event(s)`)
+
+            // await this.loadShardEventHandler('./ShardEvents')
+            // this.loadShardManager()
     
             await this.loadInteractionHandler('./Interactions') 
             const interactions = await this.client.interactions.map(({ name, description, type }) => ({ name, description, type }))
@@ -39,6 +42,10 @@ export default class Loader {
             // await this.loadCommandHandler('./Commands')
 
             if (this.client.music) this.client.music.init()
+            if (this.client.manager) this.client.manager.spawn()
+            
+            await this.initJTC()
+
 
         } catch (error) {
             console.log('Loader Error:\n', error)
@@ -180,4 +187,37 @@ export default class Loader {
         }
     }
 
+    loadShardManager = async () => {
+        try {
+            this.client.manager = new ShardingManager('./Client.ts', {
+                token: process.env.DISCORD_TOKEN!,
+                respawn: true,
+                totalShards: 'auto'
+            })
+        } catch (error) {
+            console.log('There was en error loading sahrding manager:\n',error)    
+        }
+    }
+
+    loadShardEventHandler = async (dir: string) => {
+        try {
+            const filePath = path.join(__dirname, dir)
+            const files = await readdirSync(filePath)
+            for (const eventFile of files) {
+                const stat = await lstatSync(path.join(filePath, eventFile))
+                if (stat.isDirectory()) await this.loadShardEventHandler(path.join(dir, eventFile))
+                if (eventFile.endsWith('.ts')) {
+                    const { name } = path.parse(eventFile)
+                    const Event = await import(path.join(filePath, eventFile))
+                    if (Event.default?.prototype instanceof MainShardEvent) {
+                        const event = new Event.default(this.client, name)
+                        event.emitter[event.type](name, (...args: any[]) => event.run(...args))
+                        this.client.shardEvents.set(name, event)
+                    }
+                }
+            }
+        } catch (error) {
+            console.log('There was en error loading events:\n',error)
+        }
+    }
 }
