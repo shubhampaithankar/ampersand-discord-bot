@@ -1,15 +1,14 @@
-import { ChatInputCommandInteraction } from 'discord.js'
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 import { MainInteraction } from '../../Classes'
 import Client from '../../Client'
 
 export default class SkipInteraction extends MainInteraction {
     constructor(client: Client) {
-        super(client, 'join', {
-            name: 'join',
-            description: 'joins a voice channel for music',
+        super(client, {
             type: 1,
-            module: 'Music',
-            options: null
+            data: new SlashCommandBuilder()
+                .setName('join')
+                .setDescription('joins the user\'s voice channel')
         })
     }
 

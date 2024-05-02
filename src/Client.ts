@@ -3,14 +3,12 @@ import { REST } from '@discordjs/rest'
 import { Manager } from 'erela.js'
 import mongoose from 'mongoose'
 
-import { MainCommand, MainEvent, MainInteraction, MainMusicEvent, MainShardEvent } from './Classes'
+import { MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Classes'
 import Loader from './Loader'
 import Utils from './Utils'
 
 export default class BaseClient extends Client {
     interactions: Collection<string, MainInteraction>
-    commands: Collection<string, MainCommand>
-    aliases: Collection<string, MainCommand>
     events: Collection<string, MainEvent>
     shardEvents: Collection<string, MainShardEvent>
     musicEvents: Collection<string, MainMusicEvent>
@@ -33,8 +31,6 @@ export default class BaseClient extends Client {
             shards: 'auto'
         })
         this.interactions = new Collection()
-        this.commands = new Collection()
-        this.aliases = new Collection()
         this.events = new Collection()
         this.musicEvents = new Collection()
         this.shardEvents = new Collection()

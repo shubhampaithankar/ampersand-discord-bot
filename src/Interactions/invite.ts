@@ -1,15 +1,14 @@
 import Client from '../Client'
 import { MainInteraction } from '../Classes'
-import { ChatInputCommandInteraction } from 'discord.js'
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 
 export default class InviteInteraction extends MainInteraction {
     constructor(client: Client) {
-        super(client, 'invite', {
-            name: 'invite',
-            description: 'sends an invite link for the bot',
+        super(client, {
             type: 1,
-            options: null,
-            module: 'Miscellaneous'
+            data: new SlashCommandBuilder()
+                .setName('invite')
+                .setDescription('sends an invite link for the bot'),
         })
     }
 

@@ -6,16 +6,15 @@ import { updateMusic } from '../../Database/databaseUtils'
 
 export default class SetMusicInteraction extends MainInteraction {
     constructor(client: Client) {
-        super(client, 'setmusic', {
-            name: 'setmusic',
-            description: 'shows music module menu',
+        super(client, {
             type: 1,
-            options: null,
-            module: 'Module',
             permissions: [
                 'Administrator',
                 'ManageGuild'
-            ]
+            ],
+            data: new SlashCommandBuilder()
+                .setName('setmusic')
+                .setDescription('enable / disable music module'),
         })
     }
 

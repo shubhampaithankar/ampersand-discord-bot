@@ -1,15 +1,14 @@
-import { ChatInputCommandInteraction } from 'discord.js'
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 import { MainInteraction } from '../../Classes'
 import Client from '../../Client'
 
 export default class StopInteraction extends MainInteraction {
     constructor(client: Client) {
-        super(client, 'stop', {
-            name: 'stop',
-            description: 'stops music',
+        super(client, {
             type: 1,
-            module: 'Music',
-            options: null
+            data: new SlashCommandBuilder()
+                .setName('stop')
+                .setDescription('stops')
         })
     }
 

@@ -1,15 +1,14 @@
-import { ChatInputCommandInteraction } from 'discord.js'
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 import { MainInteraction } from '../../Classes'
 import Client from '../../Client'
 
 export default class PlayInteraction extends MainInteraction {
     constructor(client: Client) {
-        super(client, 'play', {
-            name: 'play',
-            description: 'plays music',
+        super(client, {
             type: 1,
-            module: 'Music',
-            options: null
+            data: new SlashCommandBuilder()
+                .setName('play')
+                .setDescription('plays music in user\'s voice channel')
         })
     }
 
