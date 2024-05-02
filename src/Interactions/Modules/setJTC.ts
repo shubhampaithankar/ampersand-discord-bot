@@ -10,6 +10,7 @@ export default class SetJTC extends MainInteraction {
             description: 'shows jtc menu',
             type: 1,
             options: null,
+            module: 'Module',
             permissions: [
                 'Administrator'
             ]
@@ -41,11 +42,13 @@ export default class SetJTC extends MainInteraction {
     
     async followUp(interaction: ChannelSelectMenuInteraction, ...args: string[]) {
         try {
-            if (interaction.channels && interaction.channels?.size <= 0) {
+            if (!interaction.channels) return
+
+            if (interaction.channels.size <= 0) {
                 await interaction.reply('Please select a channel')
                 return
             }
-            const channel = interaction.channels?.first() as VoiceChannel
+            const channel = interaction.channels.first() as VoiceChannel
             if (channel) {
                 await updateJTC(channel, true)
                 await interaction.reply(`Enabled join to create module and successfully set ${channel.name} as \`Join to create\` Channel`)

@@ -73,18 +73,28 @@ export const getMusic = async (guild: Guild) => {
     }
 }
 
-export const updateMusic = async (channel: TextChannel, value: boolean) => {
+export const updateMusic = async (value: boolean, guildId: string, channel?: TextChannel) => {
     try {
-        await musicSchema.findOneAndUpdate({
-            guildId: channel.guildId,
-        }, {
-            $addToSet: {
-                channelIds: channel.id
-            },
-            enabled: value
-        }, {
-            upsert: true
-        })
+        if (channel) {
+            await musicSchema.findOneAndUpdate({
+                guildId: guildId,
+            }, {
+                $addToSet: {
+                    channelIds: channel.id
+                },
+                enabled: value
+            }, {
+                upsert: true
+            })
+        } else {
+            await musicSchema.findOneAndUpdate({
+                guildId: guildId,
+            }, {
+                enabled: value
+            }, {
+                upsert: true
+            })
+        }
     } catch (error) {
         console.log('Database Error: while updating music data:\n', error)
     }

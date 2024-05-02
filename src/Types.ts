@@ -12,6 +12,7 @@ export type InteractionConfig = {
     description?: string
     permissions?: PermissionResolvable
     options: Array<object> | null
+    module: string
 }
 
 export type InteractionOptions = {

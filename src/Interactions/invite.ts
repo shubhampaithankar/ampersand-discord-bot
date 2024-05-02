@@ -8,7 +8,8 @@ export default class InviteInteraction extends MainInteraction {
             name: 'invite',
             description: 'sends an invite link for the bot',
             type: 1,
-            options: null
+            options: null,
+            module: 'Miscellaneous'
         })
     }
 

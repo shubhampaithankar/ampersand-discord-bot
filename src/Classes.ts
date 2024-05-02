@@ -9,7 +9,7 @@ export class MainCommand {
     aliases: any
     cooldown: number
     description: any
-    module: any
+    module: string
     usage: any
 
     constructor(client: Client, name: string, config: any = {}) {
@@ -23,7 +23,11 @@ export class MainCommand {
     }
 
     async run(message: Message, args: string[]) {
-        throw new Error(`Command ${this.name} doesn't provide a run method!`)
+        try {
+            throw new Error(`The run method has not been implemented in ${this.name}`)
+        } catch (error) {
+            console.log(error)
+        }
     }
 
 }
@@ -34,6 +38,7 @@ export class MainInteraction {
     type: number
     description?: string
     permissions?: PermissionResolvable
+    module?: string
 
     constructor(client: Client, name: string, config: InteractionConfig) {
         this.client = client
@@ -41,6 +46,7 @@ export class MainInteraction {
         this.type = config.type
         this.description = config.description
         this.permissions = config.permissions
+        this.module = config.module || 'Miscellaneous'
     }
 
     async run(interaction: InteractionTypes, ...args: string[]) {
@@ -75,7 +81,11 @@ export class MainEvent {
         this.emitter = this.client
     }
     async run(...args: any[]) {
-        throw new Error(`The run method has not been implemented in ${this.name}`)
+        try {
+            throw new Error(`The run method has not been implemented in ${this.name}`)
+        } catch (error) {
+            console.log(error)
+        }
     }
 }
 
@@ -91,7 +101,11 @@ export class MainShardEvent {
         this.emitter = this.client.manager
     }
     async run(...args: any[]) {
-        throw new Error(`The run method has not been implemented in ${this.name}`)
+        try {
+            throw new Error(`The run method has not been implemented in ${this.name}`)
+        } catch (error) {
+            console.log(error)
+        } 
     }
 }
 
@@ -107,6 +121,10 @@ export class MainMusicEvent {
         this.emitter = client.music || null
     }
     async run(...args: any[]) {
-        throw new Error(`The run method has not been implemented in ${this.name}`)
+        try {
+            throw new Error(`The run method has not been implemented in ${this.name}`)
+        } catch (error) {
+            console.log(error)
+        }
     }
 }
