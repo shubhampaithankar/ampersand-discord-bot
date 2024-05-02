@@ -8,9 +8,8 @@ export default class Utils {
         this.client = client
     }
 
-    createInteractionCollector = async (interaction: InteractionTypes, componentType: any, max: number) => {
+    createInteractionCollector = async (interaction: InteractionTypes, componentType: any, max: number, customId: string) => {
         try {
-            const customId = `${interaction.channelId}_${interaction.id}`
             const collector = interaction.channel?.createMessageComponentCollector({
                 filter: i => i.customId === customId,
                 componentType,
@@ -30,6 +29,8 @@ export default class Utils {
                 collector.on('error', (error) => {
                     reject(error)
                 })
+
+                collector.on('end', () => {})
             })
         } catch (error) {
             console.error('Error in interaction collector:', error)
