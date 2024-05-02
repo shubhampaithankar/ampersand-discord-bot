@@ -1,6 +1,6 @@
 import Client from '../../Client'
 import { MainInteraction } from '../../Classes'
-import { ChannelSelectMenuComponentData, ChannelType, ChatInputCommandInteraction, ComponentType, SlashCommandBooleanOption, SlashCommandBuilder } from 'discord.js'
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelSelectMenuBuilder, ChannelSelectMenuComponentData, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentType, SlashCommandBooleanOption, SlashCommandBuilder } from 'discord.js'
 import { musicSchema } from '../../Database/Schemas'
 
 export default class SetMusicInteraction extends MainInteraction {
@@ -22,25 +22,53 @@ export default class SetMusicInteraction extends MainInteraction {
             await interaction.deferReply()
 
             const guildMusicData = await musicSchema.findOne({ guildId: interaction.guildId })
+            const isEnabled = guildMusicData && guildMusicData.enabled
 
-            const name = guildMusicData && guildMusicData.enabled ? 'disable' : 'enable'
-            const description = guildMusicData && guildMusicData.enabled ? 'Disable the music module' : 'Enable the music module'
+            const name = isEnabled ? 'Disable' : 'Enable'
+            const description = isEnabled ? 'Disable the music module. Currently: `Enabled`' : 'Enable the music module. Currently: `Disabled`'
+            const style = isEnabled ? ButtonStyle.Danger : ButtonStyle.Success
 
-            const data = new SlashCommandBuilder()
-                .setName('music-module')
-                .setDescription('Enable or disable the music module for your guild.')
-                .addBooleanOption(option =>
-                    option.setName(name)
-                        .setDescription(description)
-                        .setRequired(true)
-                )
+            const button = new ButtonBuilder()
+                .setLabel(name)
+                .setStyle(style)
+                .setCustomId(`${interaction.channelId}_${interaction.id}`)
+
+            const row = new ActionRowBuilder<ButtonBuilder>()
+                .addComponents(button)
+
+            await interaction.editReply({
+                content: description,
+                components: [row],
+            })
+
+            const collected = await this.client.utils.createInteractionCollector(interaction, ComponentType.Button, 1) as ButtonInteraction
+            if (collected) await this.followUp(collected)
 
         } catch (error) {
             console.log(error)
         }
     }
 
-    async followUp(interaction: any, ...args: string[]): Promise<void> {
-        
+    async followUp(interaction: any, ...args: string[]) {
+        try {
+            console.log(interaction)
+            // const type = interaction.customId.split('_')[2]
+            // console.log(type)
+            const channelOptions = new ChannelSelectMenuBuilder()
+                .setChannelTypes(ChannelType.GuildText)
+                .setCustomId(`${interaction.channelId}_${interaction.id}_onChannelSelect`)
+            
+            const selectMenu = new ActionRowBuilder<ChannelSelectMenuBuilder>()
+                .addComponents(channelOptions)
+
+            await interaction.reply({
+                components: [selectMenu]
+            })
+    
+            const collected = await this.client.utils.createInteractionCollector(interaction, ComponentType.ChannelSelect, 1) as ChannelSelectMenuInteraction
+            // if (collected) console.log(collected)
+        } catch (error) {
+            
+        }
     }
 }
