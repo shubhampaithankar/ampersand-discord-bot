@@ -1,18 +1,24 @@
 import Client from '../Client'
 import { MainInteraction } from '../Classes'
-import { ChatInputCommandInteraction } from 'discord.js'
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 
 export default class HelpInteraction extends MainInteraction {
     constructor(client: Client) {
-        super(client, 'help', {
-            name: 'help',
-            description: 'shows help menu',
+        super(client, {
             type: 1,
-            options: null
+            data: new SlashCommandBuilder()
+                .setName('help')
+                .setDescription('shows help menu')
+                .addStringOption((option) => option.setName('command').setDescription('help regarding the command').setRequired(false)),
         })
     }
 
     async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
-        interaction.reply('Hello World')
+        try {
+            console.log(interaction.options.getString('command'))
+            interaction.reply('Hello World')
+        } catch (error) {
+            console.log(error)
+        }
     }
 }

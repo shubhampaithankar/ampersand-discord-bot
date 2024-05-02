@@ -4,7 +4,7 @@ import mongoose from 'mongoose'
 import { readdirSync, lstatSync } from 'fs'
 import path from 'path'
 
-import { MainCommand, MainEvent, MainInteraction, MainShardEvent } from './Classes'
+import { MainEvent, MainInteraction, MainShardEvent } from './Classes'
 
 export default class Loader {
     client: Client
@@ -18,10 +18,8 @@ export default class Loader {
             await this.connectToDB()
             console.log(`Connected to database: ${this.client.database?.databaseName}`)
     
-            // await this.loadCommandHandler('./Commands')
-    
-            await this.loadInteractionHandler('./Interactions') 
-            const interactions = await this.client.interactions.map(({ name, description, type }) => ({ name, description, type }))
+            await this.loadInteractionHandler('./Interactions')
+            const interactions = await this.client.interactions.map(interaction => interaction.data)
             await this.client.rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID!), {
                 body: interactions
             })
@@ -43,32 +41,6 @@ export default class Loader {
         }
     }
 
-    loadCommandHandler = async (dir: string) => {
-        try {
-            const filePath = path.join(__dirname, dir)
-            const files = await readdirSync(filePath)
-            for (const cmdFile of files) {
-                const stat = await lstatSync(path.join(filePath, cmdFile))
-                if (stat.isDirectory()) await this.loadCommandHandler(path.join(dir, cmdFile))
-                if (cmdFile.endsWith('.ts')) {
-                    const { name } = path.parse(cmdFile)
-                    const Command = await import(path.join(filePath, cmdFile))
-                    if (Command.prototype instanceof MainCommand) {
-                        const command = new Command(this.client, name)
-                        this.client.commands.set(command.name.toLowerCase(), command)
-                        if (command.aliases.length) {
-                            command.aliases.forEach((alias: string) => {
-                                this.client.aliases.set(alias, command.name.toLowerCase())
-                            })
-                        }
-                    }
-                }
-            }   
-        } catch (error) {
-            console.log('There was en error loading commands:\n',error)
-        }
-    }
-
     loadInteractionHandler = async (dir: string) => {
         try {
             const filePath = path.join(__dirname, dir)
@@ -77,11 +49,11 @@ export default class Loader {
                 const stat = await lstatSync(path.join(filePath, intFile))
                 if (stat.isDirectory()) await this.loadInteractionHandler(path.join(dir, intFile)) // Await recursive call
                 if (intFile.endsWith('.ts')) {
-                    const { name } = path.parse(intFile)
+                    const name = path.parse(intFile).name.toLowerCase()
                     const Interaction = await import(path.join(filePath, intFile))
                     if (Interaction.default?.prototype instanceof MainInteraction) {
                         const interaction = new Interaction.default(this.client, name) as MainInteraction
-                        this.client.interactions.set(interaction.name.toLowerCase(), interaction)
+                        this.client.interactions.set(name, interaction)
                     }
                 }
             }

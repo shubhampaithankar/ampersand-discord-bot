@@ -1,56 +1,29 @@
 import Client from './Client'
-import { Message, PermissionResolvable, ShardingManager } from 'discord.js'
+import { ApplicationCommandDataResolvable, Message, PermissionResolvable, ShardingManager } from 'discord.js'
 import { InteractionConfig, InteractionTypes } from './Types'
-
-export class MainCommand {
-    client: Client
-    name: any
-    aliases: any
-    cooldown: number
-    description: any
-    module: any
-    usage: any
-
-    constructor(client: Client, name: string, config: any = {}) {
-        this.client = client
-        this.name = config.name || name
-        this.aliases = config.aliases || []
-        this.cooldown = 3
-        this.description = config.description || 'No description provided.'
-        this.module = config.module || 'Miscellaneous'
-        this.usage = config.usage || 'No usage provided.'
-    }
-
-    async run(message: Message, args: string[]) {
-        throw new Error(`Command ${this.name} doesn't provide a run method!`)
-    }
-
-}
 
 export class MainInteraction {
     client: Client
-    name: string
     type: number
-    description?: string
     permissions?: PermissionResolvable
+    data: ApplicationCommandDataResolvable
 
-    constructor(client: Client, name: string, config: InteractionConfig) {
+    constructor(client: Client, config: InteractionConfig) {
         this.client = client
-        this.name = config.name || name
         this.type = config.type
-        this.description = config.description
         this.permissions = config.permissions
+        this.data = config.data
     }
 
     async run(interaction: InteractionTypes, ...args: string[]) {
         try {
-            throw new Error(`Interaction ${this.name} doesn't provide a run method!`)
+            throw new Error(`Interaction ${this.data} doesn't provide a run method!`)
         } catch (error) {}
     }
 
     async followUp(interaction: any, ...args: string[]) {
         try {
-            throw new Error(`Interaction ${this.name} doesn't provide a run method!`)
+            throw new Error(`Interaction ${this.data} doesn't provide a run method!`)
         } catch (error) {}
     }
 

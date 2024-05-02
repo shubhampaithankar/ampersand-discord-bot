@@ -1,18 +1,19 @@
 import Client from '../Client'
 import { MainInteraction } from '../Classes'
-import { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelSelectMenuComponentData, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentType, VoiceChannel } from 'discord.js'
+import { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelSelectMenuComponentData, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentType, SlashCommandBuilder, VoiceChannel } from 'discord.js'
 import { updateJTC } from '../Database/databaseUtils'
 
 export default class SetJTC extends MainInteraction {
     constructor(client: Client) {
-        super(client, 'setjtc', {
-            name: 'setjtc',
-            description: 'shows jtc menu',
+        super(client, {
             type: 1,
-            options: null,
             permissions: [
-                'Administrator'
-            ]
+                'Administrator',
+                'ManageGuild'
+            ],
+            data: new SlashCommandBuilder()
+                .setName('setjtc')
+                .setDescription('shows jtc menu'),
         })
     }
 
