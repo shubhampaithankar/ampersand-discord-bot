@@ -10,6 +10,7 @@ import {
 export type InteractionConfig = {
     type: number
     permissions?: PermissionResolvable
+    category?: string
     data: ApplicationCommandDataResolvable
 }
 
