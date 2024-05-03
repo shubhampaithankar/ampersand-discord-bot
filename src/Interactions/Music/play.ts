@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 import { MainInteraction } from '../../Classes'
 import Client from '../../Client'
+import { SearchResult } from 'erela.js'
 
 export default class PlayInteraction extends MainInteraction {
     constructor(client: Client) {
@@ -42,7 +43,7 @@ export default class PlayInteraction extends MainInteraction {
 
         if (player.state !== 'CONNECTED') player.connect()
 
-        let res
+        let res: SearchResult | undefined
       
         try {
             res = await player.search(search, member.user.username)
@@ -50,8 +51,9 @@ export default class PlayInteraction extends MainInteraction {
                 if (!player.queue.current) player.destroy()
                 throw res.exception
             }
-        } catch (err: any) {
-            await interaction.reply(`There was an error while searching: \`${err.message}\``)
+        } catch (err) {
+            console.log(err)
+            await interaction.reply('There was an error while searching')
         }
 
         if (!res) return
@@ -76,14 +78,14 @@ export default class PlayInteraction extends MainInteraction {
       
             if (!player.playing && !player.paused && player.queue.totalSize === res.tracks.length) player.play()
                 
-            await interaction.reply(`Queued playlist \`${res.playlist?.name}\` with ${res.tracks.length} tracks`)
+            await interaction.reply(`Queued playlist \`${res.playlist!.name}\` with ${res.tracks.length} tracks`)
             break
         }
         case 'SEARCH_RESULT': {
             player.queue.add(res['tracks'][0])
             if (!player.playing && !player.paused && !player.queue.size) player.play()
                   
-            await interaction.reply(`Added \`${res['tracks'][0].title}\` to the queue`)
+            await interaction.reply(`Added \`${res.tracks[0].title}\` to the queue`)
             break
         }
         }
