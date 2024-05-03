@@ -9,10 +9,11 @@ export default class PlayInteraction extends MainInteraction {
             data: new SlashCommandBuilder()
                 .setName('play')
                 .setDescription('plays music in user\'s voice channel')
+                .addStringOption((option) => option.setName('song').setDescription('plays the song by name or url').setRequired(true))
         })
     }
 
-    run = async (interaction: ChatInputCommandInteraction) => {
+    run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
         const guild = this.client.guilds.cache.get(interaction.guildId!)
         if (!guild) return
 
@@ -25,15 +26,14 @@ export default class PlayInteraction extends MainInteraction {
             return
         }
   
-        const player = await this.client.utils.createMusicPlayer(guild.id, channel.id, interaction.channelId, true)
+        const player = await this.client.utils.getMusicPlayer(guild.id, channel.id, interaction.channelId, true)
         if (!player) return
 
         if (channel.id !== player.voiceChannel) {
             await interaction.reply('You\'re not in the same voice channel')
         }
 
-        const search = ''
-
+        const search = interaction.options.getString('song') || ''
         if (!search.length) {
             // Handle the case where the search term is missing
             await interaction.reply('Please enter a search term or URL')

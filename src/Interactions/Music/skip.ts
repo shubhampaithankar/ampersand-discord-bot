@@ -18,16 +18,16 @@ export default class SkipInteraction extends MainInteraction {
 
         const member = guild.members.cache.get(interaction.member!.user.id)
         if (!member) return
-        
-        const { channel } = member.voice
-        if (!channel) {
-            await interaction.reply('You need to join a voice channel')
-            return
-        }
   
-        const player = await this.client.utils.createMusicPlayer(guild.id, channel.id, interaction.channelId, false)
+        const player = await this.client.utils.getMusicPlayer(guild.id)
         if (!player) {
             await interaction.reply('No player found in any voice channels')
+            return
+        }
+
+        const { channel } = member.voice
+        if (!channel) {
+            await interaction.reply('You need to join the voice channel')
             return
         }
 

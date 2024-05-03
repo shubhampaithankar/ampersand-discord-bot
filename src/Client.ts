@@ -13,7 +13,6 @@ export default class BaseClient extends Client {
     shardEvents: Collection<string, MainShardEvent>
     musicEvents: Collection<string, MainMusicEvent>
     
-    
     database: mongoose.mongo.Db | null = null
     music: Manager | null = null
     manager: ShardingManager | null = null
