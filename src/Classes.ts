@@ -1,5 +1,5 @@
 import Client from './Client'
-import { ApplicationCommandDataResolvable, Message, PermissionResolvable, ShardingManager } from 'discord.js'
+import { ApplicationCommandDataResolvable, PermissionResolvable, ShardingManager } from 'discord.js'
 import { InteractionConfig, InteractionTypes } from './Types'
 import { Manager } from 'erela.js'
 
@@ -7,12 +7,14 @@ export class MainInteraction {
     client: Client
     type: number
     permissions?: PermissionResolvable
+    category?: string
     data: ApplicationCommandDataResolvable
 
     constructor(client: Client, config: InteractionConfig) {
         this.client = client
         this.type = config.type
         this.permissions = config.permissions
+        this.category = config.category || ''
         this.data = config.data
     }
 
@@ -22,7 +24,7 @@ export class MainInteraction {
         } catch (error) {}
     }
 
-    async followUp(interaction: any, ...args: string[]) {
+    async followUp(interaction: any, prevInteraction?: InteractionTypes) {
         try {
             throw new Error(`Interaction ${this.data} doesn't provide a run method!`)
         } catch (error) {}
