@@ -31,12 +31,12 @@ export default class SkipInteraction extends MainInteraction {
             return
         }
 
-        if (player.state === 'CONNECTED') {
+        if (player.isConnected) {
             if (player.voiceChannel !== channel.id) {
                 await interaction.reply('You\'re not in the same voice channel')
                 return
             }
-            if (!player.queue.current) {
+            if (!player.currentTrack) {
                 await interaction.reply('There is no music playing')
                 return
             }

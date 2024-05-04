@@ -1,4 +1,4 @@
-import { Node } from 'erela.js'
+import { Node } from 'poru'
 import { MainMusicEvent } from '../../Classes'
 import Client from '../../Client'
 
@@ -9,7 +9,7 @@ export default class NodeConnectEvent extends MainMusicEvent {
 
     async run(node: Node) {
         try {
-            console.log(`Node connected: ${node.connected}`)
+            console.log(`Node connected: ${node.options.name}`)
         } catch (error) {
             console.log(error)
         }

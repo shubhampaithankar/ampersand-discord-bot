@@ -38,16 +38,15 @@ export default class Utils {
         }
     }
 
-    getMusicPlayer = async (guild: string, voiceChannel?: string, textChannel?: string, create?: boolean) => {
-        let player = this.client.music?.get(guild)
+    getMusicPlayer = async (guildId: string, voiceChannel?: string, textChannel?: string, create?: boolean) => {
+        let player = this.client.music?.get(guildId)
 
         if (!player && voiceChannel && textChannel && create) {
-            player = await this.client.music?.create({
-                guild,
+            player = await this.client.music?.createConnection({
+                guildId,
                 voiceChannel,
                 textChannel,
-                selfDeafen: true,
-                volume: 10
+                deaf: true,
             })
         }
         return player

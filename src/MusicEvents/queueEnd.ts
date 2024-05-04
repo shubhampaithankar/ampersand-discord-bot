@@ -1,4 +1,4 @@
-import { Node, Player, Track } from 'erela.js'
+import { Node, Player, Track } from 'poru'
 import { MainMusicEvent } from '../Classes'
 import Client from '../Client'
 
@@ -11,10 +11,10 @@ export default class QueueEndEvent extends MainMusicEvent {
         try {
             if (player) {
                 setTimeout(async () => {
-                    const guildPlayer = await this.client.utils.getMusicPlayer(player.guild)
+                    const guildPlayer = await this.client.utils.getMusicPlayer(player.guildId)
                     if (!guildPlayer) return
 
-                    if (guildPlayer.queue.size === 0 && !guildPlayer.queueRepeat && !player.queue.current) guildPlayer.destroy()
+                    if (guildPlayer.queue.size === 0 && !guildPlayer.loop && !player.currentTrack) guildPlayer.destroy()
                 }, 1e3 * 180)
             }
         } catch (error) {

@@ -1,11 +1,12 @@
+import { Events } from 'discord.js'
 import { MainEvent } from '../Classes'
 import Client from '../Client'
 
 export default class ReadyEvent extends MainEvent {
     constructor (client: Client) {
-        super(client, 'ready', {
-            once: true
-        })
+        super(client, Events.ClientReady)
     }
-    async run() {}
+    run = async () => {
+        console.log('online')
+    }
 }

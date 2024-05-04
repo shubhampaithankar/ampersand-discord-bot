@@ -1,7 +1,8 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 import { MainInteraction } from '../../Classes'
 import Client from '../../Client'
-import { SearchResult } from 'erela.js'
+// import { SearchResult } from 'erela.js'
+import { Response } from 'poru'
 
 export default class PlayInteraction extends MainInteraction {
     constructor(client: Client) {
@@ -41,15 +42,18 @@ export default class PlayInteraction extends MainInteraction {
             return
         }
 
-        if (player.state !== 'CONNECTED') player.connect()
+        if (!player.isConnected) player.connect()
 
-        let res: SearchResult | undefined
+        let res: Response | undefined
       
         try {
-            res = await player.search(search, member.user.username)
-            if (res.loadType === 'LOAD_FAILED') {
-                if (!player.queue.current) player.destroy()
-                throw res.exception
+            res = await player.resolve({
+                query: search, 
+                requester: member.user.username
+            })
+            if (res.loadType === 'error') {
+                if (!player.currentTrack) player.destroy()
+                throw new Error('There was an error while resolving tracks')
             }
         } catch (err) {
             console.log(err)
@@ -57,36 +61,37 @@ export default class PlayInteraction extends MainInteraction {
         }
 
         if (!res) return
-      
+
+        console.log(res.loadType)
         switch (res.loadType) {
       
-        case 'NO_MATCHES': {
-            if (!player.queue.current) player.destroy()
-
-            await interaction.reply(`No results found for the term: **${search}**`)
-            break
-        }
-        case 'TRACK_LOADED': {
-            player.queue.add(res.tracks[0])
-            if (!player.playing && !player.paused && !player.queue.size) player.play()
-                  
-            await interaction.reply(`Added \`${res.tracks[0].title}\` to the queue`)
-            break
-        }
-        case 'PLAYLIST_LOADED': {
-            player.queue.add(res.tracks)
-      
-            if (!player.playing && !player.paused && player.queue.totalSize === res.tracks.length) player.play()
+        case 'empty': {
+            if (!player.currentTrack) player.destroy()
                 
-            await interaction.reply(`Queued playlist \`${res.playlist!.name}\` with ${res.tracks.length} tracks`)
-            break
+            await interaction.reply(`No results found for the term: **${search}**`)
+            return
         }
-        case 'SEARCH_RESULT': {
-            player.queue.add(res['tracks'][0])
-            if (!player.playing && !player.paused && !player.queue.size) player.play()
+        case 'track': {
+            player.queue.add(res.tracks[0])
+            if (!player.isPlaying && player.isConnected) player.play()
                   
-            await interaction.reply(`Added \`${res.tracks[0].title}\` to the queue`)
-            break
+            await interaction.reply(`Added \`${res.tracks[0].track}\` to the queue`)
+            return
+        }
+        case 'playlist': {
+            for (const track of res.tracks) player.queue.add(track)
+      
+            if (!player.isPlaying && player.isConnected && player.queue.size === res.tracks.length) player.play()
+                
+            await interaction.reply(`Queued playlist \`${res.playlistInfo.name}\` with ${res.tracks.length} tracks`)
+            return
+        }
+        case 'search': {
+            player.queue.add(res.tracks[0])
+            if (!player.isPlaying && player.isConnected) player.play()
+                  
+            await interaction.reply(`Added \`${res.tracks[0].info.title}\` to the queue`)
+            return
         }
         }
     }

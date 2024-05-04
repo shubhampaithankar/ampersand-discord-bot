@@ -27,10 +27,10 @@ export default class SkipInteraction extends MainInteraction {
   
         const player = await this.client.utils.getMusicPlayer(guild.id, channel.id, interaction.channelId, true)
 
-        if (player?.state === 'CONNECTED') {
-            if (player?.voiceChannel !== channel.id) {
+        if (player!.isConnected) {
+            if (player!.voiceChannel !== channel.id) {
                 await interaction.reply('There is a player already present in another voice channel')
             }
-        } else player?.connect()
+        } else player!.connect()
     }
 }

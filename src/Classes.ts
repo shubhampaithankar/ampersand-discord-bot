@@ -1,7 +1,8 @@
 import Client from './Client'
 import { ApplicationCommandDataResolvable, PermissionResolvable, ShardingManager } from 'discord.js'
 import { InteractionConfig, InteractionTypes } from './Types'
-import { Manager } from 'erela.js'
+// import { Manager } from 'erela.js'
+import { Poru } from 'poru'
 
 export class MainInteraction {
     client: Client
@@ -82,7 +83,7 @@ export class MainMusicEvent {
     client: Client
     name: string
     type: string
-    emitter: Manager | null
+    emitter: Poru | null
     constructor(client: Client, name: string, config: any = {}) {
         this.client = client
         this.name = name 

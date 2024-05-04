@@ -1,4 +1,4 @@
-import { Node } from 'erela.js'
+import { Node } from 'poru'
 import { MainMusicEvent } from '../../Classes'
 import Client from '../../Client'
 

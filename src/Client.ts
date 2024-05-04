@@ -1,6 +1,7 @@
 import { Client, Collection, ShardingManager } from 'discord.js'
 import { REST } from '@discordjs/rest'
-import { Manager } from 'erela.js'
+// import { Manager } from 'erela.js'
+import { Poru } from 'poru'
 import mongoose from 'mongoose'
 
 import { MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Classes'
@@ -14,7 +15,8 @@ export default class BaseClient extends Client {
     musicEvents: Collection<string, MainMusicEvent>
     
     database: mongoose.mongo.Db | null = null
-    music: Manager | null = null
+    // music: Manager | null = null
+    music: Poru | null = null
     manager: ShardingManager | null = null
 
     loader = new Loader(this)
@@ -39,9 +41,15 @@ export default class BaseClient extends Client {
     async initialize () {
         try {
             await super.login(process.env.DISCORD_TOKEN)
-            await this.loader.init()
-            
-            console.log(`Bot Online: ${this.user?.tag}`)
+
+            super.once('ready', async () => {
+                console.log(`Bot Online: ${this.user?.tag}`)
+
+                await this.loader.init()
+
+                if (this.music) this.music.init(this)
+            })
+
         } catch (error) {
             console.log(error)
         }

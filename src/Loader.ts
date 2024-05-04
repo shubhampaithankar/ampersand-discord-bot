@@ -3,7 +3,7 @@ import Client from './Client'
 import mongoose from 'mongoose'
 import { Guild, Routes, ShardingManager } from 'discord.js'
 import { readdirSync, lstatSync } from 'fs'
-import { Manager, Node } from 'erela.js'
+import { Poru } from 'poru'
 
 import { MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Classes'
 
@@ -41,7 +41,6 @@ export default class Loader {
 
             // await this.loadCommandHandler('./Commands')
 
-            if (this.client.music) this.client.music.init()
             if (this.client.manager) this.client.manager.spawn()
             
             await this.initJTC()
@@ -74,22 +73,37 @@ export default class Loader {
 
     loadMusic = async () => {
         try {
-            this.client.music = new Manager({
-                clientId: `${process.env.DISCORD_CLIENT_ID!}`,
-                defaultSearchPlatform: 'youtube',
-                nodes: [{
-                    host: `${process.env.LAVALINK_HOST!}`,
-                    port: Number(process.env.LAVALINK_PORT),
-                    password: `${process.env.LAVALINK_PASSWORD}`,
-                    secure: false,
-                    retryAmount: 5
-                }],
-                clientName: 'ampersand-discord-client',
-                send: (id, payload) => {
-                    const guild = this.client.guilds.cache.get(id)
-                    if(!guild) return
-                    guild.shard.send(payload)
-                },
+            // this.client.music = new Manager({  
+            //     nodes: [{
+            //         host: `${process.env.LAVALINK_HOST!}`,
+            //         port: Number(process.env.LAVALINK_PORT),
+            //         password: `${process.env.LAVALINK_PASSWORD}`,
+            //         secure: false,
+            //         retryAmount: 5,
+            //         version: 'v4',
+            //         useVersionPath: true,
+            //     }],
+            //     defaultSearchPlatform: 'ytmsearch',
+            //     volumeDecrementer: 0.75,
+            //     shards: this.client.ws.shards.size || 1,
+            //     clientId: `${process.env.DISCORD_CLIENT_ID!}`,
+            //     clientName: 'ampersand-discord-client',
+            //     plugins: [],
+            //     send: (id, payload) => {
+            //         const guild = this.client.guilds.cache.get(id)
+            //         if(!guild) return
+            //         guild.shard.send(payload)
+            //     },
+            // })
+            this.client.music = new Poru(this.client, [{                
+                host: `${process.env.LAVALINK_HOST!}`,
+                port: Number(process.env.LAVALINK_PORT),
+                password: `${process.env.LAVALINK_PASSWORD}`,
+                secure: false,
+                name: 'ampersand-discord-client',
+            }], {
+                library: 'discord.js',
+                defaultPlatform: 'ytmsearch',
             })
         } catch (error) {
             console.log('There was en error loading ErelaJS:\n',error)
