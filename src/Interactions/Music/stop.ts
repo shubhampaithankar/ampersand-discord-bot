@@ -9,7 +9,7 @@ export default class StopInteraction extends MainInteraction {
             category: 'Music',
             data: new SlashCommandBuilder()
                 .setName('stop')
-                .setDescription('stops the bot from playing and disonnect')
+                .setDescription('stops the bot from playing and disconnect')
         })
     }
 

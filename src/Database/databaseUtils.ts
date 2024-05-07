@@ -73,7 +73,7 @@ export const getMusic = async (guild: Guild) => {
     }
 }
 
-export const updateMusic = async (value: boolean, guildId: string, channel?: TextChannel) => {
+export const updateMusic = async (value: boolean, guildId: string, channel?: TextChannel, remove?: boolean) => {
     try {
         if (channel) {
             await musicSchema.findOneAndUpdate({

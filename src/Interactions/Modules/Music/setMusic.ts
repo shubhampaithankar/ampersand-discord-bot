@@ -1,8 +1,8 @@
-import Client from '../../Client'
-import { MainInteraction } from '../../Classes'
+import Client from '../../../Client'
+import { MainInteraction } from '../../../Classes'
 import { APIButtonComponent, ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentType, SlashCommandBuilder, TextChannel } from 'discord.js'
-import { musicSchema } from '../../Database/Schemas'
-import { updateMusic } from '../../Database/databaseUtils'
+import { musicSchema } from '../../../Database/Schemas'
+import { updateMusic } from '../../../Database/databaseUtils'
 
 export default class SetMusicInteraction extends MainInteraction {
     constructor(client: Client) {
