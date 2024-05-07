@@ -4,7 +4,12 @@ import {
     MentionableSelectMenuInteraction, Message, MessageComponentInteraction, MessageContextMenuCommandInteraction, 
     ModalSubmitInteraction, RoleSelectMenuInteraction, StringSelectMenuInteraction, 
     UserContextMenuCommandInteraction, UserSelectMenuInteraction, VoiceChannel, Collection, PermissionResolvable,
-    ApplicationCommandDataResolvable
+    ApplicationCommandDataResolvable,
+    EmbedAuthorOptions,
+    ColorResolvable,
+    EmbedFooterOptions,
+    APIEmbedField,
+    SlashCommandBuilder
 } from 'discord.js'
 
 export type InteractionConfig = {
@@ -19,3 +24,21 @@ export type InteractionTypes = ( AutocompleteInteraction | ButtonInteraction
     | MentionableSelectMenuInteraction | MessageComponentInteraction | MessageContextMenuCommandInteraction
     | ModalSubmitInteraction | RoleSelectMenuInteraction | StringSelectMenuInteraction | UserContextMenuCommandInteraction | UserSelectMenuInteraction ) 
     & { commandName?: string, customId?: string, message?: Message, channels?: Collection<string, VoiceChannel> }
+
+export type EmbedDataType = {
+    author: EmbedAuthorOptions;
+    title?: string;
+    description?: string;
+    color?: ColorResolvable; // Hex code for color
+    thumbnail?: string; // URL of the thumbnail image
+    image?: string; // URL of the image
+    footer?: EmbedFooterOptions;
+    fields?: APIEmbedField[];
+    timestamp?: Date | number;
+    url?: string;
+    [key: string]: any;
+}
+
+export type HelpInteractionType = {
+    [category: string]: SlashCommandBuilder[]
+}
