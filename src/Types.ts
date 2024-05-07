@@ -8,7 +8,8 @@ import {
     EmbedAuthorOptions,
     ColorResolvable,
     EmbedFooterOptions,
-    APIEmbedField
+    APIEmbedField,
+    SlashCommandBuilder
 } from 'discord.js'
 
 export type InteractionConfig = {
@@ -37,4 +38,7 @@ export type EmbedDataType = {
     url?: string;
     [key: string]: any;
 }
-  
+
+export type HelpInteractionType = {
+    [category: string]: SlashCommandBuilder[]
+}

@@ -1,4 +1,5 @@
-import { APIEmbedField, EmbedBuilder } from 'discord.js'
+import { EmbedBuilder } from 'discord.js'
+import { capitalize } from 'lodash'
 import BaseClient from './Client'
 import { EmbedDataType, InteractionTypes } from './Types'
 
@@ -83,5 +84,5 @@ export default class Utils {
         return embed
     }
       
-      
+    capitalizeString = (s: string) => s && s.length > 0 ? capitalize(s) : ''
 }
