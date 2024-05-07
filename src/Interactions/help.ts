@@ -45,7 +45,7 @@ export default class HelpInteraction extends MainInteraction {
 
             if (!query) {
                 categories.forEach(category => {
-                    const commandsString = interactions[category].map((item) => `\`${item.name}\``).join(' ')
+                    const commandsString = interactions[category !== 'misc' ? category : ''].map((item) => `\`${item.name}\``).join(' ')
                     embedData.fields!.push({
                         name: this.client.utils.capitalizeString(category),
                         value: commandsString
