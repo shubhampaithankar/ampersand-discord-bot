@@ -6,6 +6,7 @@ export default class SkipInteraction extends MainInteraction {
     constructor(client: Client) {
         super(client, {
             type: 1,
+            category: 'Music',
             data: new SlashCommandBuilder()
                 .setName('skip')
                 .setDescription('skips current track')

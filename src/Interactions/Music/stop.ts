@@ -6,9 +6,10 @@ export default class StopInteraction extends MainInteraction {
     constructor(client: Client) {
         super(client, {
             type: 1,
+            category: 'Music',
             data: new SlashCommandBuilder()
                 .setName('stop')
-                .setDescription('stops')
+                .setDescription('stops the bot from playing and disonnect')
         })
     }
 

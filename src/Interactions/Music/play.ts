@@ -8,6 +8,7 @@ export default class PlayInteraction extends MainInteraction {
     constructor(client: Client) {
         super(client, {
             type: 1,
+            category: 'Music',
             data: new SlashCommandBuilder()
                 .setName('play')
                 .setDescription('plays music in user\'s voice channel')
