@@ -1,6 +1,7 @@
-import { MainInteraction } from './Classes'
+import { EmbedBuilder } from 'discord.js'
+import { capitalize } from 'lodash'
 import BaseClient from './Client'
-import { InteractionTypes } from './Types'
+import { EmbedDataType, InteractionTypes } from './Types'
 
 export default class Utils {
     client: BaseClient
@@ -37,4 +38,51 @@ export default class Utils {
             return null
         }
     }
+
+    createMessageEmbed = async (data: EmbedDataType) => {
+        const embed = new EmbedBuilder()
+
+        Object.keys(data).forEach(key => {
+            if (data[key] !== undefined && data[key] !== null) {
+                switch (key) {
+                case 'author':
+                    embed.setAuthor(data['author'])
+                    break
+                case 'title':
+                    embed.setTitle(data['title']!)
+                    break
+                case 'description':
+                    embed.setDescription(data['description']!)
+                    break
+                case 'color':
+                    embed.setColor(data['color']!)
+                    break
+                case 'thumbnail':
+                    embed.setThumbnail(data['thumbnail']!)
+                    break
+                case 'image':
+                    embed.setImage(data['image']!)
+                    break
+                case 'footer':
+                    embed.setFooter(data['footer']!)
+                    break
+                case 'fields':
+                    embed.addFields(data['fields']!)
+                    break
+                case 'timestamp':
+                    embed.setTimestamp(data['timestamp'])
+                    break
+                case 'url':
+                    embed.setURL(data['url']!)
+                    break
+                default:
+                    // console.warn(`Unknown property: ${key}`)
+                }
+            }
+        })
+    
+        return embed
+    }
+      
+    capitalizeString = (s: string) => s && s.length > 0 ? capitalize(s) : ''
 }

@@ -9,9 +9,6 @@ export default class InviteInteraction extends MainInteraction {
             data: new SlashCommandBuilder()
                 .setName('invite')
                 .setDescription('sends an invite link for the bot'),
-
-
-
         })
     }
 

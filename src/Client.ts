@@ -18,6 +18,8 @@ export default class BaseClient extends Client {
     utils = new Utils(this)
 
     rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!) 
+
+    startTime: number
     
     jtcChannels: Collection<string, Set<string>>
 
@@ -30,14 +32,27 @@ export default class BaseClient extends Client {
         this.events = new Collection()
         this.shardEvents = new Collection()
         this.jtcChannels = new Collection()
+        this.startTime = Date.now()
     }
 
     async initialize () {
         try {
             await super.login(process.env.DISCORD_TOKEN)
             await this.loader.init()
+
+            
             
             console.log(`Bot Online: ${this.user?.tag}`)
+            console.log(`Up Since: ${new Date(this.startTime).toLocaleString('en-IN', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: '2-digit', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit', 
+                hour12: false, 
+                timeZone: 'Asia/Kolkata' 
+            })}`)
         } catch (error) {
             console.log(error)
         }
