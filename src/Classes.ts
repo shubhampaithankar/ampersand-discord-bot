@@ -25,7 +25,7 @@ export class MainInteraction {
         } catch (error) {}
     }
 
-    async followUp(interaction: any, prevInteraction?: InteractionTypes, ...args: string[]) {
+    async followUp(interaction: any, prevInteraction?: InteractionTypes, ...args: any[]) {
         try {
             throw new Error(`Interaction ${this.data} doesn't provide a run method!`)
         } catch (error) {}
