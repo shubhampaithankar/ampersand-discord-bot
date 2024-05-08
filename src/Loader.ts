@@ -84,26 +84,6 @@ export default class Loader {
         }
     }
 
-    connectToDB = async () => {
-        try {
-            const mongo = await mongoose.connect(process.env.MONGO_URL!)
-            this.client.database = mongo.connection.db
-        } catch (error) {
-            console.log('There was en error while connecting to database:\n',error)
-        }
-    }
-
-    initJTC = async () => {
-        try {
-            this.client.guilds.cache.forEach((guild: Guild) => {
-                if (this.client.jtcChannels.has(guild.id)) return
-                this.client.jtcChannels.set(guild.id, new Set([]))
-            })
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
     loadShardManager = async () => {
         try {
             this.client.manager = new ShardingManager('./Client.ts', {
@@ -135,6 +115,26 @@ export default class Loader {
             }
         } catch (error) {
             console.log('There was en error loading events:\n',error)
+        }
+    }
+
+    connectToDB = async () => {
+        try {
+            const mongo = await mongoose.connect(process.env.MONGO_URL!)
+            this.client.database = mongo.connection.db
+        } catch (error) {
+            console.log('There was en error while connecting to database:\n',error)
+        }
+    }
+
+    initJTC = async () => {
+        try {
+            this.client.guilds.cache.forEach((guild: Guild) => {
+                if (this.client.jtcChannels.has(guild.id)) return
+                this.client.jtcChannels.set(guild.id, new Set([]))
+            })
+        } catch (error) {
+            console.log(error)
         }
     }
 }
