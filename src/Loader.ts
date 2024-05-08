@@ -1,10 +1,11 @@
-import Client from './Client'
-import { Guild, Routes, ShardingManager } from 'discord.js'
-import mongoose from 'mongoose'
-import { readdirSync, lstatSync } from 'fs'
 import path from 'path'
+import Client from './Client'
+import mongoose from 'mongoose'
+import { Guild, Routes, ShardingManager } from 'discord.js'
+import { readdirSync, lstatSync } from 'fs'
+import { Poru } from 'poru'
 
-import { MainEvent, MainInteraction, MainShardEvent } from './Classes'
+import { MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Classes'
 
 export default class Loader {
     client: Client
@@ -15,29 +16,97 @@ export default class Loader {
 
     init = async () => {
         try {
+            await this.initJTC()
+
             await this.connectToDB()
             console.log(`Connected to database: ${this.client.database?.databaseName}`)
-    
+
+            await this.loadMusic()
+
+            await this.loadEventHandler('./Events')
+            console.log(`Loaded ${this.client.events.size} Event(s)`)
+
+            await this.loadMusicEventHandler('./MusicEvents')
+            console.log(`Loaded ${this.client.musicEvents.size} Music Event(s)`)
+
+            // await this.loadShardEventHandler('./ShardEvents')
+            // this.loadShardManager()
+            
             await this.loadInteractionHandler('./Interactions')
             const interactions = await this.client.interactions.map(interaction => interaction.data)
             await this.client.rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID!), {
                 body: interactions
             })
             console.log(`Loaded ${this.client.interactions.size} Interaction(s)`)
-    
-            await this.loadEventHandler('./Events')
-            console.log(`Loaded ${this.client.events.size} Event(s)`)
 
+            // await this.loadCommandHandler('./Commands')
+
+            if (this.client.manager) this.client.manager.spawn()
+            
             await this.initJTC()
 
-            // await this.loadShardManager()
-
-            // await this.loadShardEventHandler('./ShardEvents')
-
-            // if (this.client.manager) this.client.manager.spawn()
 
         } catch (error) {
             console.log('Loader Error:\n', error)
+        }
+    }
+
+    initJTC = async () => {
+        try {
+            this.client.guilds.cache.forEach((guild: Guild) => {
+                if (this.client.jtcChannels.has(guild.id)) return
+                this.client.jtcChannels.set(guild.id, new Set([]))
+            })
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    connectToDB = async () => {
+        try {
+            const mongo = await mongoose.connect(process.env.MONGO_URL!)
+            this.client.database = mongo.connection.db
+        } catch (error) {
+            console.log('There was en error while connecting to database:\n',error)
+        }
+    }
+
+    loadMusic = async () => {
+        try {
+            // this.client.music = new Manager({  
+            //     nodes: [{
+            //         host: `${process.env.LAVALINK_HOST!}`,
+            //         port: Number(process.env.LAVALINK_PORT),
+            //         password: `${process.env.LAVALINK_PASSWORD}`,
+            //         secure: false,
+            //         retryAmount: 5,
+            //         version: 'v4',
+            //         useVersionPath: true,
+            //     }],
+            //     defaultSearchPlatform: 'ytmsearch',
+            //     volumeDecrementer: 0.75,
+            //     shards: this.client.ws.shards.size || 1,
+            //     clientId: `${process.env.DISCORD_CLIENT_ID!}`,
+            //     clientName: 'ampersand-discord-client',
+            //     plugins: [],
+            //     send: (id, payload) => {
+            //         const guild = this.client.guilds.cache.get(id)
+            //         if(!guild) return
+            //         guild.shard.send(payload)
+            //     },
+            // })
+            this.client.music = new Poru(this.client, [{                
+                host: `${process.env.LAVALINK_HOST!}`,
+                port: Number(process.env.LAVALINK_PORT),
+                password: `${process.env.LAVALINK_PASSWORD}`,
+                secure: false,
+                name: 'ampersand-discord-client',
+            }], {
+                library: 'discord.js',
+                defaultPlatform: 'ytmsearch',
+            })
+        } catch (error) {
+            console.log('There was en error loading ErelaJS:\n',error)
         }
     }
 
@@ -84,6 +153,28 @@ export default class Loader {
         }
     }
 
+    loadMusicEventHandler = async (dir: string) => {
+        try {
+            const filePath = path.join(__dirname, dir)
+            const files = await readdirSync(filePath)
+            for (const eventFile of files) {
+                const stat = await lstatSync(path.join(filePath, eventFile))
+                if (stat.isDirectory()) await this.loadMusicEventHandler(path.join(dir, eventFile))
+                if (eventFile.endsWith('.ts')) {
+                    const { name } = path.parse(eventFile)
+                    const Event = await import(path.join(filePath, eventFile))
+                    if (Event.default?.prototype instanceof MainMusicEvent) {
+                        const event = new Event.default(this.client, name)
+                        event.emitter[event.type](name, (...args: any[]) => event.run(...args))
+                        this.client.musicEvents.set(name, event)
+                    }
+                }
+            }
+        } catch (error) {
+            console.log('There was en error loading music events:\n',error)
+        }
+    }
+
     loadShardManager = async () => {
         try {
             this.client.manager = new ShardingManager('./Client.ts', {
@@ -115,26 +206,6 @@ export default class Loader {
             }
         } catch (error) {
             console.log('There was en error loading events:\n',error)
-        }
-    }
-
-    connectToDB = async () => {
-        try {
-            const mongo = await mongoose.connect(process.env.MONGO_URL!)
-            this.client.database = mongo.connection.db
-        } catch (error) {
-            console.log('There was en error while connecting to database:\n',error)
-        }
-    }
-
-    initJTC = async () => {
-        try {
-            this.client.guilds.cache.forEach((guild: Guild) => {
-                if (this.client.jtcChannels.has(guild.id)) return
-                this.client.jtcChannels.set(guild.id, new Set([]))
-            })
-        } catch (error) {
-            console.log(error)
         }
     }
 }

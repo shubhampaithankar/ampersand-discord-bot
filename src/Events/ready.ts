@@ -8,7 +8,7 @@ export default class ReadyEvent extends MainEvent {
             once: true
         })
     }
-    async run() {
+    run = async () => {
         try {
 
             console.log(`Bot Online: ${this.client.user?.tag}`)

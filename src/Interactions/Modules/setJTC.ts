@@ -1,8 +1,7 @@
-import Client from '../Client'
-import { MainInteraction } from '../Classes'
-import { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelSelectMenuComponentData, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentType, SlashCommandBuilder, VoiceChannel } from 'discord.js'
-import { updateJTC } from '../Database/databaseUtils'
-import { InteractionTypes } from '../Types'
+import Client from '../../Client'
+import { MainInteraction } from '../../Classes'
+import { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentType, SlashCommandBuilder, VoiceChannel } from 'discord.js'
+import { updateJTC } from '../../Database/databaseUtils'
 
 export default class SetJTC extends MainInteraction {
     constructor(client: Client) {
@@ -44,14 +43,13 @@ export default class SetJTC extends MainInteraction {
     
     async followUp(interaction: ChannelSelectMenuInteraction, prevInteraction: ChatInputCommandInteraction) {
         try {
-            if (interaction.channels && interaction.channels?.size <= 0) {
-                await prevInteraction.editReply({
-                    content: 'Please select a channel',
-                    components: []
-                })
+            if (!interaction.channels) return
+
+            if (interaction.channels.size <= 0) {
+                await interaction.reply('Please select a channel')
                 return
             }
-            const channel = interaction.channels?.first() as VoiceChannel
+            const channel = interaction.channels.first() as VoiceChannel
             if (channel) {
                 await updateJTC(channel, true)
                 await prevInteraction.editReply({

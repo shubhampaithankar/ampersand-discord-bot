@@ -1,8 +1,10 @@
 import { Client, Collection, ShardingManager } from 'discord.js'
 import { REST } from '@discordjs/rest'
+// import { Manager } from 'erela.js'
+import { Poru } from 'poru'
 import mongoose from 'mongoose'
 
-import { MainEvent, MainInteraction, MainShardEvent } from './Classes'
+import { MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Classes'
 import Loader from './Loader'
 import Utils from './Utils'
 
@@ -10,8 +12,11 @@ export default class BaseClient extends Client {
     interactions: Collection<string, MainInteraction>
     events: Collection<string, MainEvent>
     shardEvents: Collection<string, MainShardEvent>
+    musicEvents: Collection<string, MainMusicEvent>
     
     database: mongoose.mongo.Db | null = null
+    // music: Manager | null = null
+    music: Poru | null = null
     manager: ShardingManager | null = null
 
     loader = new Loader(this)
@@ -30,6 +35,7 @@ export default class BaseClient extends Client {
         })
         this.interactions = new Collection()
         this.events = new Collection()
+        this.musicEvents = new Collection()
         this.shardEvents = new Collection()
         this.jtcChannels = new Collection()
         this.startTime = Date.now()

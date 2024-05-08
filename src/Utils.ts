@@ -39,6 +39,19 @@ export default class Utils {
         }
     }
 
+    getMusicPlayer = async (guildId: string, voiceChannel?: string, textChannel?: string, create?: boolean) => {
+        let player = this.client.music?.get(guildId)
+
+        if (!player && voiceChannel && textChannel && create) {
+            player = await this.client.music?.createConnection({
+                guildId,
+                voiceChannel,
+                textChannel,
+                deaf: true,
+            })
+        }
+        return player
+    }
     createMessageEmbed = async (data: EmbedDataType) => {
         const embed = new EmbedBuilder()
 

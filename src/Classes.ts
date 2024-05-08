@@ -1,6 +1,8 @@
 import Client from './Client'
 import { ApplicationCommandDataResolvable, PermissionResolvable, ShardingManager } from 'discord.js'
 import { InteractionConfig, InteractionTypes } from './Types'
+// import { Manager } from 'erela.js'
+import { Poru } from 'poru'
 
 export class MainInteraction {
     client: Client
@@ -23,7 +25,7 @@ export class MainInteraction {
         } catch (error) {}
     }
 
-    async followUp(interaction: any, prevInteraction?: InteractionTypes, ...args: string[]) {
+    async followUp(interaction: any, prevInteraction?: InteractionTypes, ...args: any[]) {
         try {
             throw new Error(`Interaction ${this.data} doesn't provide a run method!`)
         } catch (error) {}
@@ -49,7 +51,11 @@ export class MainEvent {
         this.emitter = this.client
     }
     async run(...args: any[]) {
-        throw new Error(`The run method has not been implemented in ${this.name}`)
+        try {
+            throw new Error(`The run method has not been implemented in ${this.name}`)
+        } catch (error) {
+            console.log(error)
+        }
     }
 }
 
@@ -65,6 +71,30 @@ export class MainShardEvent {
         this.emitter = this.client.manager
     }
     async run(...args: any[]) {
-        throw new Error(`The run method has not been implemented in ${this.name}`)
+        try {
+            throw new Error(`The run method has not been implemented in ${this.name}`)
+        } catch (error) {
+            console.log(error)
+        } 
+    }
+}
+
+export class MainMusicEvent {
+    client: Client
+    name: string
+    type: string
+    emitter: Poru | null
+    constructor(client: Client, name: string, config: any = {}) {
+        this.client = client
+        this.name = name 
+        this.type = (config && config.once) ? 'once' : 'on'
+        this.emitter = client.music || null
+    }
+    async run(...args: any[]) {
+        try {
+            throw new Error(`The run method has not been implemented in ${this.name}`)
+        } catch (error) {
+            console.log(error)
+        }
     }
 }

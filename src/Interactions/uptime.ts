@@ -3,7 +3,7 @@ import { MainInteraction } from '../Classes'
 import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 import moment from 'moment'
 
-export default class PingInteraction extends MainInteraction {
+export default class UptimeInteraction extends MainInteraction {
     constructor(client: Client) {
         super(client, {
             type: 1,

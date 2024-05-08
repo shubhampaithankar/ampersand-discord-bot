@@ -1,6 +1,7 @@
 import Client from '../../Client'
 import { MainEvent } from '../../Classes'
 import { InteractionTypes } from '../../Types'
+import { musicSchema } from '../../Database/Schemas'
 import { Events } from 'discord.js'
 
 export default class InteractionCreate extends MainEvent {
@@ -21,14 +22,40 @@ export default class InteractionCreate extends MainEvent {
                 return
             }
 
-            if (!baseInteraction.customId) interaction.run(baseInteraction)
+            if (!baseInteraction.customId) {
+                const guild = baseInteraction.guild!
+                switch (interaction.category) {
+                case 'Music': {
+                    const guildMusicData = await musicSchema.findOne({
+                        guildId: guild.id
+                    })
+                    if (!guildMusicData || !guildMusicData.enabled) {
+                        await interaction.reject(
+                            interaction, 
+                            `**Music Module* is \`Disabled\` for **${guild.name}**.\n Enable it by using the \`/setmusic\` command.`
+                        )
+                        return
+                    }
+                    const channel = guild.channels.cache.get(baseInteraction.channelId!)
+                    if (!channel) return
 
-            // const customId = `${baseInteraction.channelId}_${baseInteraction.id}`
-            // if (baseInteraction.customId && baseInteraction.customId === customId) {
-            //     console.log(baseInteraction.customId)
-            //     interaction.followUp(baseInteraction)
-            //     return
-            // }
+                    if (!guildMusicData.channelIds.includes(channel.id)) {
+                        await interaction.reject(
+                            interaction, 
+                            `**${channel.name}** is \`not present\` in music database for **${guild.name}**.\n Add it by using the \`/addmusicchannel\` command.`
+                        )
+                        return
+                    }
+                    break
+                }
+                    
+                
+                default: break
+                }
+
+                await interaction.run(baseInteraction)
+                
+            }
 
         } catch (error) {
             console.log(error)

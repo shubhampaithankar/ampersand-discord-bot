@@ -1,5 +1,5 @@
-import { Guild, VoiceChannel } from 'discord.js'
-import { guildSchema, jtcSchema } from './Schemas'
+import { Guild, TextChannel, VoiceChannel } from 'discord.js'
+import { guildSchema, jtcSchema, musicSchema } from './Schemas'
 
 export const getGuildData = async (guild: Guild) => {
     try {
@@ -61,5 +61,41 @@ export const updateJTC = async (channel: VoiceChannel, value: boolean) => {
         })
     } catch (error) {
         console.log('Database Error: while updating JTC data:\n', error)
+    }
+}
+
+export const getMusic = async (guild: Guild) => {
+    try {
+        const data = await musicSchema.findOne({ guildId: guild.id })
+        return data?.toObject() || null
+    } catch (error) {
+        console.log('Database Error: while finding music data:\n', error)
+    }
+}
+
+export const updateMusic = async (value: boolean, guildId: string, channel?: TextChannel, remove?: boolean) => {
+    try {
+        if (channel) {
+            await musicSchema.findOneAndUpdate({
+                guildId: guildId,
+            }, {
+                $addToSet: {
+                    channelIds: channel.id
+                },
+                enabled: value
+            }, {
+                upsert: true
+            })
+        } else {
+            await musicSchema.findOneAndUpdate({
+                guildId: guildId,
+            }, {
+                enabled: value
+            }, {
+                upsert: true
+            })
+        }
+    } catch (error) {
+        console.log('Database Error: while updating music data:\n', error)
     }
 }
