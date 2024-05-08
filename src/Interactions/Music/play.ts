@@ -1,7 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 import { MainInteraction } from '../../Classes'
 import Client from '../../Client'
-// import { SearchResult } from 'erela.js'
 import { Response } from 'poru'
 
 export default class PlayInteraction extends MainInteraction {

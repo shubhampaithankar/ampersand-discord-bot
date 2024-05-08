@@ -40,8 +40,6 @@ export default class Loader {
             console.log(`Loaded ${this.client.interactions.size} Interaction(s)`)
 
             // await this.loadCommandHandler('./Commands')
-
-            if (this.client.manager) this.client.manager.spawn()
             
             await this.initJTC()
 
@@ -73,28 +71,6 @@ export default class Loader {
 
     loadMusic = async () => {
         try {
-            // this.client.music = new Manager({  
-            //     nodes: [{
-            //         host: `${process.env.LAVALINK_HOST!}`,
-            //         port: Number(process.env.LAVALINK_PORT),
-            //         password: `${process.env.LAVALINK_PASSWORD}`,
-            //         secure: false,
-            //         retryAmount: 5,
-            //         version: 'v4',
-            //         useVersionPath: true,
-            //     }],
-            //     defaultSearchPlatform: 'ytmsearch',
-            //     volumeDecrementer: 0.75,
-            //     shards: this.client.ws.shards.size || 1,
-            //     clientId: `${process.env.DISCORD_CLIENT_ID!}`,
-            //     clientName: 'ampersand-discord-client',
-            //     plugins: [],
-            //     send: (id, payload) => {
-            //         const guild = this.client.guilds.cache.get(id)
-            //         if(!guild) return
-            //         guild.shard.send(payload)
-            //     },
-            // })
             this.client.music = new Poru(this.client, [{                
                 host: `${process.env.LAVALINK_HOST!}`,
                 port: Number(process.env.LAVALINK_PORT),
@@ -106,7 +82,7 @@ export default class Loader {
                 defaultPlatform: 'ytmsearch',
             })
         } catch (error) {
-            console.log('There was en error loading ErelaJS:\n',error)
+            console.log('There was en error loading Poru:\n',error)
         }
     }
 

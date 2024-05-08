@@ -1,6 +1,5 @@
 import { Client, Collection, ShardingManager } from 'discord.js'
 import { REST } from '@discordjs/rest'
-// import { Manager } from 'erela.js'
 import { Poru } from 'poru'
 import mongoose from 'mongoose'
 
@@ -43,22 +42,9 @@ export default class BaseClient extends Client {
 
     async initialize () {
         try {
-            await super.login(process.env.DISCORD_TOKEN)
             await this.loader.init()
-
             
-            
-            console.log(`Bot Online: ${this.user?.tag}`)
-            console.log(`Up Since: ${new Date(this.startTime).toLocaleString('en-IN', { 
-                day: '2-digit', 
-                month: '2-digit', 
-                year: '2-digit', 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit', 
-                hour12: false, 
-                timeZone: 'Asia/Kolkata' 
-            })}`)
+            await super.login(process.env.DISCORD_TOKEN)
         } catch (error) {
             console.log(error)
         }

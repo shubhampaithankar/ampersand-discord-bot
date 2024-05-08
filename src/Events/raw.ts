@@ -1,7 +1,6 @@
 import { Events } from 'discord.js'
 import { MainEvent } from '../Classes'
 import Client from '../Client'
-// import { VoiceState, VoicePacket, VoiceServer } from 'erela.js'
 
 export default class RawEvent extends MainEvent {
     constructor (client: Client) {

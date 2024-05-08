@@ -1,7 +1,6 @@
 import Client from './Client'
 import { ApplicationCommandDataResolvable, PermissionResolvable, ShardingManager } from 'discord.js'
 import { InteractionConfig, InteractionTypes } from './Types'
-// import { Manager } from 'erela.js'
 import { Poru } from 'poru'
 
 export class MainInteraction {
