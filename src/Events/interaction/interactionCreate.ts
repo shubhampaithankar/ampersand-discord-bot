@@ -2,10 +2,11 @@ import Client from '../../Client'
 import { MainEvent } from '../../Classes'
 import { InteractionTypes } from '../../Types'
 import { musicSchema } from '../../Database/Schemas'
+import { Events } from 'discord.js'
 
 export default class InteractionCreate extends MainEvent {
     constructor (client: Client) {
-        super(client, 'interactionCreate')
+        super(client, Events.InteractionCreate)
     }
     async run(baseInteraction: InteractionTypes) {
         try {
