@@ -8,3 +8,6 @@ export const jtcSchema = model('joinToCreate', JTCSchema, 'joinToCreate')
 
 import MusicSchema from './MusicSchema'
 export const musicSchema = model('music', MusicSchema, 'music')
+
+import JTCChannelsSchema from './JTCChannelsSchema'
+export const jtcChannelsSchema = model('jtcChannels', JTCChannelsSchema, 'jtcChannels')
