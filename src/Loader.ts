@@ -9,6 +9,7 @@ import { MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Cl
 
 export default class Loader {
     client: Client
+    allowedFileExtensions = '.ts,.js'.split(',')
 
     constructor (client: Client) {
         this.client = client
@@ -73,28 +74,6 @@ export default class Loader {
 
     loadMusic = async () => {
         try {
-            // this.client.music = new Manager({  
-            //     nodes: [{
-            //         host: `${process.env.LAVALINK_HOST!}`,
-            //         port: Number(process.env.LAVALINK_PORT),
-            //         password: `${process.env.LAVALINK_PASSWORD}`,
-            //         secure: false,
-            //         retryAmount: 5,
-            //         version: 'v4',
-            //         useVersionPath: true,
-            //     }],
-            //     defaultSearchPlatform: 'ytmsearch',
-            //     volumeDecrementer: 0.75,
-            //     shards: this.client.ws.shards.size || 1,
-            //     clientId: `${process.env.DISCORD_CLIENT_ID!}`,
-            //     clientName: 'ampersand-discord-client',
-            //     plugins: [],
-            //     send: (id, payload) => {
-            //         const guild = this.client.guilds.cache.get(id)
-            //         if(!guild) return
-            //         guild.shard.send(payload)
-            //     },
-            // })
             this.client.music = new Poru(this.client, [{                
                 host: `${process.env.LAVALINK_HOST!}`,
                 port: Number(process.env.LAVALINK_PORT),
@@ -117,7 +96,7 @@ export default class Loader {
             for (const intFile of files) {
                 const stat = await lstatSync(path.join(filePath, intFile))
                 if (stat.isDirectory()) await this.loadInteractionHandler(path.join(dir, intFile)) // Await recursive call
-                if (intFile.endsWith('.ts')) {
+                if (this.allowedFileExtensions.some(ext => intFile.endsWith(ext))) {
                     const name = path.parse(intFile).name.toLowerCase()
                     const Interaction = await import(path.join(filePath, intFile))
                     if (Interaction.default?.prototype instanceof MainInteraction) {
@@ -138,7 +117,7 @@ export default class Loader {
             for (const eventFile of files) {
                 const stat = await lstatSync(path.join(filePath, eventFile))
                 if (stat.isDirectory()) await this.loadEventHandler(path.join(dir, eventFile))
-                if (eventFile.endsWith('.ts')) {
+                if (this.allowedFileExtensions.some(ext => eventFile.endsWith(ext))) {
                     const { name } = path.parse(eventFile)
                     const Event = await import(path.join(filePath, eventFile))
                     if (Event.default?.prototype instanceof MainEvent) {
@@ -160,7 +139,7 @@ export default class Loader {
             for (const eventFile of files) {
                 const stat = await lstatSync(path.join(filePath, eventFile))
                 if (stat.isDirectory()) await this.loadMusicEventHandler(path.join(dir, eventFile))
-                if (eventFile.endsWith('.ts')) {
+                if (this.allowedFileExtensions.some(ext => eventFile.endsWith(ext))) {
                     const { name } = path.parse(eventFile)
                     const Event = await import(path.join(filePath, eventFile))
                     if (Event.default?.prototype instanceof MainMusicEvent) {
@@ -194,7 +173,7 @@ export default class Loader {
             for (const eventFile of files) {
                 const stat = await lstatSync(path.join(filePath, eventFile))
                 if (stat.isDirectory()) await this.loadShardEventHandler(path.join(dir, eventFile))
-                if (eventFile.endsWith('.ts')) {
+                if (this.allowedFileExtensions.some(ext => eventFile.endsWith(ext))) {
                     const { name } = path.parse(eventFile)
                     const Event = await import(path.join(filePath, eventFile))
                     if (Event.default?.prototype instanceof MainShardEvent) {
