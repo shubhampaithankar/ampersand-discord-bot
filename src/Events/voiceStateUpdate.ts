@@ -58,7 +58,7 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
   
                 setTimeout(async () => {
                     try {
-                        if (channel && newState.member) {
+                        if (channel && newState.member && newState.member.voice) {
                             try {
                                 await newState.member.voice.setChannel(channel)
                                 await updateJTCChannels(channel, true)
@@ -105,7 +105,7 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
                         if (channel && channel.members.size === 0) {
                             try {
                                 await channel.delete()
-                                await updateJTCChannels(channel, false)
+                                if (jtcChannel) await updateJTCChannels(channel, false)
                                 if (guildJtc?.has(channel.id)) {
                                     guildJtc?.delete(channel.id)
                                     client.jtcChannels.set(guild.id, guildJtc)

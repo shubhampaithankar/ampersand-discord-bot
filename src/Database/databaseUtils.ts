@@ -68,9 +68,7 @@ export const getJTCChannel = async (channel: VoiceBasedChannel) => {
     try {
         const data = await jtcChannelsSchema.findOne({ 
             guildId: channel.guild.id,
-            $where: function() {
-                return this.channelIds.includes(channel.id)
-            }
+            channelId: { $in: [channel.id] }
         })
         return data?.toObject() || null
     } catch (error) {
@@ -83,7 +81,7 @@ export const updateJTCChannels = async (channel: VoiceChannel, add: boolean) => 
         const query = { guildId: channel.guildId }
         const update = add
             ? { $push: { channelId: channel.id } }
-            : { $pop: { channelId: channel.id } }
+            : { $pull: { channelId: channel.id } }
     
         await jtcChannelsSchema.findOneAndUpdate(query, update, { upsert: true })
     } catch (error) {
