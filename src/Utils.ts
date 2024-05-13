@@ -1,4 +1,4 @@
-import { EmbedBuilder } from 'discord.js'
+import { ChannelType, EmbedBuilder, Guild, GuildBasedChannel, PermissionResolvable, TextChannel } from 'discord.js'
 import { capitalize } from 'lodash'
 import BaseClient from './Client'
 import { EmbedDataType, InteractionTypes } from './Types'
@@ -52,6 +52,7 @@ export default class Utils {
         }
         return player
     }
+
     createMessageEmbed = async (data: EmbedDataType) => {
         const embed = new EmbedBuilder()
 
@@ -97,5 +98,43 @@ export default class Utils {
         return embed
     }
       
+    checkPermissions = async (guild: Guild, permissions: PermissionResolvable, channel?: GuildBasedChannel) => {
+        try {          
+            const bot = guild.members.cache.get(this.client.user!.id)
+            if (!bot) return false
+    
+            const general = guild.channels.cache.find(channel => channel.type === ChannelType.GuildText && channel.name.toLowerCase() === 'general') as TextChannel
+            const isGeneralAllowed = general ? general.permissionsFor(bot).has(['ViewChannel', 'SendMessages', 'SendMessagesInThreads']) : false
+    
+            // const permissionsString = `\`${permissions.toString()}\``
+    
+            if (channel) {
+                const channelPermissions = channel.permissionsFor(bot)
+                if (channelPermissions) {
+                    const isChannelAllowed = channelPermissions.has(permissions)
+                    if (!isChannelAllowed) {
+                        const missingPermissions = channelPermissions.missing(permissions)
+                        if (!isGeneralAllowed) return false
+                        await general.send(`**Not enough permissions. Missing:** ${missingPermissions.map(perm => `\`${perm}\``).join(', ')}`)
+                        return false
+                    }
+                }
+            } else {
+                if (!bot.permissions.has(permissions)) {
+                    const missingPermissions = bot.permissions.missing(permissions)
+                    if (!isGeneralAllowed) return false
+                    await general.send(`**Not enough permissions. Missing:** ${missingPermissions.map(perm => `\`${perm}\``).join(', ')}`)
+                    return false
+                }
+            }
+            return true
+        } catch (error) {
+            console.log('Error in checkPermissions:', error)
+            return false
+        }
+    }
+    
+      
+
     capitalizeString = (s: string) => s && s.length > 0 ? capitalize(s) : ''
 }

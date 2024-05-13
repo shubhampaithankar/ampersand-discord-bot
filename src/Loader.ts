@@ -9,6 +9,7 @@ import { MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Cl
 
 export default class Loader {
     client: Client
+    allowedFileExtensions = '.ts,.js'.split(',')
 
     constructor (client: Client) {
         this.client = client
@@ -93,7 +94,7 @@ export default class Loader {
             for (const intFile of files) {
                 const stat = await lstatSync(path.join(filePath, intFile))
                 if (stat.isDirectory()) await this.loadInteractionHandler(path.join(dir, intFile)) // Await recursive call
-                if (intFile.endsWith('.ts')) {
+                if (this.allowedFileExtensions.some(ext => intFile.endsWith(ext))) {
                     const name = path.parse(intFile).name.toLowerCase()
                     const Interaction = await import(path.join(filePath, intFile))
                     if (Interaction.default?.prototype instanceof MainInteraction) {
@@ -114,7 +115,7 @@ export default class Loader {
             for (const eventFile of files) {
                 const stat = await lstatSync(path.join(filePath, eventFile))
                 if (stat.isDirectory()) await this.loadEventHandler(path.join(dir, eventFile))
-                if (eventFile.endsWith('.ts')) {
+                if (this.allowedFileExtensions.some(ext => eventFile.endsWith(ext))) {
                     const { name } = path.parse(eventFile)
                     const Event = await import(path.join(filePath, eventFile))
                     if (Event.default?.prototype instanceof MainEvent) {
@@ -136,7 +137,7 @@ export default class Loader {
             for (const eventFile of files) {
                 const stat = await lstatSync(path.join(filePath, eventFile))
                 if (stat.isDirectory()) await this.loadMusicEventHandler(path.join(dir, eventFile))
-                if (eventFile.endsWith('.ts')) {
+                if (this.allowedFileExtensions.some(ext => eventFile.endsWith(ext))) {
                     const { name } = path.parse(eventFile)
                     const Event = await import(path.join(filePath, eventFile))
                     if (Event.default?.prototype instanceof MainMusicEvent) {
@@ -170,7 +171,7 @@ export default class Loader {
             for (const eventFile of files) {
                 const stat = await lstatSync(path.join(filePath, eventFile))
                 if (stat.isDirectory()) await this.loadShardEventHandler(path.join(dir, eventFile))
-                if (eventFile.endsWith('.ts')) {
+                if (this.allowedFileExtensions.some(ext => eventFile.endsWith(ext))) {
                     const { name } = path.parse(eventFile)
                     const Event = await import(path.join(filePath, eventFile))
                     if (Event.default?.prototype instanceof MainShardEvent) {
