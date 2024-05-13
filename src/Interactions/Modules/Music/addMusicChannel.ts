@@ -10,7 +10,6 @@ export default class AddMusicChannelInteraction extends MainInteraction {
             type: 1,
             category: 'Modules',
             permissions: [
-                'Administrator',
                 'ManageGuild'
             ],
             data: new SlashCommandBuilder()

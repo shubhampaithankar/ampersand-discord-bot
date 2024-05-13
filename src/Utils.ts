@@ -1,4 +1,4 @@
-import { ChannelType, EmbedBuilder, Guild, GuildBasedChannel, PermissionResolvable, TextChannel } from 'discord.js'
+import { ChannelType, EmbedBuilder, Guild, GuildBasedChannel, GuildMember, PermissionResolvable, TextChannel } from 'discord.js'
 import { capitalize } from 'lodash'
 import BaseClient from './Client'
 import { EmbedDataType, InteractionTypes } from './Types'
@@ -40,101 +40,115 @@ export default class Utils {
     }
 
     getMusicPlayer = async (guildId: string, voiceChannel?: string, textChannel?: string, create?: boolean) => {
-        let player = this.client.music?.get(guildId)
+        try {
+            if (!guildId) return null
 
-        if (!player && voiceChannel && textChannel && create) {
-            player = await this.client.music?.createConnection({
-                guildId,
-                voiceChannel,
-                textChannel,
-                deaf: true,
-            })
+            let player = this.client.music?.get(guildId)
+    
+            if (!player && voiceChannel && textChannel && create) {
+                player = await this.client.music?.createConnection({
+                    guildId,
+                    voiceChannel,
+                    textChannel,
+                    deaf: true,
+                })
+            }
+            return player
+        } catch (error) {
+            console.error('Error in getting music player:', error)
+            return null
         }
-        return player
     }
 
     createMessageEmbed = async (data: EmbedDataType) => {
-        const embed = new EmbedBuilder()
+        try {
+            const embed = new EmbedBuilder()
 
-        Object.keys(data).forEach(key => {
-            if (data[key] !== undefined && data[key] !== null) {
-                switch (key) {
-                case 'author':
-                    embed.setAuthor(data['author'])
-                    break
-                case 'title':
-                    embed.setTitle(data['title']!)
-                    break
-                case 'description':
-                    embed.setDescription(data['description']!)
-                    break
-                case 'color':
-                    embed.setColor(data['color']!)
-                    break
-                case 'thumbnail':
-                    embed.setThumbnail(data['thumbnail']!)
-                    break
-                case 'image':
-                    embed.setImage(data['image']!)
-                    break
-                case 'footer':
-                    embed.setFooter(data['footer']!)
-                    break
-                case 'fields':
-                    embed.addFields(data['fields']!)
-                    break
-                case 'timestamp':
-                    embed.setTimestamp(data['timestamp'])
-                    break
-                case 'url':
-                    embed.setURL(data['url']!)
-                    break
-                default:
-                    // console.warn(`Unknown property: ${key}`)
-                }
-            }
-        })
-    
-        return embed
-    }
-      
-    checkPermissions = async (guild: Guild, permissions: PermissionResolvable, channel?: GuildBasedChannel) => {
-        try {          
-            const bot = guild.members.cache.get(this.client.user!.id)
-            if (!bot) return false
-    
-            const general = guild.channels.cache.find(channel => channel.type === ChannelType.GuildText && channel.name.toLowerCase() === 'general') as TextChannel
-            const isGeneralAllowed = general ? general.permissionsFor(bot).has(['ViewChannel', 'SendMessages', 'SendMessagesInThreads']) : false
-    
-            // const permissionsString = `\`${permissions.toString()}\``
-    
-            if (channel) {
-                const channelPermissions = channel.permissionsFor(bot)
-                if (channelPermissions) {
-                    const isChannelAllowed = channelPermissions.has(permissions)
-                    if (!isChannelAllowed) {
-                        const missingPermissions = channelPermissions.missing(permissions)
-                        if (!isGeneralAllowed) return false
-                        await general.send(`**Not enough permissions. Missing:** ${missingPermissions.map(perm => `\`${perm}\``).join(', ')}`)
-                        return false
+            Object.keys(data).forEach(key => {
+                if (data[key] !== undefined && data[key] !== null) {
+                    switch (key) {
+                    case 'author':
+                        embed.setAuthor(data['author'])
+                        break
+                    case 'title':
+                        embed.setTitle(data['title']!)
+                        break
+                    case 'description':
+                        embed.setDescription(data['description']!)
+                        break
+                    case 'color':
+                        embed.setColor(data['color']!)
+                        break
+                    case 'thumbnail':
+                        embed.setThumbnail(data['thumbnail']!)
+                        break
+                    case 'image':
+                        embed.setImage(data['image']!)
+                        break
+                    case 'footer':
+                        embed.setFooter(data['footer']!)
+                        break
+                    case 'fields':
+                        embed.addFields(data['fields']!)
+                        break
+                    case 'timestamp':
+                        embed.setTimestamp(data['timestamp'])
+                        break
+                    case 'url':
+                        embed.setURL(data['url']!)
+                        break
+                    default:
+                        // console.warn(`Unknown property: ${key}`)
                     }
                 }
+            })
+        
+            return embed
+        } catch (error) {
+            console.error('Error in creating message embed:', error)
+            return null
+        }
+    }
+      
+    checkPermissions = async (member: GuildMember, permissions: PermissionResolvable, guild: Guild, sendGeneral: boolean, channel?: GuildBasedChannel) => {
+        let isAllowed: boolean = false
+        let missingPermissions: string[] = []
+        try {          
+
+            const general = guild.channels.cache.find(channel => channel.type === ChannelType.GuildText && channel.name.toLowerCase() === 'general') as TextChannel
+            const isGeneralAllowed = sendGeneral && general ? general.permissionsFor(member).has(['ViewChannel', 'SendMessages'], true) : false
+    
+            if (channel) {
+                const channelPermissions = channel.permissionsFor(member)
+                const isChannelAllowed = channelPermissions.has(permissions, true)
+                
+                if (!isChannelAllowed) {
+                    missingPermissions = channelPermissions.missing(permissions)
+                    if (isGeneralAllowed) {
+                        await general.send(this.getMissingPermsString(missingPermissions))
+                    }
+                    isAllowed = false
+                }
+
             } else {
-                if (!bot.permissions.has(permissions)) {
-                    const missingPermissions = bot.permissions.missing(permissions)
-                    if (!isGeneralAllowed) return false
-                    await general.send(`**Not enough permissions. Missing:** ${missingPermissions.map(perm => `\`${perm}\``).join(', ')}`)
-                    return false
+                if (!member.permissions.has(permissions)) {
+                    missingPermissions = member.permissions.missing(permissions)
+                    if (isGeneralAllowed) {
+                        await general.send(this.getMissingPermsString(missingPermissions))
+                    }
+                    isAllowed = false
                 }
             }
-            return true
+
+            return { isAllowed, missingPermissions }
+            
         } catch (error) {
-            console.log('Error in checkPermissions:', error)
-            return false
+            console.log('Error in chekcing permissions:', error)
+            return { isAllowed, missingPermissions }
         }
     }
     
-      
-
     capitalizeString = (s: string) => s && s.length > 0 ? capitalize(s) : ''
+
+    getMissingPermsString = (missingPermissions: string[]) => `**Not enough permissions. Missing:** ${missingPermissions.map(perm => `\`${perm}\``).join(', ')}`
 }

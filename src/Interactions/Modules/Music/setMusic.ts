@@ -9,7 +9,6 @@ export default class SetMusicInteraction extends MainInteraction {
         super(client, {
             type: 1,
             permissions: [
-                'Administrator',
                 'ManageGuild'
             ],
             category: 'Modules',

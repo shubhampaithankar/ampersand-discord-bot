@@ -85,6 +85,7 @@ export default class HelpInteraction extends MainInteraction {
             }
 
             const embed = await this.client.utils.createMessageEmbed(embedData)
+            if (!embed) throw new Error('There was an error in Help command')
 
             await interaction.reply({
                 embeds: [embed]

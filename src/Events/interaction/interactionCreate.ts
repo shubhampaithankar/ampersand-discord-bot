@@ -11,19 +11,29 @@ export default class InteractionCreate extends MainEvent {
     async run(baseInteraction: InteractionTypes) {
         try {
 
+            if (!baseInteraction.inGuild()) return
+            const guild = baseInteraction.guild!
+
+            const bot = guild.members.cache.get(this.client.user!.id!)
+            if (!bot) return
+
             const commandName: string | null = baseInteraction.message?.interaction?.commandName || baseInteraction.commandName || null
             if (!commandName) return
             
             const interaction = this.client.interactions.get(commandName)
             if (!interaction) return 
 
-            if (interaction.permissions && !baseInteraction.memberPermissions?.has(interaction.permissions)) {
+            if (interaction.permissions) {
+                const { isAllowed, missingPermissions } = await this.client.utils.checkPermissions(bot, interaction.permissions, guild, false)
+                if (!isAllowed) await interaction.reject(baseInteraction, this.client.utils.getMissingPermsString(missingPermissions))
+            }
+
+            if (interaction.permissions && !baseInteraction.memberPermissions?.has(interaction.permissions, true)) {
                 interaction.reject(baseInteraction, `You do not have the required permissions: ${interaction.permissions.toString()} to use this command.`)
                 return
             }
 
             if (!baseInteraction.customId) {
-                const guild = baseInteraction.guild!
                 switch (interaction.category) {
                 case 'Music': {
                     const guildMusicData = await musicSchema.findOne({

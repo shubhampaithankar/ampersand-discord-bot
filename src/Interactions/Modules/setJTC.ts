@@ -8,7 +8,6 @@ export default class SetJTC extends MainInteraction {
         super(client, {
             type: 1,
             permissions: [
-                'Administrator',
                 'ManageGuild'
             ],
             category: 'Modules',
