@@ -33,6 +33,7 @@ export default class PlayInteraction extends MainInteraction {
 
         if (channel.id !== player.voiceChannel) {
             await interaction.reply('You\'re not in the same voice channel')
+            return
         }
 
         const search = interaction.options.getString('song') || ''
@@ -60,9 +61,11 @@ export default class PlayInteraction extends MainInteraction {
             await interaction.reply('There was an error while searching')
         }
 
-        if (!res) return
+        if (!res) {
+            await interaction.reply(`No results found for the term: **${search}**`)
+            return
+        }
 
-        console.log(res.loadType)
         switch (res.loadType) {
       
         case 'empty': {

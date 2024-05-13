@@ -1,9 +1,12 @@
 import path from 'path'
 import Client from './Client'
 import mongoose from 'mongoose'
+
 import { Guild, Routes, ShardingManager } from 'discord.js'
 import { readdirSync, lstatSync } from 'fs'
+
 import { Poru } from 'poru'
+import { Spotify } from 'poru-spotify'
 
 import { MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Classes'
 
@@ -40,11 +43,6 @@ export default class Loader {
             })
             console.log(`Loaded ${this.client.interactions.size} Interaction(s)`)
 
-            // await this.loadCommandHandler('./Commands')
-            
-            await this.initJTC()
-
-
         } catch (error) {
             console.log('Loader Error:\n', error)
         }
@@ -80,7 +78,13 @@ export default class Loader {
                 name: 'ampersand-discord-client',
             }], {
                 library: 'discord.js',
-                defaultPlatform: 'ytmsearch',
+                defaultPlatform: 'ytsearch',
+                plugins: [
+                    // new Spotify({
+                    //     clientID: `${process.env.SPOTIFY_CLIENT_ID}`,
+                    //     clientSecret: `${process.env.SPOTIFY_CLIENT_SECRET}`,
+                    // })
+                ]
             })
         } catch (error) {
             console.log('There was en error loading Poru:\n',error)

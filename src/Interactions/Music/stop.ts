@@ -36,6 +36,7 @@ export default class StopInteraction extends MainInteraction {
             if (player.voiceChannel !== channel.id) {
                 await interaction.reply('You\'re not in the same voice channel')
             }
+            await interaction.reply('Stopped playing')
             player.destroy()
         }
     }

@@ -42,6 +42,7 @@ export default class SkipInteraction extends MainInteraction {
                 return
             }
             player.stop()
+            await interaction.reply(`Skipped current track: \`${player.currentTrack.info.title}\``)
             return
         }
     }
