@@ -40,8 +40,10 @@ export default class AddMusicChannelInteraction extends MainInteraction {
             const collected = await this.client.utils.createInteractionCollector(interaction, ComponentType.ChannelSelect, 1, customId) as ChannelSelectMenuInteraction
             if (collected) return await this.followUp(collected, interaction, guildMusicData?.enabled)
 
-        } catch (error) {
-            console.log(error)
+        } catch (error: any) {
+            console.log('There was an error in AddMusicChannel command: ', error)
+            await interaction.reply(`There was an error \`${error.message}\``)
+            return
         }
     }
   
@@ -71,8 +73,10 @@ export default class AddMusicChannelInteraction extends MainInteraction {
                     // Handle error appropriately (e.g., log to remote service, display user message)
                 }
             }
-        } catch (error) {
-            console.log(error)
+        } catch (error: any) {
+            console.log('There was an error in AddMusicChannel command follow-up: ', error)
+            await interaction.reply(`There was an error \`${error.message}\``)
+            return
         }
     }
 }

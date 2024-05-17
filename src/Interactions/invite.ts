@@ -13,7 +13,13 @@ export default class InviteInteraction extends MainInteraction {
     }
 
     async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
-        const URI = `https://discord.com/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&permissions=8&scope=bot`
-        interaction.reply(URI)
+        try {
+            const URI = `https://discord.com/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&permissions=8&scope=bot`
+            await interaction.reply(URI)
+        } catch (error: any) {
+            console.log('There was an error in Invite command: ', error)
+            await interaction.reply(`There was an error \`${error.message}\``)
+            return
+        }
     }
 }

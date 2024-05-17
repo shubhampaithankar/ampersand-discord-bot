@@ -22,7 +22,7 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
         const bot = guild.members.cache.get(client.user!.id!)
         if (!bot) return
 
-        const { isAllowed } = await client.utils.checkPermissions(bot, ['ManageChannels', 'ManageRoles', 'MoveMembers'], guild, true)
+        const { isAllowed } = await client.utils.checkPermissionsFor(bot, ['ManageChannels', 'ManageRoles', 'MoveMembers'], guild, true)
         if (!isAllowed) return
 
         const jtcData = await getJTC(guild)
@@ -37,7 +37,7 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
             if (newState.channelId === jtcData.channelId) {
 
                 const jtcChannel = guild.channels.cache.get(jtcData.channelId) as VoiceChannel
-                const { isAllowed: isJTCChannelAllowed } = await client.utils.checkPermissions(bot, 'ViewChannel', guild, true, jtcChannel)
+                const { isAllowed: isJTCChannelAllowed } = await client.utils.checkPermissionsFor(bot, 'ViewChannel', guild, true, jtcChannel)
 
                 if (!jtcChannel || !isJTCChannelAllowed) return
 
@@ -45,7 +45,7 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
                 
                 if (jtcChannel.parent) {
                     
-                    const { isAllowed: isParentAllowed } = await client.utils.checkPermissions(bot, 'ViewChannel', guild, true, jtcChannel.parent)
+                    const { isAllowed: isParentAllowed } = await client.utils.checkPermissionsFor(bot, 'ViewChannel', guild, true, jtcChannel.parent)
                     if (!isParentAllowed) return
 
                     channel = await jtcChannel.parent.children.create({

@@ -92,8 +92,10 @@ export default class HelpInteraction extends MainInteraction {
             })
 
             return 
-        } catch (error) {
-            console.log(error)
+        } catch (error: any) {
+            console.log('There was an error in Help command: ', error)
+            await interaction.reply(`There was an error \`${error.message}\``)
+            return
         }
     }
 }

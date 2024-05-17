@@ -34,9 +34,10 @@ export default class SetJTC extends MainInteraction {
             const collected = await this.client.utils.createInteractionCollector(interaction, ComponentType.ChannelSelect, 1, customId) as ChannelSelectMenuInteraction
             if (collected) return await this.followUp(collected, interaction)
 
-        } catch (error) {
-            console.log(error)
-            await interaction.reply('There was an error, please try again later')
+        } catch (error: any) {
+            console.log('There was an error in SetJTC command: ', error)
+            await interaction.reply(`There was an error \`${error.message}\``)
+            return
         }
     }
     
@@ -56,12 +57,13 @@ export default class SetJTC extends MainInteraction {
                     components: []
                 })
             }
-        } catch (error) {
-            console.log(error)
+        } catch (error: any) {
+            console.log('There was an error in SetJTC command: ', error)
             await prevInteraction.editReply({
-                content: 'There was an error, please try again later',
+                content: `There was an error \`${error.message}\``,
                 components: []
             }) 
+            return
         }
     }
 }
