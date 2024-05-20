@@ -22,7 +22,7 @@ export default class ClearQueueInteraction extends MainInteraction {
             if (!member) return
       
             const player = await this.client.utils.getMusicPlayer(guild.id)
-            if (!player) {
+            if (!player || !player.isConnected) {
                 await interaction.reply('No player found in any voice channels')
                 return
             }

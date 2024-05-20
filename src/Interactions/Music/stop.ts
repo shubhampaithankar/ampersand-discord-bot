@@ -22,7 +22,7 @@ export default class StopInteraction extends MainInteraction {
             if (!member) return
     
             const player = await this.client.utils.getMusicPlayer(guild.id)
-            if (!player) {
+            if (!player || !player.isConnected) {
                 await interaction.reply('No player found in any voice channels')
                 return
             }
@@ -33,13 +33,12 @@ export default class StopInteraction extends MainInteraction {
                 return
             }
     
-            if (player.isConnected) {
-                if (player.voiceChannel !== channel.id) {
-                    await interaction.reply('You\'re not in the same voice channel')
-                }
-                await interaction.reply('Stopped playing')
-                player.destroy()
+            if (player.voiceChannel !== channel.id) {
+                await interaction.reply('You\'re not in the same voice channel')
             }
+            await interaction.reply('Stopped playing')
+            player.destroy()
+            
         } catch (error: any) {
             console.log('There was an error in Stop command: ', error)
             await interaction.reply(`There was an error \`${error.message}\``)

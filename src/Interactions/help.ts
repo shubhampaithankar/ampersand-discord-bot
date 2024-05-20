@@ -16,10 +16,9 @@ export default class HelpInteraction extends MainInteraction {
 
     async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
         try {
-            // eslint-disable-next-line prefer-const
-            let embedData: EmbedDataType = {
+            const embedData: EmbedDataType = {
                 author: {
-                    name: 'Ampersand Bot',
+                    name: this.client.user!.displayName,
                     iconURL: this.client.user?.avatarURL() || undefined
                 },
                 color: 'Aqua',

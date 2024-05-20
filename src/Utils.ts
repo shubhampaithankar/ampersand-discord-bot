@@ -1,7 +1,8 @@
-import { ChannelType, EmbedBuilder, Guild, GuildBasedChannel, GuildMember, PermissionResolvable, TextChannel } from 'discord.js'
+import { ChannelType, EmbedBuilder, Guild, GuildBasedChannel, GuildMember, InteractionCollector, PermissionResolvable, TextChannel } from 'discord.js'
 import { capitalize } from 'lodash'
 import BaseClient from './Client'
 import { EmbedDataType, InteractionTypes } from './Types'
+import moment from 'moment'
 
 export default class Utils {
     client: BaseClient
@@ -9,13 +10,22 @@ export default class Utils {
         this.client = client
     }
 
-    createInteractionCollector = async (interaction: InteractionTypes, componentType: any, max: number, customId: string) => {
+    createInteractionCollector = async (interaction: InteractionTypes, componentType: any, max: number, customId: string | string[]) => {
         try {
-            const collector = interaction.channel?.createMessageComponentCollector({
-                filter: i => i.customId === customId,
-                componentType,
-                max,
-            })
+            let collector: InteractionCollector<any> | undefined
+            if (typeof customId === 'string') {
+                collector = interaction.channel?.createMessageComponentCollector({
+                    filter: i => i.customId === customId,
+                    componentType,
+                    max,
+                })
+            } else if (Array.isArray(customId)) {
+                collector = interaction.channel?.createMessageComponentCollector({
+                    filter: i => customId.includes(i.customId),
+                    componentType,
+                    max,
+                })
+            } 
 
             return new Promise((resolve, reject) => {
                 if (!collector) {
@@ -149,6 +159,23 @@ export default class Utils {
         } catch (error) {
             console.error('Error in getting music player:', error)
             return null
+        }
+    }
+
+    formatDuration = (milliseconds: number) => {
+        try {
+            const duration = moment.duration(milliseconds)
+    
+            let formattedDuration = ''
+            if (duration.hours() > 0) {
+                formattedDuration += duration.hours().toString().padStart(2, '0') + ':'
+            }
+            formattedDuration += duration.minutes().toString().padStart(2, '0') + ':' + duration.seconds().toString().padStart(2, '0')
+        
+            return formattedDuration
+        } catch (error) {
+            console.error('Error in formatting duration:', error)
+            return ''
         }
     }
 }

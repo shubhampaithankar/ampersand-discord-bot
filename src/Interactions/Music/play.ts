@@ -30,7 +30,10 @@ export default class PlayInteraction extends MainInteraction {
             }
       
             const player = await this.client.utils.getMusicPlayer(guild.id, channel.id, interaction.channelId, true)
-            if (!player) return
+            if (!player) {
+                await interaction.reply('There was an error while creating a player')
+                return
+            }
     
             if (channel.id !== player.voiceChannel) {
                 await interaction.reply('You\'re not in the same voice channel')

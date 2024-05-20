@@ -9,7 +9,7 @@ export default class NodeErrorEvent extends MainMusicEvent {
 
     async run(node: Node, error: Error) {
         try {
-            // console.log(`Manager Error on Node: ${node.options.identifier}`)
+            console.log(`Manager Error on Node: ${node.poru.userId}`)
             // console.log(error.stack)
         } catch (error) {
             console.log(error)

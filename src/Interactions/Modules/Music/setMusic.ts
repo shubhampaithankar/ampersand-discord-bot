@@ -1,8 +1,7 @@
 import Client from '../../../Client'
 import { MainInteraction } from '../../../Classes'
 import { APIButtonComponent, ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentType, SlashCommandBuilder, TextChannel } from 'discord.js'
-import { musicSchema } from '../../../Database/Schemas'
-import { updateMusic } from '../../../Database/databaseUtils'
+import { getMusic, updateMusic } from '../../../Database/databaseUtils'
 
 export default class SetMusicInteraction extends MainInteraction {
     constructor(client: Client) {
@@ -20,7 +19,7 @@ export default class SetMusicInteraction extends MainInteraction {
   
     async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
         try {
-            const guildMusicData = await musicSchema.findOne({ guildId: interaction.guildId })
+            const guildMusicData = await getMusic(interaction.guild!)
             const isEnabled = guildMusicData && guildMusicData.enabled
   
             const name = isEnabled ? 'Disable' : 'Enable'
@@ -89,8 +88,13 @@ export default class SetMusicInteraction extends MainInteraction {
                                 })
                             }
                         
-                        } catch (error) {
-                            console.log(error)
+                        } catch (error: any) {
+                            console.log('There was an error in SetMusic command follow-up: ', error)
+                            await prevInteraction.editReply({
+                                content: `There was an error \`${error.message}\``,
+                                components: []
+                            }) 
+                            return
                         }
 
                         await inter.reply({
@@ -110,8 +114,12 @@ export default class SetMusicInteraction extends MainInteraction {
                                     content: `Disabled **Music module** for \`${inter.guild!.name}\``,
                                     components: [],
                                 })
-                            } catch (error) {
+                            } catch (error: any) {
                                 console.error('Error disabling music:', error)
+                                await prevInteraction.editReply({
+                                    content: `There was an error \`${error.message}\``,
+                                    components: []
+                                })
                             }
                         }
                     }
@@ -133,19 +141,26 @@ export default class SetMusicInteraction extends MainInteraction {
                     const channel = inter.channels.first() as TextChannel
                     if (channel && inter.guildId) {
                         try {
-                            await updateMusic(true, inter.guildId) // Add error handling
+                            await updateMusic(true, inter.guildId)
                             return await prevInter.editReply({
                                 content: `Enabled **Music module** and successfully set \`${channel.name}\` as Music Commands Input Channel`,
                                 components: [],
                             })
-                        } catch (error) {
+                        } catch (error: any) {
                             console.error('Error enabling music:', error)
-                        // Handle error appropriately (e.g., log to remote service, display user message)
+                            await prevInteraction.editReply({
+                                content: `There was an error \`${error.message}\``,
+                                components: []
+                            })
                         }
                     }
                     break
                 }
                 default: {
+                    await prevInteraction.editReply({
+                        content: 'Invalid input, please try again',
+                        components: []
+                    })
                     return
                 }
             }

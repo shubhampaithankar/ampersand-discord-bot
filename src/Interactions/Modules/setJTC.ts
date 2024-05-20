@@ -49,6 +49,7 @@ export default class SetJTC extends MainInteraction {
                 await interaction.reply('Please select a channel')
                 return
             }
+
             const channel = interaction.channels.first() as VoiceChannel
             if (channel) {
                 await updateJTC(channel, true)
@@ -56,7 +57,9 @@ export default class SetJTC extends MainInteraction {
                     content: `Enabled **Join To Create** module and successfully set \`${channel.name}\` as join to create Channel`,
                     components: []
                 })
+                return
             }
+            
         } catch (error: any) {
             console.log('There was an error in SetJTC command: ', error)
             await prevInteraction.editReply({
