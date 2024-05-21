@@ -36,7 +36,7 @@ export default class AddMusicChannelInteraction extends MainInteraction {
                 ephemeral: true
             })
 
-            const collected = await this.client.utils.createInteractionCollector(interaction, customId, ComponentType.ChannelSelect, 1) as ChannelSelectMenuInteraction
+            const collected = await this.client.utils.createInteractionCollector(interaction, customId, ComponentType.ChannelSelect, undefined, 1) as ChannelSelectMenuInteraction
             if (collected) return await this.followUp(collected, interaction, guildMusicData?.enabled)
 
         } catch (error: any) {

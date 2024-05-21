@@ -44,7 +44,7 @@ export default class SetMusicInteraction extends MainInteraction {
                 ephemeral: true
             })
   
-            const collected = await this.client.utils.createInteractionCollector(interaction, customId, ComponentType.Button, 1) as ButtonInteraction
+            const collected = await this.client.utils.createInteractionCollector(interaction, customId, ComponentType.Button, undefined, 1) as ButtonInteraction
             if (collected) return await this.followUp(collected, interaction, name)
 
         } catch (error: any) {
@@ -103,7 +103,7 @@ export default class SetMusicInteraction extends MainInteraction {
                             ephemeral: true
                         })
   
-                        const collected = await this.client.utils.createInteractionCollector(inter, customId, ComponentType.ChannelSelect, 1) as ChannelSelectMenuInteraction
+                        const collected = await this.client.utils.createInteractionCollector(inter, customId, ComponentType.ChannelSelect, undefined, 1) as ChannelSelectMenuInteraction
                         if (collected) return await this.followUp(collected, interaction, name)
 
                     } else {

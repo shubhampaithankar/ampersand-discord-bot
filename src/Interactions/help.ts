@@ -25,7 +25,7 @@ export default class HelpInteraction extends MainInteraction {
                 title: 'Help Command',
                 timestamp: Date.now(),
                 footer: {
-                    text: interaction.member!.user.username
+                    text: interaction.member!.user.username,
                 },
                 fields: []
             }

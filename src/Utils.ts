@@ -10,7 +10,7 @@ export default class Utils {
         this.client = client
     }
 
-    createInteractionCollector = async (interaction: InteractionTypes, customId: string | string[], componentType: MessageComponentType, max?: number, time?: number) => {
+    createInteractionCollector = async (interaction: InteractionTypes, customId: string | string[], componentType: MessageComponentType, endCallback?: () => unknown, max?: number, time?: number) => {
         try {
             let collector: InteractionCollector<any> | undefined
             if (typeof customId === 'string') {
@@ -43,7 +43,7 @@ export default class Utils {
                     reject(error)
                 })
 
-                collector.on('end', () => {})
+                collector.on('end', typeof endCallback === 'function' ? endCallback : () => {})
             })
         } catch (error) {
             console.error('Error in interaction collector:', error)

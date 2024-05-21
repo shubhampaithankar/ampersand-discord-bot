@@ -10,7 +10,6 @@ export default class QueueInteraction extends MainInteraction {
             data: new SlashCommandBuilder()
                 .setName('queue')
                 .setDescription('shows the current queue')
-                // .addNumberOption(option => option.setName('page').setDescription('queue page number').setRequired(false))
         })
     }
 
@@ -42,7 +41,7 @@ export default class QueueInteraction extends MainInteraction {
             
             const { currentTrack } = player
             
-            const tracks = player.queue.map((track, i)=> `**${i + 1}.** - [${track.info.title}](${track.info.uri || ''}) - \`${this.client.utils.formatDuration(track.info.length)}\` • @${track.info.requester}`)
+            const tracks = player.queue.map((track, i)=> `**${i + 1}.** - [${track.info.title}](${track.info.uri || ''}) - \`${this.client.utils.formatDuration(track.info.length)}\` • ${track.info.requester}`)
             const queueDuration = `${this.client.utils.formatDuration(tracks.reduce((acc, curr) => acc + curr.length, 0))}`
             
             const pages: EmbedBuilder[] = []
@@ -58,11 +57,11 @@ export default class QueueInteraction extends MainInteraction {
                     color: 'Blue',
                     title: 'Queue Command',
                     description: `
-                        **Now Playing:**\n[${currentTrack.info.title}](${currentTrack.info.uri || ''}) - \`${this.client.utils.formatDuration(currentTrack.info.length)}\` • @${currentTrack.info.requester}\n
+                        **Now Playing:**\n[${currentTrack.info.title}](${currentTrack.info.uri || ''}) - \`${this.client.utils.formatDuration(currentTrack.info.length)}\` • ${currentTrack.info.requester}\n
                         ${str == '' ? ' Nothing' : '\n' + str}
                     `,
                     footer: {
-                        text: `${i + 1} / ${pagesNumber} • Total Duration ${queueDuration}`
+                        text: `${i + 1} / ${pagesNumber} • Total Duration ${queueDuration} • ${interaction.member!.user.username}`
                     }
                 })
                 pages.push(page!)
@@ -70,30 +69,25 @@ export default class QueueInteraction extends MainInteraction {
 
             const prevCustomId = `${interaction.channelId}_${interaction.id}_prevPage`
             const nextCustomId =`${interaction.channelId}_${interaction.id}_nextPage`
-            const button1 = new ButtonBuilder()
-                .setLabel('Previous')
-                .setStyle(ButtonStyle.Secondary)
-                .setCustomId(prevCustomId)
+            const cancelCustomId =`${interaction.channelId}_${interaction.id}_cancel`
 
-            const button2 = new ButtonBuilder()
-                .setLabel('Next')
-                .setStyle(ButtonStyle.Secondary)
-                .setCustomId(nextCustomId)
+            const prevButton = this.createButton('Previous', ButtonStyle.Secondary, prevCustomId)
+            const nextButton = this.createButton('Next', ButtonStyle.Secondary, nextCustomId)
+            const cancelButton = this.createButton('Cancel', ButtonStyle.Secondary, cancelCustomId)
+            
 
             const buttonRow = new ActionRowBuilder<ButtonBuilder>()
-                .addComponents(button1, button2)
+                .addComponents(prevButton, nextButton, cancelButton)
 
             const moreThanOne = pagesNumber > 1
 
-            // Send the initial page with buttons
             await interaction.reply({ embeds: [pages[0]], components: moreThanOne ? [buttonRow] : undefined })
 
             if (!moreThanOne) return 
 
-            const collected = await this.client.utils.createInteractionCollector(interaction,[prevCustomId, nextCustomId], ComponentType.Button, 1) as ButtonInteraction
-            if (collected) {
-                await this.followUp(collected, interaction, pages, 0)
-            }
+            const collected = await this.client.utils.createInteractionCollector(interaction,[prevCustomId, nextCustomId], ComponentType.Button) as ButtonInteraction
+            if (collected) await this.followUp(collected, interaction, pages, 0)
+            
             return
 
             
@@ -107,58 +101,60 @@ export default class QueueInteraction extends MainInteraction {
 
     followUp = async (interaction: ButtonInteraction, prevInteraction: ChatInputCommandInteraction, pages: EmbedBuilder[], currentPage: number) => {
         try {
+            await interaction.deferUpdate()
+      
             const type = interaction.customId.split('_')[2]
+      
             let pageNumber: number
-            let customId: string
+            let customIdToUpdate: string
 
             const prevCustomId = `${prevInteraction.channelId}_${prevInteraction.id}_prevPage`
-            const nextCustomId =`${prevInteraction.channelId}_${prevInteraction.id}_nextPage`
-            const button1 = new ButtonBuilder()
-                .setLabel('Previous')
-                .setStyle(ButtonStyle.Secondary)
-                .setCustomId(prevCustomId)
+            const nextCustomId = `${prevInteraction.channelId}_${prevInteraction.id}_nextPage`
+            const cancelCustomId =`${interaction.channelId}_${interaction.id}_cancel`
 
-            const button2 = new ButtonBuilder()
-                .setLabel('Next')
-                .setStyle(ButtonStyle.Secondary)
-                .setCustomId(nextCustomId)
+            const prevButton = this.createButton('Previous', ButtonStyle.Secondary, prevCustomId)
+            const nextButton = this.createButton('Next', ButtonStyle.Secondary, nextCustomId)
+            const cancelButton = this.createButton('Cancel', ButtonStyle.Secondary, cancelCustomId)
 
+            prevButton.setDisabled(currentPage === 0)
+            nextButton.setDisabled(currentPage === pages.length - 1)
+      
             const buttonRow = new ActionRowBuilder<ButtonBuilder>()
-                .addComponents(button1, button2)
-
+                .addComponents(prevButton, nextButton, cancelButton)
+      
             switch (type) {
                 case 'prevPage': {
-                    
-                    customId = interaction.message.components[0].components[0].customId as string
-                    pageNumber = currentPage - 1 // Go to last page if on first page
-
+                    pageNumber = currentPage === 0 ? pages.length - 1 : currentPage - 1
+                    customIdToUpdate = nextCustomId // Update the 'Next' button
+      
                     await prevInteraction.editReply({ embeds: [pages[pageNumber]], components: [buttonRow] })
                     break
                 }
                 case 'nextPage': {
-                    
-                    customId = interaction.message.components[0].components[1].customId as string
-                    pageNumber = currentPage + 1 // Go to first page if on last page
-
+                    pageNumber = currentPage === pages.length - 1 ? 0 : currentPage + 1
+                    customIdToUpdate = prevCustomId // Update the 'Previous' button
+      
                     await prevInteraction.editReply({ embeds: [pages[pageNumber]], components: [buttonRow] })
                     break
                 }
                 default: {
-                    console.error('Invalid button type:', type) // Log error for debugging
+                    console.error('Invalid button type:', type)
                     await interaction.reply('Invalid button type')
                     return
                 }
             }
-            const collected = await this.client.utils.createInteractionCollector(interaction, customId, ComponentType.Button, undefined, 60000) as ButtonInteraction
+      
+            const collected = await this.client.utils.createInteractionCollector(interaction, customIdToUpdate, ComponentType.Button) as ButtonInteraction
             if (collected) {
                 await this.followUp(collected, prevInteraction, pages, pageNumber)
                 return
             }
-    
         } catch (error: any) {
             console.log('There was an error in Queue command followUp: ', error)
             await interaction.reply(`There was an error \`${error.message}\``)
             return
         }
     }
+    
+    createButton = (label: string, style: ButtonStyle, customId: string) => new ButtonBuilder({label,style,customId})
 }
