@@ -43,7 +43,7 @@ export default class InteractionCreate extends MainEvent {
                         if (!guildMusicData || !guildMusicData.enabled) {
                             await interaction.reject(
                                 interaction, 
-                                `**Music Module* is \`Disabled\` for **${guild.name}**.\n Enable it by using the \`/setmusic\` command.`
+                                `**Music Module** is \`Disabled\` for **${guild.name}**.\n Enable it by using the \`/setmusic\` command.`
                             )
                             return
                         }

@@ -1,4 +1,4 @@
-import { ChannelType, EmbedBuilder, Guild, GuildBasedChannel, GuildMember, InteractionCollector, PermissionResolvable, TextChannel } from 'discord.js'
+import { ChannelType, ComponentType, EmbedBuilder, Guild, GuildBasedChannel, GuildMember, InteractionCollector, MessageComponentType, PermissionResolvable, TextChannel } from 'discord.js'
 import { capitalize } from 'lodash'
 import BaseClient from './Client'
 import { EmbedDataType, InteractionTypes } from './Types'
@@ -10,7 +10,7 @@ export default class Utils {
         this.client = client
     }
 
-    createInteractionCollector = async (interaction: InteractionTypes, componentType: any, max: number, customId: string | string[]) => {
+    createInteractionCollector = async (interaction: InteractionTypes, customId: string | string[], componentType: MessageComponentType, max?: number, time?: number) => {
         try {
             let collector: InteractionCollector<any> | undefined
             if (typeof customId === 'string') {
@@ -18,12 +18,14 @@ export default class Utils {
                     filter: i => i.customId === customId,
                     componentType,
                     max,
+                    time
                 })
             } else if (Array.isArray(customId)) {
                 collector = interaction.channel?.createMessageComponentCollector({
                     filter: i => customId.includes(i.customId),
                     componentType,
                     max,
+                    time
                 })
             } 
 
