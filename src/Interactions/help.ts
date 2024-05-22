@@ -16,17 +16,16 @@ export default class HelpInteraction extends MainInteraction {
 
     async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
         try {
-            // eslint-disable-next-line prefer-const
-            let embedData: EmbedDataType = {
+            const embedData: EmbedDataType = {
                 author: {
-                    name: 'Ampersand Bot',
+                    name: this.client.user!.displayName,
                     iconURL: this.client.user?.avatarURL() || undefined
                 },
                 color: 'Aqua',
                 title: 'Help Command',
                 timestamp: Date.now(),
                 footer: {
-                    text: interaction.member!.user.username
+                    text: interaction.member!.user.username,
                 },
                 fields: []
             }
@@ -85,14 +84,17 @@ export default class HelpInteraction extends MainInteraction {
             }
 
             const embed = await this.client.utils.createMessageEmbed(embedData)
+            if (!embed) throw new Error('There was an error in Help command')
 
             await interaction.reply({
                 embeds: [embed]
             })
 
             return 
-        } catch (error) {
-            console.log(error)
+        } catch (error: any) {
+            console.log('There was an error in Help command: ', error)
+            await interaction.reply(`There was an error \`${error.message}\``)
+            return
         }
     }
 }

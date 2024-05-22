@@ -2,14 +2,14 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 import { MainInteraction } from '../../Classes'
 import Client from '../../Client'
 
-export default class SkipInteraction extends MainInteraction {
+export default class ShuffleInteraction extends MainInteraction {
     constructor(client: Client) {
         super(client, {
             type: 1,
             category: 'Music',
             data: new SlashCommandBuilder()
-                .setName('skip')
-                .setDescription('skips current track')
+                .setName('shuffle')
+                .setDescription('shuffles the queue')
         })
     }
 
@@ -41,12 +41,14 @@ export default class SkipInteraction extends MainInteraction {
                 await interaction.reply('There is no music playing')
                 return
             }
-            player.stop()
-            await interaction.reply(`Skipped current track: \`${player.currentTrack.info.title}\``)
+
+            // player.set(`beforeShuffle_${guild.id}`, player.queue.map(track => track))
+            player.queue.shuffle()
+            await interaction.reply('\'Shuffle the queue\'')
             return
 
         } catch (error: any) {
-            console.log('There was an error in Skip command: ', error)
+            console.log('There was an error in Shuffle command: ', error)
             await interaction.reply(`There was an error \`${error.message}\``)
             return
         }

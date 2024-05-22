@@ -1,4 +1,4 @@
-import { Events } from 'discord.js'
+import { ActivityType, Events } from 'discord.js'
 import { MainEvent } from '../Classes'
 import Client from '../Client'
 
@@ -10,7 +10,6 @@ export default class ReadyEvent extends MainEvent {
     }
     run = async () => {
         try {
-
             console.log(`Bot Online: ${this.client.user?.tag}`)
 
             console.log(`Up Since: ${new Date(this.client.startTime).toLocaleString('en-IN', { 
@@ -24,6 +23,28 @@ export default class ReadyEvent extends MainEvent {
                 timeZone: 'Asia/Kolkata' 
             })}`)
 
+            this.client.loader.initJTC()
+
+            if (this.client.manager) await this.client.manager.spawn({
+                amount: 'auto'
+            })
+            
+            if (this.client.music) await this.client.music.init(this.client)
+
+            this.client.user?.setPresence({
+                status: 'dnd',
+                activities: [
+                    {
+                        name: `${this.client.guilds.cache.size} Guilds`,
+                        type: ActivityType.Competing,
+                    },
+                    {
+                        name: '/invite',
+                        type: ActivityType.Listening
+                    }
+                ]
+            })
+                  
         } catch (error) {
             console.log('Ready Event Error:\n', error)
         }

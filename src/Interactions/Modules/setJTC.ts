@@ -8,7 +8,6 @@ export default class SetJTC extends MainInteraction {
         super(client, {
             type: 1,
             permissions: [
-                'Administrator',
                 'ManageGuild'
             ],
             category: 'Modules',
@@ -32,12 +31,13 @@ export default class SetJTC extends MainInteraction {
                 components: [selectMenu]
             })
 
-            const collected = await this.client.utils.createInteractionCollector(interaction, ComponentType.ChannelSelect, 1, customId) as ChannelSelectMenuInteraction
+            const collected = await this.client.utils.createInteractionCollector(interaction, customId, ComponentType.ChannelSelect, undefined, 1) as ChannelSelectMenuInteraction
             if (collected) return await this.followUp(collected, interaction)
 
-        } catch (error) {
-            console.log(error)
-            await interaction.reply('There was an error, please try again later')
+        } catch (error: any) {
+            console.log('There was an error in SetJTC command: ', error)
+            await interaction.reply(`There was an error \`${error.message}\``)
+            return
         }
     }
     
@@ -49,6 +49,7 @@ export default class SetJTC extends MainInteraction {
                 await interaction.reply('Please select a channel')
                 return
             }
+
             const channel = interaction.channels.first() as VoiceChannel
             if (channel) {
                 await updateJTC(channel, true)
@@ -56,13 +57,16 @@ export default class SetJTC extends MainInteraction {
                     content: `Enabled **Join To Create** module and successfully set \`${channel.name}\` as join to create Channel`,
                     components: []
                 })
+                return
             }
-        } catch (error) {
-            console.log(error)
+            
+        } catch (error: any) {
+            console.log('There was an error in SetJTC command: ', error)
             await prevInteraction.editReply({
-                content: 'There was an error, please try again later',
+                content: `There was an error \`${error.message}\``,
                 components: []
             }) 
+            return
         }
     }
 }

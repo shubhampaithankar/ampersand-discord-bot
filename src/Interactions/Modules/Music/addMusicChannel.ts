@@ -1,8 +1,7 @@
 import Client from '../../../Client'
 import { MainInteraction } from '../../../Classes'
 import { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentType, SlashCommandBuilder, TextChannel } from 'discord.js'
-import { musicSchema } from '../../../Database/Schemas'
-import { updateMusic } from '../../../Database/databaseUtils'
+import { getMusic, updateMusic } from '../../../Database/databaseUtils'
 
 export default class AddMusicChannelInteraction extends MainInteraction {
     constructor(client: Client) {
@@ -10,7 +9,6 @@ export default class AddMusicChannelInteraction extends MainInteraction {
             type: 1,
             category: 'Modules',
             permissions: [
-                'Administrator',
                 'ManageGuild'
             ],
             data: new SlashCommandBuilder()
@@ -21,7 +19,7 @@ export default class AddMusicChannelInteraction extends MainInteraction {
   
     async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
         try {
-            const guildMusicData = await musicSchema.findOne({ guildId: interaction.guildId })
+            const guildMusicData = await getMusic(interaction.guild!)
 
             const customId = `${interaction.channelId}_${interaction.id}_addMusicChannel`
   
@@ -38,11 +36,13 @@ export default class AddMusicChannelInteraction extends MainInteraction {
                 ephemeral: true
             })
 
-            const collected = await this.client.utils.createInteractionCollector(interaction, ComponentType.ChannelSelect, 1, customId) as ChannelSelectMenuInteraction
+            const collected = await this.client.utils.createInteractionCollector(interaction, customId, ComponentType.ChannelSelect, undefined, 1) as ChannelSelectMenuInteraction
             if (collected) return await this.followUp(collected, interaction, guildMusicData?.enabled)
 
-        } catch (error) {
-            console.log(error)
+        } catch (error: any) {
+            console.log('There was an error in AddMusicChannel command: ', error)
+            await interaction.reply(`There was an error \`${error.message}\``)
+            return
         }
     }
   
@@ -61,19 +61,28 @@ export default class AddMusicChannelInteraction extends MainInteraction {
             const channel = interaction.channels.first() as TextChannel
             if (channel && interaction.guildId) {
                 try {
-                    await updateMusic(value || false, interaction.guildId, channel) // Add error handling
+                    await updateMusic(value || false, interaction.guildId, channel)
                     await prevInteraction.editReply({
                         content: `Added \`${channel.name}\` to Music Commands Input Channel`,
                         components: [],
                     })
                     return
-                } catch (error) {
+                } catch (error: any) {
                     console.error('Error enabling music:', error)
-                    // Handle error appropriately (e.g., log to remote service, display user message)
+                    await prevInteraction.editReply({
+                        content: `There was an error \`${error.message}\``,
+                        components: []
+                    })
+                    return
                 }
             }
-        } catch (error) {
-            console.log(error)
+        } catch (error: any) {
+            console.log('There was an error in AddMusicChannel command follow-up: ', error)
+            await prevInteraction.editReply({
+                content: `There was an error \`${error.message}\``,
+                components: []
+            })
+            return
         }
     }
 }

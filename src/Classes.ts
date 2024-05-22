@@ -1,7 +1,6 @@
 import Client from './Client'
 import { ApplicationCommandDataResolvable, PermissionResolvable, ShardingManager } from 'discord.js'
 import { InteractionConfig, InteractionTypes } from './Types'
-// import { Manager } from 'erela.js'
 import { Poru } from 'poru'
 
 export class MainInteraction {
@@ -19,10 +18,12 @@ export class MainInteraction {
         this.data = config.data
     }
 
-    async run(interaction: InteractionTypes, ...args: string[]) {
+    async run (interaction: InteractionTypes, ...args: string[]) {
         try {
             throw new Error(`Interaction ${this.data} doesn't provide a run method!`)
-        } catch (error) {}
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     async followUp(interaction: any, prevInteraction?: InteractionTypes, ...args: any[]) {

@@ -14,29 +14,36 @@ export default class StopInteraction extends MainInteraction {
     }
 
     run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
-        const guild = this.client.guilds.cache.get(interaction.guildId!)
-        if (!guild) return
-
-        const member = guild.members.cache.get(interaction.member!.user.id)
-        if (!member) return
-
-        const player = await this.client.utils.getMusicPlayer(guild.id)
-        if (!player) {
-            await interaction.reply('No player found in any voice channels')
-            return
-        }
-        
-        const { channel } = member.voice
-        if (!channel) {
-            await interaction.reply('You need to join a voice channel')
-            return
-        }
-
-        if (player.isConnected) {
+        try {
+            const guild = this.client.guilds.cache.get(interaction.guildId!)
+            if (!guild) return
+    
+            const member = guild.members.cache.get(interaction.member!.user.id)
+            if (!member) return
+    
+            const player = await this.client.utils.getMusicPlayer(guild.id)
+            if (!player || !player.isConnected) {
+                await interaction.reply('No player found in any voice channels')
+                return
+            }
+            
+            const { channel } = member.voice
+            if (!channel) {
+                await interaction.reply('You need to join a voice channel')
+                return
+            }
+    
             if (player.voiceChannel !== channel.id) {
                 await interaction.reply('You\'re not in the same voice channel')
             }
+            await interaction.reply('Stopped playing')
             player.destroy()
+            
+        } catch (error: any) {
+            console.log('There was an error in Stop command: ', error)
+            await interaction.reply(`There was an error \`${error.message}\``)
+            return
         }
+
     }
 }

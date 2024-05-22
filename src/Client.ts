@@ -1,6 +1,5 @@
 import { Client, Collection, ShardingManager } from 'discord.js'
 import { REST } from '@discordjs/rest'
-// import { Manager } from 'erela.js'
 import { Poru } from 'poru'
 import mongoose from 'mongoose'
 

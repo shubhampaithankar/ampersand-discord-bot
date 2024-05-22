@@ -1,9 +1,12 @@
 import path from 'path'
 import Client from './Client'
 import mongoose from 'mongoose'
+
 import { Guild, Routes, ShardingManager } from 'discord.js'
 import { readdirSync, lstatSync } from 'fs'
+
 import { Poru } from 'poru'
+import { Spotify } from 'poru-spotify'
 
 import { MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Classes'
 
@@ -22,11 +25,11 @@ export default class Loader {
             await this.connectToDB()
             console.log(`Connected to database: ${this.client.database?.databaseName}`)
 
-            await this.loadMusic()
-
+            
             await this.loadEventHandler('./Events')
             console.log(`Loaded ${this.client.events.size} Event(s)`)
-
+            
+            await this.loadMusic()
             await this.loadMusicEventHandler('./MusicEvents')
             console.log(`Loaded ${this.client.musicEvents.size} Music Event(s)`)
 
@@ -39,13 +42,6 @@ export default class Loader {
                 body: interactions
             })
             console.log(`Loaded ${this.client.interactions.size} Interaction(s)`)
-
-            // await this.loadCommandHandler('./Commands')
-
-            if (this.client.manager) this.client.manager.spawn()
-            
-            await this.initJTC()
-
 
         } catch (error) {
             console.log('Loader Error:\n', error)
@@ -82,10 +78,16 @@ export default class Loader {
                 name: 'ampersand-discord-client',
             }], {
                 library: 'discord.js',
-                defaultPlatform: 'ytmsearch',
+                defaultPlatform: 'ytsearch',
+                plugins: [
+                    // new Spotify({
+                    //     clientID: `${process.env.SPOTIFY_CLIENT_ID}`,
+                    //     clientSecret: `${process.env.SPOTIFY_CLIENT_SECRET}`,
+                    // })
+                ]
             })
         } catch (error) {
-            console.log('There was en error loading ErelaJS:\n',error)
+            console.log('There was en error loading Poru:\n',error)
         }
     }
 

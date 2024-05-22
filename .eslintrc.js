@@ -32,9 +32,10 @@ module.exports = {
         'no-empty': 'off',
         'quotes': ['error', 'single'],
         'semi': ['error', 'never'],
-        'indent': ['error', 4],
+        'indent': ['error', 4, { 'SwitchCase': 1 }],
         'no-multi-spaces': ['error'],
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
     }
+    
 }
