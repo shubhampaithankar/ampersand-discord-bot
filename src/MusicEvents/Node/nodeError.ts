@@ -7,10 +7,10 @@ export default class NodeErrorEvent extends MainMusicEvent {
         super(client, 'nodeError')
     }
 
-    async run(node: Node, error: Error) {
+    async run(node: Node, error: any) {
         try {
             console.log(`Manager Error on Node: ${node.poru.userId}`)
-            // console.log(error.stack)
+            console.log(error)
         } catch (error) {
             console.log(error)
         }

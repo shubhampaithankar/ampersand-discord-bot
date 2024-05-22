@@ -24,4 +24,4 @@ COPY --from=builder /app .
 EXPOSE 3000
 
 # Set the command to run your bot application
-CMD [ "npm", "run", "dev" ]
+CMD [ "npm", "start" ]
