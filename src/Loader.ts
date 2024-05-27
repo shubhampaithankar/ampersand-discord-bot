@@ -104,6 +104,7 @@ export default class Loader {
                     if (Interaction.default?.prototype instanceof MainInteraction) {
                         const interaction = new Interaction.default(this.client, name) as MainInteraction
                         this.client.interactions.set(name, interaction)
+                        interaction.aliases?.forEach(entry => this.client.aliases.set(entry, interaction))
                     }
                 }
             }

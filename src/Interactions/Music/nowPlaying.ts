@@ -6,6 +6,7 @@ export default class NowPlayingInteraction extends MainInteraction {
     constructor(client: Client) {
         super(client, {
             type: 1,
+            aliases: ['np'],
             category: 'Music',
             data: new SlashCommandBuilder()
                 .setName('nowplaying')

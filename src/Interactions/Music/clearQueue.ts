@@ -6,6 +6,7 @@ export default class ClearQueueInteraction extends MainInteraction {
     constructor(client: Client) {
         super(client, {
             type: 1,
+            aliases: ['cq'],
             category: 'Music',
             data: new SlashCommandBuilder()
                 .setName('clearqueue')

@@ -6,15 +6,19 @@ import { Poru } from 'poru'
 export class MainInteraction {
     client: Client
     type: number
-    permissions?: PermissionResolvable
+    aliases?: string[]
     category?: string
+    cooldown?: number
+    permissions?: PermissionResolvable
     data: ApplicationCommandDataResolvable
 
     constructor(client: Client, config: InteractionConfig) {
         this.client = client
         this.type = config.type
-        this.permissions = config.permissions
         this.category = config.category || ''
+        this.aliases = config.aliases || []
+        this.cooldown = config.cooldown
+        this.permissions = config.permissions
         this.data = config.data
     }
 
