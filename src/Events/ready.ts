@@ -29,7 +29,7 @@ export default class ReadyEvent extends MainEvent {
                 amount: 'auto'
             })
             
-            if (this.client.music) await this.client.music.init(this.client)
+            if (this.client.music) this.client.music.init(this.client)
 
             this.client.user?.setPresence({
                 status: 'dnd',

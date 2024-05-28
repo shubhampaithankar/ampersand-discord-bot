@@ -20,12 +20,10 @@ export default class Loader {
 
     init = async () => {
         try {
-            await this.initJTC()
 
             await this.connectToDB()
             console.log(`Connected to database: ${this.client.database?.databaseName}`)
-
-            
+   
             await this.loadEventHandler('./Events')
             console.log(`Loaded ${this.client.events.size} Event(s)`)
             
@@ -75,7 +73,7 @@ export default class Loader {
                 port: Number(process.env.LAVALINK_PORT),
                 password: `${process.env.LAVALINK_PASSWORD}`,
                 secure: false,
-                name: 'ampersand-discord-client',
+                name: `${process.env.DISCORD_CLIENT_NAME}-discord-client`,
             }], {
                 library: 'discord.js',
                 defaultPlatform: 'ytsearch',
