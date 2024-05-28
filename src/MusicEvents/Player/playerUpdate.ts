@@ -4,6 +4,5 @@ import { Player, Track } from 'poru'
 
 export default class PlayerUpdateEvent extends MainMusicEvent{
     async run (player: Player) {
-        if (!player.isConnected) player.destroy()
     }
 }

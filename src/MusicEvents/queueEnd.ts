@@ -17,7 +17,7 @@ export default class QueueEndEvent extends MainMusicEvent {
                 if (!guildPlayer) return
 
                 if (guildPlayer.queue.size === 0 && !guildPlayer.loop && !player.currentTrack) {
-                    guildPlayer.destroy()
+                    await guildPlayer.destroy()
 
                     const channel = this.client.channels.cache.get(player.textChannel) as TextChannel
                     if (!channel) return

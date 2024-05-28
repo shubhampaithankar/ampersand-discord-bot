@@ -30,7 +30,11 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
         
         if (oldState.channelId === jtcData.channelId) return // No action on leaving jtc channel
         
-        const guildJtc = client.jtcChannels.get(guild.id)
+        
+        if (!client.jtcChannels.has(guild.id)) {
+            client.jtcChannels.set(guild.id, new Set([]))
+        }
+        const guildJtc = client.jtcChannels.get(guild.id)!
         
         // On joining the JTC channel
         try {
@@ -71,11 +75,8 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
                                 await newState.member.voice.setChannel(channel)
                                 await updateJTCChannels(channel, true)
 
-                                if (!guildJtc) client.jtcChannels.set(guild.id, new Set([channel.id]))
-                                else {
-                                    guildJtc.add(channel.id)
-                                    client.jtcChannels.set(guild.id, guildJtc)
-                                }
+                                guildJtc.add(channel.id)
+                                client.jtcChannels.set(guild.id, guildJtc)
 
                             } catch (err) {
                                 console.log(err)
@@ -105,7 +106,7 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
         try {
             if (oldState && oldState.channel) {
                 const jtcChannel = await getJTCChannel(oldState.channel)
-                const isJTCChannel = (guildJtc?.has(oldState.channel.id) || !!jtcChannel) 
+                const isJTCChannel = (guildJtc.has(oldState.channel.id) || !!jtcChannel) 
                 
                 if (isJTCChannel) {
                     try {            
@@ -114,8 +115,8 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
                             try {
                                 await channel.delete()
                                 if (jtcChannel) await updateJTCChannels(channel, false)
-                                if (guildJtc?.has(channel.id)) {
-                                    guildJtc?.delete(channel.id)
+                                if (guildJtc.has(channel.id)) {
+                                    guildJtc.delete(channel.id)
                                     client.jtcChannels.set(guild.id, guildJtc)
                                 } 
                             } catch (err) {
