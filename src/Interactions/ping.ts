@@ -6,6 +6,7 @@ export default class PingInteraction extends MainInteraction {
     constructor(client: Client) {
         super(client, {
             type: 1,
+            cooldown: 5,
             data: new SlashCommandBuilder()
                 .setName('ping')
                 .setDescription('responds with a message indicating the latency'),

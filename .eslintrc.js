@@ -36,6 +36,7 @@ module.exports = {
         'no-multi-spaces': ['error'],
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
+        'no-useless-catch': 'off'
     }
     
 }

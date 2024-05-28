@@ -23,7 +23,7 @@ export default class InteractionCreate extends MainEvent {
             const commandName: string | null = baseInteraction.message?.interaction?.commandName || baseInteraction.commandName || null
             if (!commandName) return
             
-            const interaction = this.client.interactions.get(commandName)
+            const interaction = this.client.interactions.get(commandName) || this.client.aliases.get(commandName)
             if (!interaction) return 
 
             if (interaction.permissions) {
@@ -32,6 +32,30 @@ export default class InteractionCreate extends MainEvent {
                     await interaction.reject(baseInteraction, this.client.utils.getMissingPermsString(missingPermissions, member))
                     return
                 }
+            }
+
+            try {
+                const { cooldowns } = this.client
+                
+                if (!cooldowns.has(commandName)) {
+                    cooldowns.set(commandName, new Map())
+                }
+    
+                const now = Date.now()
+                const timestamps = cooldowns.get(commandName)!
+                const cooldownAmount = (interaction.cooldown || 2) * 1000
+
+                if (timestamps.has(member.user.id)) {
+                    const expirationTime = timestamps.get(member.user.id)! + cooldownAmount
+      
+                    if (now < expirationTime) {
+                        const timeLeft = (expirationTime - now) / 1000 // Convert milliseconds to seconds
+                        interaction.reject(baseInteraction, `You're on cooldown for this command. Please wait ${timeLeft.toFixed(1)} seconds.`)
+                        return
+                    }
+                }
+            } catch (error) {
+                throw error
             }
 
             if (!baseInteraction.customId) {
