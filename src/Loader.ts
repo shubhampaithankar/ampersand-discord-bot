@@ -12,10 +12,11 @@ import { MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Cl
 
 export default class Loader {
     client: Client
-    allowedFileExtensions = '.ts,.js'.split(',')
+    fileExtention: string
 
     constructor (client: Client) {
         this.client = client
+        this.fileExtention = process.env.NODE_ENV === 'DEV' ? '.ts' : '.js'
     }
 
     init = async () => {
@@ -28,11 +29,12 @@ export default class Loader {
             console.log(`Loaded ${this.client.events.size} Event(s)`)
             
             await this.loadMusic()
-            await this.loadMusicEventHandler('./MusicEvents')
+            if (this.client.music) await this.loadMusicEventHandler('./MusicEvents')
             console.log(`Loaded ${this.client.musicEvents.size} Music Event(s)`)
 
-            // await this.loadShardEventHandler('./ShardEvents')
             // this.loadShardManager()
+            // if (this.client.manager) await this.loadShardEventHandler('./ShardEvents')
+            // console.log(`Loaded ${this.client.musicEvents.size} Sharding Event(s)`)
             
             await this.loadInteractionHandler('./Interactions')
             const interactions = await this.client.interactions.map(interaction => interaction.data)
@@ -89,6 +91,18 @@ export default class Loader {
         }
     }
 
+    loadShardManager = async () => {
+        try {
+            this.client.manager = new ShardingManager('./Client.ts', {
+                token: process.env.DISCORD_TOKEN!,
+                respawn: true,
+                totalShards: 'auto'
+            })
+        } catch (error) {
+            console.log('There was en error loading sahrding manager:\n',error)    
+        }
+    }
+
     loadInteractionHandler = async (dir: string) => {
         try {
             const filePath = path.join(__dirname, dir)
@@ -96,7 +110,7 @@ export default class Loader {
             for (const intFile of files) {
                 const stat = await lstatSync(path.join(filePath, intFile))
                 if (stat.isDirectory()) await this.loadInteractionHandler(path.join(dir, intFile)) // Await recursive call
-                if (this.allowedFileExtensions.some(ext => intFile.endsWith(ext))) {
+                if (intFile.endsWith(this.fileExtention)) {
                     const name = path.parse(intFile).name.toLowerCase()
                     const Interaction = await import(path.join(filePath, intFile))
                     if (Interaction.default?.prototype instanceof MainInteraction) {
@@ -118,7 +132,7 @@ export default class Loader {
             for (const eventFile of files) {
                 const stat = await lstatSync(path.join(filePath, eventFile))
                 if (stat.isDirectory()) await this.loadEventHandler(path.join(dir, eventFile))
-                if (this.allowedFileExtensions.some(ext => eventFile.endsWith(ext))) {
+                if (eventFile.endsWith(this.fileExtention)) {
                     const { name } = path.parse(eventFile)
                     const Event = await import(path.join(filePath, eventFile))
                     if (Event.default?.prototype instanceof MainEvent) {
@@ -140,7 +154,7 @@ export default class Loader {
             for (const eventFile of files) {
                 const stat = await lstatSync(path.join(filePath, eventFile))
                 if (stat.isDirectory()) await this.loadMusicEventHandler(path.join(dir, eventFile))
-                if (this.allowedFileExtensions.some(ext => eventFile.endsWith(ext))) {
+                if (eventFile.endsWith(this.fileExtention)) {
                     const { name } = path.parse(eventFile)
                     const Event = await import(path.join(filePath, eventFile))
                     if (Event.default?.prototype instanceof MainMusicEvent) {
@@ -155,18 +169,6 @@ export default class Loader {
         }
     }
 
-    loadShardManager = async () => {
-        try {
-            this.client.manager = new ShardingManager('./Client.ts', {
-                token: process.env.DISCORD_TOKEN!,
-                respawn: true,
-                totalShards: 'auto'
-            })
-        } catch (error) {
-            console.log('There was en error loading sahrding manager:\n',error)    
-        }
-    }
-
     loadShardEventHandler = async (dir: string) => {
         try {
             const filePath = path.join(__dirname, dir)
@@ -174,7 +176,7 @@ export default class Loader {
             for (const eventFile of files) {
                 const stat = await lstatSync(path.join(filePath, eventFile))
                 if (stat.isDirectory()) await this.loadShardEventHandler(path.join(dir, eventFile))
-                if (this.allowedFileExtensions.some(ext => eventFile.endsWith(ext))) {
+                if (eventFile.endsWith(this.fileExtention)) {
                     const { name } = path.parse(eventFile)
                     const Event = await import(path.join(filePath, eventFile))
                     if (Event.default?.prototype instanceof MainShardEvent) {
