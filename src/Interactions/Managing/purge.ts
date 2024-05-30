@@ -19,20 +19,20 @@ export default class PurgeInteraction extends MainInteraction {
                             .setName('number')
                             .setDescription('number of messages')
                             .setRequired(true)
-                            .setMaxValue(100)
+                            .setMaxValue(200)
                             .setMinValue(5)
                 )
         })
     }
 
     run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
-        const deferReply = await interaction.deferReply()
+        const deferReply = await interaction.deferReply().catch(err => {})
         try {
             const channel = interaction.channel as BaseGuildTextChannel
             const number = interaction.options.getNumber('number')! 
 
             const { messages } = channel
-            const messagesToDelete = (await messages.fetch({ limit: number, before: deferReply.id }))
+            const messagesToDelete = await messages.fetch({ limit: number, before: deferReply?.id, cache: true })
 
             await channel.bulkDelete(messagesToDelete, true)
             
