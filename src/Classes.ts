@@ -1,5 +1,5 @@
 import Client from './Client'
-import { ApplicationCommandDataResolvable, PermissionResolvable, ShardingManager } from 'discord.js'
+import { ApplicationCommandDataResolvable, ChatInputCommandInteraction, InteractionCollector, PermissionResolvable, ShardingManager, SlashCommandBuilder } from 'discord.js'
 import { InteractionConfig, InteractionTypes } from './Types'
 import { Poru } from 'poru'
 
@@ -11,6 +11,7 @@ export class MainInteraction {
     cooldown?: number
     permissions?: PermissionResolvable
     data: ApplicationCommandDataResolvable
+    // collector: InteractionCollector // remove followUp function and add collector here
 
     constructor(client: Client, config: InteractionConfig) {
         this.client = client
@@ -22,7 +23,7 @@ export class MainInteraction {
         this.data = config.data
     }
 
-    async run (interaction: InteractionTypes, ...args: string[]) {
+    async run(interaction: InteractionTypes, ...args: string[]) {
         try {
             throw new Error(`Interaction ${this.data} doesn't provide a run method!`)
         } catch (error) {
@@ -33,13 +34,17 @@ export class MainInteraction {
     async followUp(interaction: any, prevInteraction?: InteractionTypes, ...args: any[]) {
         try {
             throw new Error(`Interaction ${this.data} doesn't provide a run method!`)
-        } catch (error) {}
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     async reject(interaction: any, message: string) {
         try {
             await interaction.reply(message)
-        } catch (error) {}
+        } catch (error) {
+            console.log(error)
+        }
     }
 
 }

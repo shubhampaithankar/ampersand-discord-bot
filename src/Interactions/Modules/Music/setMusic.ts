@@ -17,7 +17,7 @@ export default class SetMusicInteraction extends MainInteraction {
         })
     }
   
-    async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
+    run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
         try {
             const guildMusicData = await getMusic(interaction.guild!)
             const isEnabled = guildMusicData && guildMusicData.enabled
@@ -45,7 +45,10 @@ export default class SetMusicInteraction extends MainInteraction {
             })
   
             const collected = await this.client.utils.createInteractionCollector(interaction, customId, ComponentType.Button, undefined, 1) as ButtonInteraction
-            if (collected) return await this.followUp(collected, interaction, name)
+            if (collected) {
+                await this.followUp(collected, interaction, name)
+                return
+            }
 
         } catch (error: any) {
             console.log('There was an error in SetMusic command: ', error)
@@ -54,7 +57,7 @@ export default class SetMusicInteraction extends MainInteraction {
         }
     }
   
-    async followUp(interaction: any, prevInteraction: any, name: string): Promise<any> {
+    followUp = async (interaction: any, prevInteraction: any, name: string) => {
         try {
             const type = interaction.customId.split('_')[2]
   
@@ -104,22 +107,27 @@ export default class SetMusicInteraction extends MainInteraction {
                         })
   
                         const collected = await this.client.utils.createInteractionCollector(inter, customId, ComponentType.ChannelSelect, undefined, 1) as ChannelSelectMenuInteraction
-                        if (collected) return await this.followUp(collected, interaction, name)
+                        if (collected) {
+                            await this.followUp(collected, interaction, name)
+                            return 
+                        }
 
                     } else {
                         if (inter.guildId) {
                             try {
                                 await updateMusic(false, inter.guildId) // Add error handling
-                                return await prevInter.editReply({
+                                await prevInter.editReply({
                                     content: `Disabled **Music module** for \`${inter.guild!.name}\``,
                                     components: [],
                                 })
+                                return
                             } catch (error: any) {
                                 console.error('Error disabling music:', error)
                                 await prevInteraction.editReply({
                                     content: `There was an error \`${error.message}\``,
                                     components: []
                                 })
+                                return
                             }
                         }
                     }
@@ -132,26 +140,29 @@ export default class SetMusicInteraction extends MainInteraction {
                     if (!inter.channels) return // Check for missing channels
 
                     if (inter.channels.size === 0) {
-                        return await prevInter.editReply({
+                        await prevInter.editReply({
                             content: 'Please select a channel',
                             components: [],
                         })
+                        return
                     }
   
                     const channel = inter.channels.first() as TextChannel
                     if (channel && inter.guildId) {
                         try {
                             await updateMusic(true, inter.guildId)
-                            return await prevInter.editReply({
+                            await prevInter.editReply({
                                 content: `Enabled **Music module** and successfully set \`${channel.name}\` as Music Commands Input Channel`,
                                 components: [],
                             })
+                            return
                         } catch (error: any) {
                             console.error('Error enabling music:', error)
                             await prevInteraction.editReply({
                                 content: `There was an error \`${error.message}\``,
                                 components: []
                             })
+                            return
                         }
                     }
                     break
@@ -164,6 +175,8 @@ export default class SetMusicInteraction extends MainInteraction {
                     return
                 }
             }
+
+            return
         } catch (error: any) {
             console.log('There was an error in SetMusic command follow-up: ', error)
             await prevInteraction.editReply({

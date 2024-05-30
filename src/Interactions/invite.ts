@@ -12,7 +12,7 @@ export default class InviteInteraction extends MainInteraction {
         })
     }
 
-    async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
+    run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
         try {
             const URI = `https://discord.com/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&permissions=8&scope=bot`
             await interaction.reply(URI)

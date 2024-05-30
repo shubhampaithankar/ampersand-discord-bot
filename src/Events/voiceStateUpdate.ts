@@ -22,8 +22,10 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
         const bot = guild.members.cache.get(client.user!.id!)
         if (!bot) return
 
-        const { isAllowed } = await client.utils.checkPermissionsFor(bot, ['ManageChannels', 'ManageRoles', 'MoveMembers'], guild, true)
-        if (!isAllowed) return
+        const { isAllowed, missingPermissions } = await client.utils.checkPermissionsFor(bot, ['ManageChannels', 'ManageRoles', 'MoveMembers'], guild, true)
+        if (!isAllowed) {
+            console.log('not allowed', missingPermissions)
+        }
 
         const jtcData = await getJTC(guild)
         if (!jtcData || !jtcData.enabled) return // Check if JTC is enabled
@@ -64,41 +66,39 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
                 }
 
                 // Lock channel to prevent spam
-                await jtcChannel.permissionOverwrites.edit(guild.roles.everyone, {
-                    Connect: false
+                await jtcChannel.permissionOverwrites.edit(guild.roles.everyone, { 
+                    Connect: false 
                 })
   
-                setTimeout(async () => {
-                    try {
-                        if (channel && newState.member && newState.member.voice) {
-                            try {
-                                await newState.member.voice.setChannel(channel)
-                                await updateJTCChannels(channel, true)
+                await new Promise(resolve => setTimeout(resolve, 150)) // 150ms delay
 
-                                guildJtc.add(channel.id)
-                                client.jtcChannels.set(guild.id, guildJtc)
+                try {
+                    if (channel && newState.member && newState.member.voice) {
+                        try {
+                            await newState.member.voice.setChannel(channel)
+                            await updateJTCChannels(channel, true)
 
-                            } catch (err) {
-                                console.log(err)
-                            }
+                            guildJtc.add(channel.id)
+                            client.jtcChannels.set(guild.id, guildJtc)
+
+                        } catch (err) {
+                            throw err
                         }
-                    } catch (error) {
-                        console.log(error)
-                        return
                     }
-                }, 200)
+                } catch (error) {
+                    throw error
+                }
 
-                setTimeout(async () => {
-                    try {
-                        if (!jtcChannel) return 
-                        await jtcChannel.permissionOverwrites.edit(guild.roles.everyone, {
-                            Connect: null
-                        })
-                    } catch (error) {
-                        console.log(error)
-                        return
-                    }
-                }, 5e3)
+                await new Promise(resolve => setTimeout(resolve, 5000)) // 5 seconds delay
+
+                try {
+                    if (!jtcChannel) return 
+                    await jtcChannel.permissionOverwrites.edit(guild.roles.everyone, {
+                        Connect: null
+                    })
+                } catch (error) {
+                    throw error
+                }
             }
         } catch (error) { console.log(error) }
 
