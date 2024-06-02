@@ -26,28 +26,27 @@ export default class LockdownInteraction extends MainInteraction {
             const { everyone } = guild.roles
             const originalPermissions: any = {}
 
-            for (const channel of channels.values()) {
-                if (!isEnabled) {
-                    originalPermissions[channel.id] = channel.permissionOverwrites.cache.values()
-                    channel.permissionOverwrites.edit(everyone, {
-                        Connect: false,
-                        SendMessages: false
-                        // ReadMessageHistory: false,
-                    })
-                } else {
-                    channel.permissionOverwrites.edit(everyone, {
-                        Connect: guildLockdown.originalPermissions[channel.id].Connect,
-                        SendMessages: guildLockdown.originalPermissions[channel.id].SendMessages,
-                        // ReadMessageHistory: false,
-                    })
+            try {
+                for (const channel of channels.values()) {
+                    if (!isEnabled) {
+                        originalPermissions[channel.id] = channel.permissionOverwrites.cache.values()
+                        channel.permissionOverwrites.edit(everyone, {
+                            Connect: false,
+                            SendMessages: false
+                            // ReadMessageHistory: false,
+                        })
+                    } else {
+                        channel.permissionOverwrites.edit(everyone, {
+                            Connect: guildLockdown.originalPermissions[channel.id].Connect,
+                            SendMessages: guildLockdown.originalPermissions[channel.id].SendMessages,
+                            // ReadMessageHistory: false,
+                        })
+                    }
                 }
-                try {
-                    // await updateLockdown(guild, true, originalPermissions)
-                } catch (error) {
-                    throw error
-                }
+                updateLockdown(guild, !isEnabled, originalPermissions)
+            } catch (error) {
+                throw error
             }
-
             
             const embed = await this.client.utils.createMessageEmbed({
                 author: {
