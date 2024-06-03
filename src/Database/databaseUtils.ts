@@ -139,8 +139,9 @@ export const getLockdown = async (guild: Guild) => {
     }
 }
 
-export const updateLockdown = async (guild: Guild, value: boolean, originalPermissions: any) => {
+export const updateLockdown = async (guild: Guild, value: boolean, originalPermissions?: any) => {
     try {
+
         await lockdownSchema.findOneAndUpdate({
             guildId: guild.id,
         }, {
