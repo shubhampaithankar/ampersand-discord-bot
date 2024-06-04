@@ -52,8 +52,7 @@ export default class NowPlayingInteraction extends MainInteraction {
                 },
                 color: 'Blue',
                 title: 'Now Playing Command',
-                description: `
-                    **Now Playing:**\n[${currentTrack.info.title}](${currentTrack.info.uri || ''}) - \`${this.client.utils.formatDuration(currentTrack.info.length)}\` • ${currentTrack.info.requester}
+                description: `**[${currentTrack.info.title}](${currentTrack.info.uri || ''})** - \`${this.client.utils.formatDuration(currentTrack.info.length)}\` • ${currentTrack.info.requester}
                 `,
                 footer: {
                     text: interaction.member!.user.username,

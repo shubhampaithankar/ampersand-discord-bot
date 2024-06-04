@@ -17,7 +17,7 @@ export default class SetJTC extends MainInteraction {
         })
     }
 
-    async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
+    run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
         try {
             const customId = `${interaction.channelId}_${interaction.id}_setJTC`
             const channelOptions = new ChannelSelectMenuBuilder()

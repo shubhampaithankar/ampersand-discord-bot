@@ -13,7 +13,7 @@ export default class PingInteraction extends MainInteraction {
         })
     }
 
-    async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
+    run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
         try {
             const reply = await interaction.reply('Pinging...')
             await reply.edit(`Pong! \nLatency is ${reply.createdTimestamp - interaction.createdTimestamp}ms. \nAPI Latency is ${Math.round(this.client.ws.ping)}ms`)

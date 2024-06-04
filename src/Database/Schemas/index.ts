@@ -11,3 +11,7 @@ export const musicSchema = model('music', MusicSchema, 'music')
 
 import JTCChannelsSchema from './JTCChannelsSchema'
 export const jtcChannelsSchema = model('jtcChannels', JTCChannelsSchema, 'jtcChannels')
+
+import LockdownSchema from './LockdownSchema'
+export const lockdownSchema = model('lockdown', LockdownSchema, 'lockdown')
+

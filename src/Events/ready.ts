@@ -31,7 +31,7 @@ export default class ReadyEvent extends MainEvent {
             
             if (this.client.music) this.client.music.init(this.client)
 
-            this.client.user?.setPresence({
+            this.client.user!.setPresence({
                 status: 'dnd',
                 activities: [
                     {

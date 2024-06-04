@@ -17,7 +17,7 @@ export default class AddMusicChannelInteraction extends MainInteraction {
         })
     }
   
-    async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
+    run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
         try {
             const guildMusicData = await getMusic(interaction.guild!)
 
@@ -46,7 +46,7 @@ export default class AddMusicChannelInteraction extends MainInteraction {
         }
     }
   
-    async followUp(interaction: ChannelSelectMenuInteraction, prevInteraction: ChatInputCommandInteraction, value: any) {
+    followUp = async (interaction: ChannelSelectMenuInteraction, prevInteraction: ChatInputCommandInteraction, value: any) => {
         try {
             if (!interaction.channels) return // Check for missing channels
 

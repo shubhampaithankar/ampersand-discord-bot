@@ -15,17 +15,17 @@ export default class Utils {
             let collector: InteractionCollector<any> | undefined
             if (typeof customId === 'string') {
                 collector = interaction.channel?.createMessageComponentCollector({
-                    filter: i => i.customId === customId,
+                    filter: i => i.customId === customId && i.user.id === interaction.user.id,
                     componentType,
                     max,
-                    time
+                    time: time || 60 * 1e3
                 })
             } else if (Array.isArray(customId)) {
                 collector = interaction.channel?.createMessageComponentCollector({
-                    filter: i => customId.includes(i.customId),
+                    filter: i => customId.includes(i.customId) && i.user.id === interaction.user.id,
                     componentType,
                     max,
-                    time
+                    time: time || 60 * 1e3
                 })
             } 
 
@@ -35,13 +35,9 @@ export default class Utils {
                     return null
                 }
     
-                collector.on('collect', (collected: InteractionTypes) => {
-                    resolve(collected)
-                })
+                collector.on('collect', (collected: InteractionTypes) => resolve(collected))
     
-                collector.on('error', (error) => {
-                    reject(error)
-                })
+                collector.on('error', (error) => reject(error))
 
                 collector.on('end', typeof endCallback === 'function' ? endCallback : () => {})
             })
