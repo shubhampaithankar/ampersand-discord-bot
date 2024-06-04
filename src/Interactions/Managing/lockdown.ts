@@ -97,8 +97,7 @@ export default class LockdownInteraction extends MainInteraction {
 
             const timeLimit = 1e3 * 60 * 6 * 12 // 12 hours
 
-            // const collected = await this.client.utils.createInteractionCollector(interaction, [removeButtonId, scheduleRemoveButtonId], ComponentType.Button, undefined, 1, timeLimit) as ButtonInteraction
-            // if (collected) return this.followUp(collected, interaction)
+            // createInteractionCollector(interaction, [removeButtonId, scheduleRemoveButtonId], ComponentType.Button, undefined, 1, timeLimit) as ButtonInteraction
 
         } catch (error: any) {
             console.log('There was an error in Help command: ', error)
@@ -115,8 +114,4 @@ export default class LockdownInteraction extends MainInteraction {
             return
         }
     }
-}
-
-type OriginalPermissionsType = {
-    [permission: string]: boolean | null
 }
