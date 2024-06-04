@@ -14,7 +14,7 @@ export default class HelpInteraction extends MainInteraction {
         })
     }
 
-    async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
+    run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
         try {
             const embedData: EmbedDataType = {
                 author: {

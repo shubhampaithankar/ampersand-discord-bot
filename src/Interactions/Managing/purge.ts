@@ -26,17 +26,17 @@ export default class PurgeInteraction extends MainInteraction {
     }
 
     run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
-        const deferReply = await interaction.deferReply()
+        const deferReply = await interaction.deferReply().catch(err => {})
         try {
             const channel = interaction.channel as BaseGuildTextChannel
             const number = interaction.options.getNumber('number')! 
 
             const { messages } = channel
-            const messagesToDelete = (await messages.fetch({ limit: number, before: deferReply.id }))
+            const messagesToDelete = await messages.fetch({ limit: number, before: deferReply?.id, cache: true })
 
-            await channel.bulkDelete(messagesToDelete, true)
+            const deletedMessages = await channel.bulkDelete(messagesToDelete, true)
             
-            await interaction.editReply(`Purged ${number} messages in the channel.`)
+            await interaction.editReply(`Purged ${deletedMessages.size} messages in the channel.`)
             return
         } catch (error: any) {
             console.log('There was an error in Purge command: ', error)

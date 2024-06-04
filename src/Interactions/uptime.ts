@@ -13,7 +13,7 @@ export default class UptimeInteraction extends MainInteraction {
         })
     }
 
-    async run(interaction: ChatInputCommandInteraction, ...args: string[]) {
+    run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
         try {
             const uptime = moment.duration(Date.now() - this.client.startTime)
             const formattedUptime = `${uptime.days()}d ${uptime.hours()}h ${uptime.minutes()}m ${uptime.seconds()}s`

@@ -1,8 +1,7 @@
-import { TextChannel } from 'discord.js'
 import { MainMusicEvent } from '../../Classes'
-import { Player, Track } from 'poru'
+import { Player } from 'poru'
 
 export default class PlayerUpdateEvent extends MainMusicEvent{
-    async run (player: Player) {
+    async run(player: Player) {
     }
 }

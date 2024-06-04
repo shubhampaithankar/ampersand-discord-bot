@@ -1,5 +1,5 @@
 import { Guild, TextChannel, VoiceBasedChannel, VoiceChannel } from 'discord.js'
-import { guildSchema, jtcChannelsSchema, jtcSchema, musicSchema } from './Schemas'
+import { guildSchema, jtcChannelsSchema, jtcSchema, lockdownSchema, musicSchema } from './Schemas'
 
 export const getGuildData = async (guild: Guild) => {
     try {
@@ -7,6 +7,7 @@ export const getGuildData = async (guild: Guild) => {
         return data?.toObject() || null
     } catch (error) {
         console.log('Database Error: while finding guild data:\n', error)
+        return null
     }
 }
 
@@ -46,6 +47,7 @@ export const getJTC = async (guild: Guild) => {
         return data?.toObject() || null
     } catch (error) {
         console.log('Database Error: while finding JTC data:\n', error)
+        return null
     }
 }
 
@@ -73,6 +75,7 @@ export const getJTCChannel = async (channel: VoiceBasedChannel) => {
         return data?.toObject() || null
     } catch (error) {
         console.log('Database Error: while finding music data:\n', error)
+        return null
     }
 }
 
@@ -95,6 +98,7 @@ export const getMusic = async (guild: Guild) => {
         return data?.toObject() || null
     } catch (error) {
         console.log('Database Error: while finding music data:\n', error)
+        return null
     }
 }
 
@@ -122,5 +126,31 @@ export const updateMusic = async (value: boolean, guildId: string, channel?: Tex
         }
     } catch (error) {
         console.log('Database Error: while updating music data:\n', error)
+    }
+}
+
+export const getLockdown = async (guild: Guild) => {
+    try {
+        const data = await lockdownSchema.findOne({ guildId: guild.id })
+        return data?.toObject() || null
+    } catch (error) {
+        console.log('Database Error: while finding lockdown data:\n', error)
+        return null
+    }
+}
+
+export const updateLockdown = async (guild: Guild, value: boolean, originalPermissions?: any) => {
+    try {
+
+        await lockdownSchema.findOneAndUpdate({
+            guildId: guild.id,
+        }, {
+            enabled: value,
+            originalPermissions
+        }, {
+            upsert: true
+        })
+    } catch (error) {
+        console.log('Database Error: while updating lockdown data:\n', error)
     }
 }
