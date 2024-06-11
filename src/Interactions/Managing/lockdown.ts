@@ -20,7 +20,9 @@ export default class LockdownInteraction extends MainInteraction {
             const guild = interaction.guild!
             const channels = guild.channels.cache as Collection<string, GuildChannel>
             
+            
             const guildLockdown = await getLockdown(guild)
+            console.log(typeof guildLockdown)
             const isEnabled = (!!guildLockdown && guildLockdown.enabled)
             
             const { everyone } = guild.roles
@@ -28,33 +30,33 @@ export default class LockdownInteraction extends MainInteraction {
             
             const getChannelPermissions = (channel: GuildChannel) => channel.permissionsFor(everyone).serialize()
 
-            try {
-                for (const channel of channels.values()) {
-                    if (!isEnabled) {
+            // try {
+            //     for (const channel of channels.values()) {
+            //         if (!isEnabled) {
 
-                        originalPermissions.set(channel.id, {
-                            Connect: getChannelPermissions(channel).Connect,
-                            SendMessages: getChannelPermissions(channel).SendMessages,
-                        })
+            //             originalPermissions.set(channel.id, {
+            //                 Connect: getChannelPermissions(channel).Connect,
+            //                 SendMessages: getChannelPermissions(channel).SendMessages,
+            //             })
 
-                        channel.permissionOverwrites.edit(everyone, {
-                            Connect: false,
-                            SendMessages: false
-                            // ReadMessageHistory: false,
-                        })
+            //             channel.permissionOverwrites.edit(everyone, {
+            //                 Connect: false,
+            //                 SendMessages: false
+            //                 // ReadMessageHistory: false,
+            //             })
 
-                    } else {
-                        channel.permissionOverwrites.edit(everyone, {
-                            Connect: guildLockdown.originalPermissions.get(channel.id)?.Connect,
-                            SendMessages: guildLockdown.originalPermissions.get(channel.id)?.SendMessages,
-                            // ReadMessageHistory: false,
-                        })
-                    }
-                }
-                updateLockdown(guild, !isEnabled, !isEnabled ? originalPermissions : null)
-            } catch (error) {
-                throw error
-            }
+            //         } else {
+            //             channel.permissionOverwrites.edit(everyone, {
+            //                 Connect: guildLockdown.originalPermissions.get(channel.id)?.Connect,
+            //                 SendMessages: guildLockdown.originalPermissions.get(channel.id)?.SendMessages,
+            //                 // ReadMessageHistory: false,
+            //             })
+            //         }
+            //     }
+            //     updateLockdown(guild, !isEnabled, !isEnabled ? originalPermissions : null)
+            // } catch (error) {
+            //     throw error
+            // }
             
             const embed = await this.client.utils.createMessageEmbed({
                 author: {
@@ -96,8 +98,14 @@ export default class LockdownInteraction extends MainInteraction {
             })
 
             const timeLimit = 1e3 * 60 * 6 * 12 // 12 hours
+            this.collector = interaction.channel!.createMessageComponentCollector({
+                componentType: ComponentType.Button,
+                filter: (i) => [removeButtonId, scheduleRemoveButtonId].includes(i.customId) && i.user.id === interaction.user.id,
+                max: 1,
+                time: timeLimit
+            })
 
-            // createInteractionCollector(interaction, [removeButtonId, scheduleRemoveButtonId], ComponentType.Button, undefined, 1, timeLimit) as ButtonInteraction
+            this.followUp(interaction, guildLockdown)
 
         } catch (error: any) {
             console.log('There was an error in Help command: ', error)
@@ -106,11 +114,43 @@ export default class LockdownInteraction extends MainInteraction {
         }
     }
 
-    followUp = async (interaction: ButtonInteraction, prevInteraction: ChatInputCommandInteraction, ...args: any[]) => {
+    followUp = async (prevInteraction: ChatInputCommandInteraction, guildLockdown: any) => {
         try {
+            const collector = this.collector!
+
+            collector.on('collect', async (interaction: ButtonInteraction) => {
+                const type = interaction.customId.split('_')[2]
+
+                const guild = interaction.guild!
+                const channels = guild.channels.cache as Collection<string, GuildChannel>
+
+                const { everyone } = guild.roles
+
+                switch (type) {
+                    case 'removeLockdown': break
+                    case 'removeLockdownAfterSchedule': {
+                        const timeLimit = 1e3 * 60 * 6 * 6 // 6 hours
+                        collector.stop()
+                        await this.client.utils.sleepFor(timeLimit)
+                        break
+                    }
+                    default: return
+                }
+
+                for (const channel of channels.values()) {
+                    channel.permissionOverwrites.edit(everyone, {
+                        Connect: guildLockdown.originalPermissions.get(channel.id)?.Connect,
+                        SendMessages: guildLockdown.originalPermissions.get(channel.id)?.SendMessages,
+                        // ReadMessageHistory: false,
+                    })
+                }
+                updateLockdown(guild, false)
+            })
+
+            collector.on('end', () => {})
         } catch (error: any) {
             console.log('There was an error in Help command: ', error)
-            await interaction.reply(`There was an error \`${error.message}\``)
+            await prevInteraction.editReply(`There was an error \`${error.message}\``)
             return
         }
     }
