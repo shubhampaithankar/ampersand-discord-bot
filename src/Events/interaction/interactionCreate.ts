@@ -13,8 +13,8 @@ export default class InteractionCreate extends MainEvent {
             if (!interaction.inGuild()) return
             const guild = interaction.guild!
 
-            // const bot = guild.members.cache.get(this.client.user!.id!)
-            // if (!bot) return
+            const bot = guild.members.cache.get(this.client.user!.id!)
+            if (!bot) return
 
             const member = guild.members.cache.get(interaction.member.user.id)
             if (!member) return
@@ -24,6 +24,8 @@ export default class InteractionCreate extends MainEvent {
             
             const command = this.client.interactions.get(commandName) || this.client.aliases.get(commandName)
             if (!command) return 
+
+            command.bot = bot
 
             if (command.permissions) {
                 const { isAllowed, missingPermissions } = await this.client.utils.checkPermissionsFor(member, command.permissions, guild, false)
@@ -93,7 +95,6 @@ export default class InteractionCreate extends MainEvent {
 
                 timestamps.set(member.user.id, now)
                 await command.run(interaction)
-
             }
 
         } catch (error) {

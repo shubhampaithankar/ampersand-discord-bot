@@ -12,8 +12,8 @@ export class MainInteraction {
     cooldown?: number
     collector?: InteractionCollector<any>
     permissions?: PermissionResolvable
+    bot?: GuildMember
     data: ApplicationCommandDataResolvable
-    // Attach bot to the interaction as guild member
 
     constructor(client: Client, config: InteractionConfig) {
         this.client = client

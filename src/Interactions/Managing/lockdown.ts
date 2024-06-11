@@ -20,9 +20,7 @@ export default class LockdownInteraction extends MainInteraction {
             const guild = interaction.guild!
             const channels = guild.channels.cache as Collection<string, GuildChannel>
             
-            
             const guildLockdown = await getLockdown(guild)
-            console.log(typeof guildLockdown)
             const isEnabled = (!!guildLockdown && guildLockdown.enabled)
             
             const { everyone } = guild.roles
@@ -30,33 +28,33 @@ export default class LockdownInteraction extends MainInteraction {
             
             const getChannelPermissions = (channel: GuildChannel) => channel.permissionsFor(everyone).serialize()
 
-            // try {
-            //     for (const channel of channels.values()) {
-            //         if (!isEnabled) {
+            try {
+                for (const channel of channels.values()) {
+                    if (!isEnabled) {
 
-            //             originalPermissions.set(channel.id, {
-            //                 Connect: getChannelPermissions(channel).Connect,
-            //                 SendMessages: getChannelPermissions(channel).SendMessages,
-            //             })
+                        originalPermissions.set(channel.id, {
+                            Connect: getChannelPermissions(channel).Connect,
+                            SendMessages: getChannelPermissions(channel).SendMessages,
+                        })
 
-            //             channel.permissionOverwrites.edit(everyone, {
-            //                 Connect: false,
-            //                 SendMessages: false
-            //                 // ReadMessageHistory: false,
-            //             })
+                        channel.permissionOverwrites.edit(everyone, {
+                            Connect: false,
+                            SendMessages: false
+                            // ReadMessageHistory: false,
+                        })
 
-            //         } else {
-            //             channel.permissionOverwrites.edit(everyone, {
-            //                 Connect: guildLockdown.originalPermissions.get(channel.id)?.Connect,
-            //                 SendMessages: guildLockdown.originalPermissions.get(channel.id)?.SendMessages,
-            //                 // ReadMessageHistory: false,
-            //             })
-            //         }
-            //     }
-            //     updateLockdown(guild, !isEnabled, !isEnabled ? originalPermissions : null)
-            // } catch (error) {
-            //     throw error
-            // }
+                    } else {
+                        channel.permissionOverwrites.edit(everyone, {
+                            Connect: guildLockdown.originalPermissions.get(channel.id)?.Connect,
+                            SendMessages: guildLockdown.originalPermissions.get(channel.id)?.SendMessages,
+                            // ReadMessageHistory: false,
+                        })
+                    }
+                }
+                updateLockdown(guild, !isEnabled, !isEnabled ? originalPermissions : null)
+            } catch (error) {
+                throw error
+            }
             
             const embed = await this.client.utils.createMessageEmbed({
                 author: {
@@ -116,12 +114,12 @@ export default class LockdownInteraction extends MainInteraction {
 
     followUp = async (prevInteraction: ChatInputCommandInteraction, guildLockdown: any) => {
         try {
-            const collector = this.collector!
+            const guild = prevInteraction.guild!
 
+            const collector = this.collector!
             collector.on('collect', async (interaction: ButtonInteraction) => {
                 const type = interaction.customId.split('_')[2]
 
-                const guild = interaction.guild!
                 const channels = guild.channels.cache as Collection<string, GuildChannel>
 
                 const { everyone } = guild.roles
@@ -147,7 +145,29 @@ export default class LockdownInteraction extends MainInteraction {
                 updateLockdown(guild, false)
             })
 
-            collector.on('end', () => {})
+            collector.on('end', async () => {
+                const embed = await this.client.utils.createMessageEmbed({
+                    author: {
+                        name: this.client.user!.displayName,
+                        iconURL: this.client.user?.avatarURL() || undefined
+                    },
+                    color: 'Red',
+                    title: 'Lockdown Command',
+                    description: `
+                    **Lockdown Disabled** for server: \`${guild.name}\``,
+                    timestamp: Date.now(),
+                    footer: {
+                        text: prevInteraction.member!.user.username,
+                    },
+                })
+    
+                if (!embed) throw new Error('Unable to create embed')
+
+                await prevInteraction.editReply({
+                    embeds: [embed],
+                    components: []
+                })
+            })
         } catch (error: any) {
             console.log('There was an error in Help command: ', error)
             await prevInteraction.editReply(`There was an error \`${error.message}\``)

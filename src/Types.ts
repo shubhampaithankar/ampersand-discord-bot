@@ -1,9 +1,4 @@
-import { 
-    AutocompleteInteraction, ButtonInteraction, ChannelSelectMenuInteraction, 
-    ChatInputCommandInteraction, CommandInteraction, ContextMenuCommandInteraction, 
-    MentionableSelectMenuInteraction, Message, MessageComponentInteraction, MessageContextMenuCommandInteraction, 
-    ModalSubmitInteraction, RoleSelectMenuInteraction, StringSelectMenuInteraction, 
-    UserContextMenuCommandInteraction, UserSelectMenuInteraction, VoiceChannel, Collection, PermissionResolvable,
+import { Message, VoiceChannel, Collection, PermissionResolvable,
     ApplicationCommandDataResolvable,
     EmbedAuthorOptions,
     ColorResolvable,
@@ -12,7 +7,8 @@ import {
     SlashCommandBuilder,
     InteractionCollector,
     Interaction,
-    CacheType
+    CacheType,
+    GuildMember
 } from 'discord.js'
 
 export type InteractionConfig = {
@@ -23,6 +19,7 @@ export type InteractionConfig = {
     cooldown?: number
     collector?: InteractionCollector<any>
     permissions?: PermissionResolvable
+    bot?: GuildMember
     data: ApplicationCommandDataResolvable
 }
 
