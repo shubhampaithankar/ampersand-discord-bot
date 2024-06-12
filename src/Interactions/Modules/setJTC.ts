@@ -61,13 +61,11 @@ export default class SetJTC extends MainInteraction {
                     })
                     return
                 }
-
-                const bot = interaction.guild!.members.cache.get(this.client.user!.id)!
     
                 const channel = interaction.channels.first() as VoiceChannel
                 if (channel) {
 
-                    await channel.permissionOverwrites.edit(bot, {
+                    await channel.permissionOverwrites.edit(this.bot!, {
                         ViewChannel: true
                     })
 
