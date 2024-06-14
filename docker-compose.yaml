@@ -8,6 +8,7 @@ services:
     ports:
       - "3000:3000"
     pull_policy: build
+    restart: unless-stopped
     environment:
       DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
       DISCORD_CLIENT_NAME: ${DISCORD_CLIENT_NAME}
