@@ -70,7 +70,7 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
                     Connect: false 
                 })
   
-                await new Promise(resolve => setTimeout(resolve, 150)) // 150ms delay
+                await client.utils.sleepFor(150) // 150ms delay
 
                 try {
                     if (channel && newState.member && newState.member.voice) {
@@ -89,7 +89,7 @@ const handleJTC = async (client: BaseClient, guild: Guild, oldState: VoiceState,
                     throw error
                 }
 
-                await new Promise(resolve => setTimeout(resolve, 5000)) // 5 seconds delay
+                await client.utils.sleepFor(1000 * 5) // 5 seconds delay
 
                 try {
                     if (!jtcChannel) return 

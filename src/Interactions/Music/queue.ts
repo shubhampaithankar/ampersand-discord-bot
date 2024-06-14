@@ -64,7 +64,8 @@ export default class QueueInteraction extends MainInteraction {
                         text: `${pagesNumber > 0 ? `${i + 1} / ${pagesNumber}`: ''} • Total Duration ${queueDuration} • ${interaction.member!.user.username}`
                     }
                 })
-                pages.push(page!)
+                if (!page) throw new Error('Unable to create page')
+                pages.push(page)
             }
             
             const prevCustomId = `${interaction.channelId}_${interaction.id}_prevPage`
@@ -83,10 +84,16 @@ export default class QueueInteraction extends MainInteraction {
 
             await interaction.reply({ embeds: [pages[0]], components: moreThanOne ? [buttonRow] : undefined })
 
-            if (!moreThanOne) return 
+            if (!moreThanOne) return
 
-            const collected = await this.client.utils.createInteractionCollector(interaction, [prevCustomId, nextCustomId, cancelCustomId], ComponentType.Button) as ButtonInteraction
-            if (collected) return await this.followUp(collected, interaction, pages, 0)
+            this.collector = interaction.channel!.createMessageComponentCollector({
+                componentType: ComponentType.Button,
+                filter: (i) => [prevCustomId, nextCustomId, cancelCustomId].includes(i.customId),
+                max: 1,
+                time: 1000 * 60 * 15
+            })
+
+            await this.followUp(interaction, pages, 0)
             
         } catch (error: any) {
             console.log('There was an error in Queue command: ', error)
@@ -96,58 +103,64 @@ export default class QueueInteraction extends MainInteraction {
 
     }
 
-    followUp = async (interaction: ButtonInteraction, prevInteraction: ChatInputCommandInteraction, pages: EmbedBuilder[], currentPage: number) => {
+    followUp = async (prevInteraction: ChatInputCommandInteraction, pages: EmbedBuilder[], currentPage: number) => {
         try {
-            await interaction.deferUpdate()
-      
-            const type = interaction.customId.split('_')[2]
-      
-            let pageNumber: number
+            const collector = this.collector!
 
-            const prevCustomId = `${prevInteraction.channelId}_${prevInteraction.id}_prevPage`
-            const nextCustomId = `${prevInteraction.channelId}_${prevInteraction.id}_nextPage`
-            const cancelCustomId =`${interaction.channelId}_${interaction.id}_cancel`
+            collector.on('collect', async (interaction: ButtonInteraction) => {
 
-            const prevButton = this.createButton('Previous', ButtonStyle.Secondary, prevCustomId)
-            const nextButton = this.createButton('Next', ButtonStyle.Secondary, nextCustomId)
-            const cancelButton = this.createButton('Cancel', ButtonStyle.Secondary, cancelCustomId)
-      
-            const buttonRow = new ActionRowBuilder<ButtonBuilder>()
-                .addComponents(prevButton, nextButton, cancelButton)
-      
-            switch (type) {
-                case 'prevPage': {
-                    pageNumber = currentPage === 0 ? pages.length - 1 : currentPage - 1
+                await interaction.deferUpdate()
+                    
+                const type = interaction.customId.split('_')[2]
+                let pageNumber: number = 0
+          
+                const prevCustomId = `${prevInteraction.channelId}_${prevInteraction.id}_prevPage`
+                const nextCustomId = `${prevInteraction.channelId}_${prevInteraction.id}_nextPage`
+                const cancelCustomId =`${interaction.channelId}_${interaction.id}_cancel`
+    
+                const prevButton = this.createButton('Previous', ButtonStyle.Secondary, prevCustomId)
+                const nextButton = this.createButton('Next', ButtonStyle.Secondary, nextCustomId)
+                const cancelButton = this.createButton('Cancel', ButtonStyle.Secondary, cancelCustomId)
+          
+                const buttonRow = new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents(prevButton, nextButton, cancelButton)
+                    
+                switch (type) {
+                    case 'prevPage': {
+                        pageNumber = currentPage === 0 ? pages.length - 1 : currentPage - 1
+                        await prevInteraction.editReply({ embeds: [pages[pageNumber]], components: [buttonRow] })
 
-                    await prevInteraction.editReply({ embeds: [pages[pageNumber]], components: [buttonRow] })
-                    break
-                }
-                case 'nextPage': {
-                    pageNumber = currentPage === pages.length - 1 ? 0 : currentPage + 1
-      
-                    await prevInteraction.editReply({ embeds: [pages[pageNumber]], components: [buttonRow] })
-                    break
-                }
-                case 'cancel': {
-                    await prevInteraction.editReply({ components: [] })
-                    return
-                }
-                default: {
-                    console.error('Invalid button type:', type)
-                    await interaction.reply('Invalid button type')
-                    return
-                }
-            }
+                        break
+                    }
+                    case 'nextPage': {
+                        pageNumber = currentPage === pages.length - 1 ? 0 : currentPage + 1
+                        await prevInteraction.editReply({ embeds: [pages[pageNumber]], components: [buttonRow] })
 
-            const collected = await this.client.utils.createInteractionCollector(interaction, [prevCustomId, nextCustomId, cancelCustomId], ComponentType.Button) as ButtonInteraction
-            if (collected) {
-                await this.followUp(collected, prevInteraction, pages, pageNumber)
-                return
-            }
+                        break
+                    }
+                    case 'cancel': break
+                    default: throw new Error('Invalid button type')
+                }
+                
+                this.collector = interaction.channel!.createMessageComponentCollector({
+                    componentType: ComponentType.Button,
+                    filter: (i) => [prevCustomId, nextCustomId, cancelCustomId].includes(i.customId),
+                    time: 1000 * 60 * 15, 
+                    max: 1
+                })
+
+                await this.followUp(prevInteraction, pages, pageNumber)
+            })
+
+            collector.on('end', async (collection, reason) => {
+                this.collector = undefined
+
+                const interaction = collection.first() as ButtonInteraction
+                if (interaction && reason === 'cancel') await interaction.editReply({ components: [] })
+            })
+
+
         } catch (error: any) {
-            console.log('There was an error in Queue command followUp: ', error)
-            await interaction.reply(`There was an error \`${error.message}\``)
-            return
         }
     }
     

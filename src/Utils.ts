@@ -1,7 +1,7 @@
-import { ChannelType, ComponentType, EmbedBuilder, Guild, GuildBasedChannel, GuildMember, InteractionCollector, MessageComponentType, PermissionResolvable, TextChannel } from 'discord.js'
+import { ButtonBuilder, ButtonComponentData, ChannelType, ComponentType, EmbedBuilder, Guild, GuildBasedChannel, GuildMember, InteractionCollector, MessageComponentType, PermissionResolvable, TextChannel } from 'discord.js'
 import { capitalize } from 'lodash'
 import BaseClient from './Client'
-import { EmbedDataType, InteractionTypes } from './Types'
+import { EmbedDataType } from './Types'
 import moment from 'moment'
 
 export default class Utils {
@@ -10,42 +10,7 @@ export default class Utils {
         this.client = client
     }
 
-    createInteractionCollector = async (interaction: InteractionTypes, customId: string | string[], componentType: MessageComponentType, endCallback?: () => unknown, max?: number, time?: number) => {
-        try {
-            let collector: InteractionCollector<any> | undefined
-            if (typeof customId === 'string') {
-                collector = interaction.channel?.createMessageComponentCollector({
-                    filter: i => i.customId === customId && i.user.id === interaction.user.id,
-                    componentType,
-                    max,
-                    time: time || 60 * 1e3
-                })
-            } else if (Array.isArray(customId)) {
-                collector = interaction.channel?.createMessageComponentCollector({
-                    filter: i => customId.includes(i.customId) && i.user.id === interaction.user.id,
-                    componentType,
-                    max,
-                    time: time || 60 * 1e3
-                })
-            } 
-
-            return new Promise((resolve, reject) => {
-                if (!collector) {
-                    console.error('Collector could not be created.')
-                    return null
-                }
-    
-                collector.on('collect', (collected: InteractionTypes) => resolve(collected))
-    
-                collector.on('error', (error) => reject(error))
-
-                collector.on('end', typeof endCallback === 'function' ? endCallback : () => {})
-            })
-        } catch (error) {
-            console.error('Error in interaction collector:', error)
-            return null
-        }
-    }
+    capitalizeString = (s: string) => s && s.length > 0 ? capitalize(s) : ''
 
     createMessageEmbed = async (data: EmbedDataType) => {
         try {
@@ -96,6 +61,16 @@ export default class Utils {
             return null
         }
     }
+
+    createButton = (data: ButtonComponentData, customId: string, url: string) => 
+        new ButtonBuilder()
+            .setCustomId(customId)
+            .setLabel(data.label ?? '')
+            .setStyle(data.style)
+            .setEmoji(data.emoji ?? '')
+            .setURL(url ?? undefined)
+            .setDisabled(data.disabled ?? false)
+    
       
     checkPermissionsFor = async (member: GuildMember, permissions: PermissionResolvable, guild: Guild, sendGeneral: boolean, channel?: GuildBasedChannel) => {
         let isAllowed: boolean = true
@@ -134,8 +109,6 @@ export default class Utils {
             return { isAllowed, missingPermissions }
         }
     }
-    
-    capitalizeString = (s: string) => s && s.length > 0 ? capitalize(s) : ''
 
     getMissingPermsString = (missingPermissions: string[], member: GuildMember) => `**Not enough permissions. Missing:** ${missingPermissions.map(perm => `\`${perm}\``).join(', ')} for <@${member.user.id}>`
 
@@ -160,6 +133,8 @@ export default class Utils {
         }
     }
 
+    getError = (error: unknown) => typeof error === 'string' ? this.capitalizeString(error) : error instanceof Error ? error.message : error
+
     formatDuration = (milliseconds: number) => {
         try {
             const duration = moment.duration(milliseconds)
@@ -176,4 +151,6 @@ export default class Utils {
             return ''
         }
     }
+
+    sleepFor = (time: number) => new Promise((resolve) => setTimeout(resolve, time))
 }

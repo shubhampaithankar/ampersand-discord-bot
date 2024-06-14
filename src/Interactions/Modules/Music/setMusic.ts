@@ -18,6 +18,7 @@ export default class SetMusicInteraction extends MainInteraction {
     }
   
     run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
+        await interaction.deferReply().catch(() => {})
         try {
             const guildMusicData = await getMusic(interaction.guild!)
             const isEnabled = guildMusicData && guildMusicData.enabled
@@ -38,143 +39,152 @@ export default class SetMusicInteraction extends MainInteraction {
             const row = new ActionRowBuilder<ButtonBuilder>()
                 .addComponents(button)
   
-            await interaction.reply({
+            await interaction.editReply({
                 content: description,
                 components: [row],
-                ephemeral: true
+            })
+
+            this.collector = interaction.channel!.createMessageComponentCollector({
+                componentType: ComponentType.Button,
+                max: 1,
+                filter: (i) => i.customId === customId && i.user.id === interaction.user.id
             })
   
-            const collected = await this.client.utils.createInteractionCollector(interaction, customId, ComponentType.Button, undefined, 1) as ButtonInteraction
-            if (collected) {
-                await this.followUp(collected, interaction, name)
-                return
-            }
+            await this.followUp(interaction, name)
 
         } catch (error: any) {
             console.log('There was an error in SetMusic command: ', error)
-            await interaction.reply(`There was an error \`${error.message}\``)
+            await interaction.editReply(`There was an error \`${error.message}\``)
             return
         }
     }
   
-    followUp = async (interaction: any, prevInteraction: any, name: string) => {
+    followUp = async (prevInteraction: any, name?: string) => {
         try {
-            const type = interaction.customId.split('_')[2]
-  
-            switch (type) {
-                case `onModule${name}`: {
-                    const inter = interaction as ButtonInteraction
-                    const prevInter = prevInteraction as ChatInputCommandInteraction
-  
-                    if (name === 'Enable') {
+            const collector = this.collector!
 
-                        const customId = `${inter.channelId}_${inter.id}_onChannelSelect`
-  
-                        const channelOptions = new ChannelSelectMenuBuilder()
-                            .setChannelTypes(ChannelType.GuildText)
-                            .setCustomId(customId)
-  
-                        const selectMenu = new ActionRowBuilder<ChannelSelectMenuBuilder>()
-                            .addComponents(channelOptions)
+            collector.on('collect', async (interaction: any) => {
+                const type = interaction.customId.split('_')[2]
 
-                        // Prevent the button from being clicked once user clicks enable
-                        try {
-                            const buttonId = `${prevInter.channelId}_${prevInter.id}_onModule${name}`
-                            const buttonComponent = inter.message.components[0].components.find(component => component.customId === buttonId)
+                switch (type) {
+                    case `onModule${name}`: {
+                        const inter = interaction as ButtonInteraction
+                        const prevInter = prevInteraction as ChatInputCommandInteraction
+      
+                        if (name === 'Enable') {
     
-                            if (buttonComponent) {
-                                const row = new ActionRowBuilder<ButtonBuilder>()
-                                    .addComponents(ButtonBuilder.from(buttonComponent as APIButtonComponent).setDisabled(true))
+                            const customId = `${inter.channelId}_${inter.id}_onChannelSelect`
+      
+                            const channelOptions = new ChannelSelectMenuBuilder()
+                                .setChannelTypes(ChannelType.GuildText)
+                                .setCustomId(customId)
+      
+                            const selectMenu = new ActionRowBuilder<ChannelSelectMenuBuilder>()
+                                .addComponents(channelOptions)
+    
+                            // Prevent the button from being clicked once user clicks enable
+                            try {
+                                const buttonId = `${prevInter.channelId}_${prevInter.id}_onModule${name}`
+                                const buttonComponent = inter.message.components[0].components.find(component => component.customId === buttonId)
         
+                                if (buttonComponent) {
+                                    const row = new ActionRowBuilder<ButtonBuilder>()
+                                        .addComponents(ButtonBuilder.from(buttonComponent as APIButtonComponent).setDisabled(true))
+            
+                                    await prevInter.editReply({
+                                        components: [row]
+                                    })
+                                }
+                            
+                            } catch (error: any) {
+                                console.log('There was an error in SetMusic command follow-up: ', error)
                                 await prevInter.editReply({
-                                    components: [row]
-                                })
+                                    content: `There was an error \`${error.message}\``,
+                                    components: []
+                                }) 
+                                return
                             }
-                        
-                        } catch (error: any) {
-                            console.log('There was an error in SetMusic command follow-up: ', error)
-                            await prevInteraction.editReply({
-                                content: `There was an error \`${error.message}\``,
-                                components: []
-                            }) 
+
+                            await inter.deferUpdate()
+    
+                            await prevInter.editReply({
+                                content: 'Please select a channel for the music module',
+                                components: [selectMenu],
+                            })
+
+                            this.collector = inter.channel!.createMessageComponentCollector({
+                                componentType: ComponentType.ChannelSelect,
+                                max: 1,
+                                filter: (i) => i.customId === customId && i.user.id === inter.user.id
+                            })
+
+                            await this.followUp(prevInter)
+
+                            return
+    
+                        } else {
+                            if (inter.guildId) {
+                                try {
+                                    await updateMusic(false, inter.guildId) // Add error handling
+                                    await prevInter.editReply({
+                                        content: `Disabled **Music module** for \`${inter.guild!.name}\``,
+                                        components: [],
+                                    })
+                                    return
+                                } catch (error: any) {
+                                    console.error('Error disabling music:', error)
+                                    await prevInter.editReply({
+                                        content: `There was an error \`${error.message}\``,
+                                        components: []
+                                    })
+                                    return
+                                }
+                            }
+                        }
+                        break
+                    }
+                    case 'onChannelSelect': {
+                        const inter = interaction as ChannelSelectMenuInteraction
+                        const prevInter = prevInteraction as ButtonInteraction
+
+                        if (!inter.channels) throw new Error('No channels found')
+
+                        if (inter.channels.size === 0) {
+                            await prevInter.editReply({
+                                content: 'Please select a channel',
+                                components: [],
+                            })
                             return
                         }
-
-                        await inter.reply({
-                            content: 'Please select a channel for the music module',
-                            components: [selectMenu],
-                            ephemeral: true
-                        })
-  
-                        const collected = await this.client.utils.createInteractionCollector(inter, customId, ComponentType.ChannelSelect, undefined, 1) as ChannelSelectMenuInteraction
-                        if (collected) {
-                            await this.followUp(collected, interaction, name)
-                            return 
-                        }
-
-                    } else {
-                        if (inter.guildId) {
+      
+                        const channel = inter.channels.first() as TextChannel
+                        if (channel && inter.guildId) {
                             try {
-                                await updateMusic(false, inter.guildId) // Add error handling
+                                await updateMusic(true, inter.guildId)
                                 await prevInter.editReply({
-                                    content: `Disabled **Music module** for \`${inter.guild!.name}\``,
+                                    content: `Enabled **Music module** and successfully set \`${channel.name}\` as Music Commands Input Channel`,
                                     components: [],
                                 })
                                 return
                             } catch (error: any) {
-                                console.error('Error disabling music:', error)
-                                await prevInteraction.editReply({
+                                console.error('Error enabling music:', error)
+                                await prevInter.editReply({
                                     content: `There was an error \`${error.message}\``,
                                     components: []
                                 })
                                 return
                             }
                         }
+                        break
                     }
-                    break
+                    default: {
+                        collector.stop()
+                        throw new Error('Invalid input. Please try again.')
+                    }
                 }
-                case 'onChannelSelect': {
-                    const inter = interaction as ChannelSelectMenuInteraction
-                    const prevInter = prevInteraction as ButtonInteraction
-  
-                    if (!inter.channels) return // Check for missing channels
+            })
 
-                    if (inter.channels.size === 0) {
-                        await prevInter.editReply({
-                            content: 'Please select a channel',
-                            components: [],
-                        })
-                        return
-                    }
-  
-                    const channel = inter.channels.first() as TextChannel
-                    if (channel && inter.guildId) {
-                        try {
-                            await updateMusic(true, inter.guildId)
-                            await prevInter.editReply({
-                                content: `Enabled **Music module** and successfully set \`${channel.name}\` as Music Commands Input Channel`,
-                                components: [],
-                            })
-                            return
-                        } catch (error: any) {
-                            console.error('Error enabling music:', error)
-                            await prevInteraction.editReply({
-                                content: `There was an error \`${error.message}\``,
-                                components: []
-                            })
-                            return
-                        }
-                    }
-                    break
-                }
-                default: {
-                    await prevInteraction.editReply({
-                        content: 'Invalid input, please try again',
-                        components: []
-                    })
-                    return
-                }
-            }
+            collector.on('end', () => {})
 
             return
         } catch (error: any) {

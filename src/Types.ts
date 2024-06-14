@@ -1,31 +1,29 @@
-import { 
-    AutocompleteInteraction, ButtonInteraction, ChannelSelectMenuInteraction, 
-    ChatInputCommandInteraction, CommandInteraction, ContextMenuCommandInteraction, 
-    MentionableSelectMenuInteraction, Message, MessageComponentInteraction, MessageContextMenuCommandInteraction, 
-    ModalSubmitInteraction, RoleSelectMenuInteraction, StringSelectMenuInteraction, 
-    UserContextMenuCommandInteraction, UserSelectMenuInteraction, VoiceChannel, Collection, PermissionResolvable,
+import { Message, VoiceChannel, Collection, PermissionResolvable,
     ApplicationCommandDataResolvable,
     EmbedAuthorOptions,
     ColorResolvable,
     EmbedFooterOptions,
     APIEmbedField,
-    SlashCommandBuilder
+    SlashCommandBuilder,
+    InteractionCollector,
+    Interaction,
+    CacheType,
+    GuildMember
 } from 'discord.js'
 
 export type InteractionConfig = {
     type: number
+    enabled?: boolean
     category?: string
     aliases?: string[]
     cooldown?: number
+    collector?: InteractionCollector<any>
     permissions?: PermissionResolvable
+    bot?: GuildMember
     data: ApplicationCommandDataResolvable
 }
 
-export type InteractionTypes = ( AutocompleteInteraction | ButtonInteraction 
-    | ChannelSelectMenuInteraction | ChatInputCommandInteraction | CommandInteraction | ContextMenuCommandInteraction 
-    | MentionableSelectMenuInteraction | MessageComponentInteraction | MessageContextMenuCommandInteraction
-    | ModalSubmitInteraction | RoleSelectMenuInteraction | StringSelectMenuInteraction | UserContextMenuCommandInteraction | UserSelectMenuInteraction ) 
-    & { commandName?: string, customId?: string, message?: Message, channels?: Collection<string, VoiceChannel> }
+export type InteractionType = Interaction<CacheType> & { commandName?: string, customId?: string, message?: Message, channels?: Collection<string, VoiceChannel> }
 
 export type EmbedDataType = {
     author: EmbedAuthorOptions;

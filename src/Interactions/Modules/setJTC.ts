@@ -1,6 +1,6 @@
 import Client from '../../Client'
 import { MainInteraction } from '../../Classes'
-import { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentType, SlashCommandBuilder, VoiceChannel } from 'discord.js'
+import { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentType, InteractionCollector, SlashCommandBuilder, VoiceChannel } from 'discord.js'
 import { updateJTC } from '../../Database/databaseUtils'
 
 export default class SetJTC extends MainInteraction {
@@ -13,7 +13,7 @@ export default class SetJTC extends MainInteraction {
             category: 'Modules',
             data: new SlashCommandBuilder()
                 .setName('setjtc')
-                .setDescription('shows jtc menu')
+                .setDescription('shows jtc menu'),
         })
     }
 
@@ -31,8 +31,13 @@ export default class SetJTC extends MainInteraction {
                 components: [selectMenu]
             })
 
-            const collected = await this.client.utils.createInteractionCollector(interaction, customId, ComponentType.ChannelSelect, undefined, 1) as ChannelSelectMenuInteraction
-            if (collected) return await this.followUp(collected, interaction)
+            this.collector = interaction.channel!.createMessageComponentCollector({
+                componentType: ComponentType.ChannelSelect,
+                max: 1,
+                filter: (i) => i.customId === customId && i.user.id === interaction.user.id
+            })
+
+            await this.followUp(interaction)
 
         } catch (error: any) {
             console.log('There was an error in SetJTC command: ', error)
@@ -40,28 +45,44 @@ export default class SetJTC extends MainInteraction {
             return
         }
     }
-    
-    async followUp(interaction: ChannelSelectMenuInteraction, prevInteraction: ChatInputCommandInteraction) {
+
+    followUp = async (prevInteraction: ChatInputCommandInteraction) => {
         try {
-            if (!interaction.channels) return
 
-            if (interaction.channels.size <= 0) {
-                await interaction.reply('Please select a channel')
-                return
-            }
+            const collector = this.collector!
 
-            const channel = interaction.channels.first() as VoiceChannel
-            if (channel) {
-                await updateJTC(channel, true)
-                await prevInteraction.editReply({
-                    content: `Enabled **Join To Create** module and successfully set \`${channel.name}\` as join to create Channel`,
-                    components: []
-                })
+            collector.on('collect', async (interaction: ChannelSelectMenuInteraction) => {
+                if (!interaction.channels) return
+        
+                if (interaction.channels.size <= 0) {
+                    await prevInteraction.editReply({
+                        content: 'Please select a channel',
+                        components: []
+                    })
+                    return
+                }
+    
+                const channel = interaction.channels.first() as VoiceChannel
+                if (channel) {
+
+                    await channel.permissionOverwrites.edit(this.bot!, {
+                        ViewChannel: true
+                    })
+
+                    await updateJTC(channel, true)
+                    
+                    await prevInteraction.editReply({
+                        content: `Enabled **Join To Create** module and successfully set \`${channel.name}\` as join to create Channel`,
+                        components: []
+                    })
+                }
                 return
-            }
-            
+            })    
+
+            collector.on('end', () => {})
+
         } catch (error: any) {
-            console.log('There was an error in SetJTC command: ', error)
+            console.log('There was an error in SetJTC followUp: ', error)
             await prevInteraction.editReply({
                 content: `There was an error \`${error.message}\``,
                 components: []

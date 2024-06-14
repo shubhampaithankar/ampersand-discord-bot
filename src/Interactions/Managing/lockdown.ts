@@ -96,9 +96,14 @@ export default class LockdownInteraction extends MainInteraction {
             })
 
             const timeLimit = 1e3 * 60 * 6 * 12 // 12 hours
+            this.collector = interaction.channel!.createMessageComponentCollector({
+                componentType: ComponentType.Button,
+                filter: (i) => [removeButtonId, scheduleRemoveButtonId].includes(i.customId) && i.user.id === interaction.user.id,
+                max: 1,
+                time: timeLimit
+            })
 
-            // const collected = await this.client.utils.createInteractionCollector(interaction, [removeButtonId, scheduleRemoveButtonId], ComponentType.Button, undefined, 1, timeLimit) as ButtonInteraction
-            // if (collected) return this.followUp(collected, interaction)
+            this.followUp(interaction, guildLockdown)
 
         } catch (error: any) {
             console.log('There was an error in Help command: ', error)
@@ -107,16 +112,66 @@ export default class LockdownInteraction extends MainInteraction {
         }
     }
 
-    followUp = async (interaction: ButtonInteraction, prevInteraction: ChatInputCommandInteraction, ...args: any[]) => {
+    followUp = async (prevInteraction: ChatInputCommandInteraction, guildLockdown: any) => {
         try {
+            const guild = prevInteraction.guild!
+
+            const collector = this.collector!
+            collector.on('collect', async (interaction: ButtonInteraction) => {
+                const type = interaction.customId.split('_')[2]
+
+                const channels = guild.channels.cache as Collection<string, GuildChannel>
+
+                const { everyone } = guild.roles
+
+                switch (type) {
+                    case 'removeLockdown': break
+                    case 'removeLockdownAfterSchedule': {
+                        const timeLimit = 1e3 * 60 * 6 * 6 // 6 hours
+                        collector.stop()
+                        await this.client.utils.sleepFor(timeLimit)
+                        break
+                    }
+                    default: return
+                }
+
+                for (const channel of channels.values()) {
+                    channel.permissionOverwrites.edit(everyone, {
+                        Connect: guildLockdown.originalPermissions.get(channel.id)?.Connect,
+                        SendMessages: guildLockdown.originalPermissions.get(channel.id)?.SendMessages,
+                        // ReadMessageHistory: false,
+                    })
+                }
+                updateLockdown(guild, false)
+            })
+
+            collector.on('end', async () => {
+                const embed = await this.client.utils.createMessageEmbed({
+                    author: {
+                        name: this.client.user!.displayName,
+                        iconURL: this.client.user?.avatarURL() || undefined
+                    },
+                    color: 'Red',
+                    title: 'Lockdown Command',
+                    description: `
+                    **Lockdown Disabled** for server: \`${guild.name}\``,
+                    timestamp: Date.now(),
+                    footer: {
+                        text: prevInteraction.member!.user.username,
+                    },
+                })
+    
+                if (!embed) throw new Error('Unable to create embed')
+
+                await prevInteraction.editReply({
+                    embeds: [embed],
+                    components: []
+                })
+            })
         } catch (error: any) {
             console.log('There was an error in Help command: ', error)
-            await interaction.reply(`There was an error \`${error.message}\``)
+            await prevInteraction.editReply(`There was an error \`${error.message}\``)
             return
         }
     }
-}
-
-type OriginalPermissionsType = {
-    [permission: string]: boolean | null
 }

@@ -1,6 +1,6 @@
 import Client from '../../Client'
 import { MainEvent } from '../../Classes'
-import { InteractionTypes } from '../../Types'
+import { InteractionType } from '../../Types'
 import { musicSchema } from '../../Database/Schemas'
 import { Events } from 'discord.js'
 
@@ -8,77 +8,82 @@ export default class InteractionCreate extends MainEvent {
     constructor (client: Client) {
         super(client, Events.InteractionCreate)
     }
-    async run(baseInteraction: InteractionTypes) {
+    async run(interaction: InteractionType) {
         try {
+            if (!interaction.inGuild()) return
+            const guild = interaction.guild!
 
-            if (!baseInteraction.inGuild()) return
-            const guild = baseInteraction.guild!
+            const bot = guild.members.cache.get(this.client.user!.id!)
+            if (!bot) return
 
-            // const bot = guild.members.cache.get(this.client.user!.id!)
-            // if (!bot) return
-
-            const member = guild.members.cache.get(baseInteraction.member.user.id)
+            const member = guild.members.cache.get(interaction.member.user.id)
             if (!member) return
 
-            const commandName: string | null = baseInteraction.message?.interaction?.commandName || baseInteraction.commandName || null
+            const commandName: string | null = interaction.message?.interaction?.commandName || interaction.commandName || null
             if (!commandName) return
             
-            const interaction = this.client.interactions.get(commandName) || this.client.aliases.get(commandName)
-            if (!interaction) return 
+            const command = this.client.interactions.get(commandName) || this.client.aliases.get(commandName)
+            if (!command) return 
 
-            if (interaction.permissions) {
-                const { isAllowed, missingPermissions } = await this.client.utils.checkPermissionsFor(member, interaction.permissions, guild, false)
+            command.bot = bot
+
+            if (command.permissions) {
+                const { isAllowed, missingPermissions } = await this.client.utils.checkPermissionsFor(member, command.permissions, guild, false)
                 if (!isAllowed) {
-                    await interaction.reject(baseInteraction, this.client.utils.getMissingPermsString(missingPermissions, member))
+                    await command.reject({ 
+                        interaction, 
+                        message: this.client.utils.getMissingPermsString(missingPermissions, member) 
+                    })
                     return
                 }
             }
 
-            try {
+            if (!interaction.customId) {
+
                 const { cooldowns } = this.client
-                
+                    
                 if (!cooldowns.has(commandName)) {
                     cooldowns.set(commandName, new Map())
                 }
     
                 const now = Date.now()
                 const timestamps = cooldowns.get(commandName)!
-                const cooldownAmount = (interaction.cooldown || 2) * 1000
+                const cooldownAmount = (command.cooldown || 2) * 1000
 
                 if (timestamps.has(member.user.id)) {
                     const expirationTime = timestamps.get(member.user.id)! + cooldownAmount
       
                     if (now < expirationTime) {
                         const timeLeft = (expirationTime - now) / 1000 // Convert milliseconds to seconds
-                        interaction.reject(baseInteraction, `You're on cooldown for this command. Please wait ${timeLeft.toFixed(1)} seconds.`)
+                        await command.reject({ 
+                            interaction, 
+                            message: `You're on cooldown for this command. Please wait ${timeLeft.toFixed(1)} seconds.`
+                        })
                         return
                     }
                 }
-            } catch (error) {
-                throw error
-            }
 
-            if (!baseInteraction.customId) {
-                switch (interaction.category) {
+                switch (command.category) {
                     case 'Music': {
                         const guildMusicData = await musicSchema.findOne({
                             guildId: guild.id
                         })
                         if (!guildMusicData || !guildMusicData.enabled) {
-                            await interaction.reject(
+                            await command.reject({
                                 interaction, 
-                                `**Music Module** is \`Disabled\` for **${guild.name}**.\n Enable it by using the \`/setmusic\` command.`
-                            )
+                                message: `**Music Module** is \`Disabled\` for **${guild.name}**.\n Enable it by using the \`/setmusic\` command.`
+                            })
                             return
                         }
-                        const channel = guild.channels.cache.get(baseInteraction.channelId!)
+                        const channel = guild.channels.cache.get(interaction.channelId!)
                         if (!channel) return
 
                         if (!guildMusicData.channelIds.includes(channel.id)) {
-                            await interaction.reject(
+                            await command.reject({
                                 interaction, 
-                                `**${channel.name}** is \`not present\` in music database for **${guild.name}**.\n Add it by using the \`/addmusicchannel\` command.`
-                            )
+                                message: `**${channel.name}** is \`not present\` in music database for **${guild.name}**.\n Add it by using the \`/addmusicchannel\` command.`
+
+                            })
                             return
                         }
                         break
@@ -88,8 +93,8 @@ export default class InteractionCreate extends MainEvent {
                     default: break
                 }
 
-                await interaction.run(baseInteraction)
-                
+                timestamps.set(member.user.id, now)
+                await command.run(interaction)
             }
 
         } catch (error) {

@@ -1,45 +1,64 @@
 import Client from './Client'
-import { ApplicationCommandDataResolvable, ChatInputCommandInteraction, InteractionCollector, PermissionResolvable, ShardingManager, SlashCommandBuilder } from 'discord.js'
-import { InteractionConfig, InteractionTypes } from './Types'
+import { ApplicationCommandDataResolvable, GuildMember, InteractionCollector, PermissionResolvable, ShardingManager } from 'discord.js'
+import { InteractionConfig } from './Types'
 import { Poru } from 'poru'
 
 export class MainInteraction {
     client: Client
     type: number
+    enabled?: boolean
     aliases?: string[]
     category?: string
     cooldown?: number
+    collector?: InteractionCollector<any>
     permissions?: PermissionResolvable
+    bot?: GuildMember
     data: ApplicationCommandDataResolvable
-    // collector: InteractionCollector // remove followUp function and add collector here
 
     constructor(client: Client, config: InteractionConfig) {
         this.client = client
         this.type = config.type
+        this.enabled = config.enabled || true
         this.category = config.category || ''
         this.aliases = config.aliases || []
         this.cooldown = config.cooldown
+        this.collector = config.collector
         this.permissions = config.permissions
         this.data = config.data
     }
 
-    async run(interaction: InteractionTypes, ...args: string[]) {
+    async run(interaction: any, ...args: string[]) {
         try {
             throw new Error(`Interaction ${this.data} doesn't provide a run method!`)
-        } catch (error) {
-            console.log(error)
+        } catch (error: unknown) {
+            const message = this.client.utils.getError(error)
+            console.log(`There was an error in ${this.data} followUp: `, error)
+            await interaction.editReply({
+                content: `There was an error \`${message}\``,
+                components: []
+            }) 
+            return
         }
     }
 
-    async followUp(interaction: any, prevInteraction?: InteractionTypes, ...args: any[]) {
+    async followUp(prevInteraction: any, ...args: any[]): Promise<any> {
         try {
-            throw new Error(`Interaction ${this.data} doesn't provide a run method!`)
-        } catch (error) {
-            console.log(error)
+            const collector = this.collector!
+            collector.on('collect', (interaction: any) => {
+
+            })
+        } catch (error: unknown) {
+            const message = this.client.utils.getError(error)
+            console.log(`There was an error in ${this.data} followUp: `, error)
+            await prevInteraction.editReply({
+                content: `There was an error \`${message}\``,
+                components: []
+            }) 
+            return
         }
     }
 
-    async reject(interaction: any, message: string) {
+    async reject({ interaction, message }: any) {
         try {
             await interaction.reply(message)
         } catch (error) {
