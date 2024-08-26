@@ -76,6 +76,17 @@ export const getJTCChannel = async (channel: VoiceBasedChannel) => {
     }
 }
 
+export const getJTCChannels = async (guild: Guild) => {
+    try {
+        const data = await jtcChannelsSchema.findOne({ 
+            guildId: guild.id
+        })
+        return data?.toObject() || null
+    } catch (error) {
+        console.log('Database Error: while finding music data:\n', error)
+    }
+}
+
 export const updateJTCChannels = async (channel: VoiceChannel, add: boolean) => {
     try {
         const query = { guildId: channel.guildId }
