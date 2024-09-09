@@ -1,11 +1,11 @@
 import { Client, Collection, ShardingManager } from 'discord.js'
 import { REST } from '@discordjs/rest'
 import { Poru } from 'poru'
-import mongoose from 'mongoose'
 
 import { MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Classes'
 import Loader from './Loader'
 import Utils from './Utils'
+import { Connection } from 'mysql2/promise'
 
 export default class BaseClient extends Client {
     interactions: Collection<string, MainInteraction>
@@ -16,7 +16,7 @@ export default class BaseClient extends Client {
     musicEvents: Collection<string, MainMusicEvent>
     
 
-    database: mongoose.mongo.Db | null = null
+    database: Connection | null = null
     // music: Manager | null = null
     music: Poru | null = null
     manager: ShardingManager | null = null
