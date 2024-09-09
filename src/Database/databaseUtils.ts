@@ -1,6 +1,8 @@
 import { Guild, TextChannel, VoiceBasedChannel, VoiceChannel } from 'discord.js'
 import { guildSchema, jtcChannelsSchema, jtcSchema, lockdownSchema, musicSchema } from './Schemas'
 
+import { Connection } from 'mysql2/promise'
+
 export const getGuildData = async (guild: Guild) => {
     try {
         const data = await guildSchema.findOne({ id: guild.id })
@@ -152,5 +154,63 @@ export const updateLockdown = async (guild: Guild, value: boolean, originalPermi
         })
     } catch (error) {
         console.log('Database Error: while updating lockdown data:\n', error)
+    }
+}
+
+export const initializeDatabase = async (connection: Connection) => {
+    const createGuildsTable = `
+      CREATE TABLE IF NOT EXISTS guilds (
+        id VARCHAR(255) PRIMARY KEY,
+        isDeleted BOOLEAN,
+        joinedAt BIGINT,
+        name VARCHAR(255),
+        ownerId VARCHAR(255)
+      );
+    `
+  
+    const createJTCTable = `
+      CREATE TABLE IF NOT EXISTS jtc (
+        guildId VARCHAR(255),
+        channelId VARCHAR(255),
+        enabled BOOLEAN,
+        PRIMARY KEY (guildId, channelId)
+      );
+    `
+  
+    const createJTCChannelsTable = `
+      CREATE TABLE IF NOT EXISTS jtc_channels (
+        guildId VARCHAR(255),
+        channelIds VARCHAR(255)
+      );
+    `
+  
+    const createMusicTable = `
+      CREATE TABLE IF NOT EXISTS music (
+        guildId VARCHAR(255),
+        channelIds VARCHAR(255),
+        enabled BOOLEAN,
+        PRIMARY KEY (guildId)
+      );
+    `
+  
+    const createLockdownTable = `
+      CREATE TABLE IF NOT EXISTS lockdown (
+        guildId VARCHAR(255),
+        enabled BOOLEAN,
+        originalPermissions JSON,
+        PRIMARY KEY (guildId)
+      );
+    `
+  
+    try {
+        await connection.query(createGuildsTable)
+        await connection.query(createJTCTable)
+        await connection.query(createJTCChannelsTable)
+        await connection.query(createMusicTable)
+        await connection.query(createLockdownTable)
+
+        // console.log('Tables created successfully!')
+    } catch (error) {
+        console.error('Error creating tables:', error)
     }
 }

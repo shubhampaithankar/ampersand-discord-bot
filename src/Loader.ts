@@ -1,6 +1,7 @@
 import path from 'path'
 import Client from './Client'
 import mongoose from 'mongoose'
+import { createConnection } from 'mysql2/promise'
 
 import { Guild, Routes, ShardingManager } from 'discord.js'
 import { readdirSync, lstatSync } from 'fs'
@@ -9,6 +10,7 @@ import { Poru } from 'poru'
 import { Spotify } from 'poru-spotify'
 
 import { MainEvent, MainInteraction, MainShardEvent, MainMusicEvent } from './Classes'
+import { initializeDatabase } from './Database/databaseUtils'
 
 export default class Loader {
     client: Client
@@ -23,7 +25,7 @@ export default class Loader {
         try {
 
             await this.connectToDB()
-            console.log(`Connected to database: ${this.client.database?.databaseName}`)
+            console.log(`Connected to database: ${this.client.database?.config.database}`)
    
             await this.loadEventHandler('./Events')
             console.log(`Loaded ${this.client.events.size} Event(s)`)
@@ -61,8 +63,19 @@ export default class Loader {
 
     connectToDB = async () => {
         try {
-            const mongo = await mongoose.connect(process.env.MONGO_URL!)
-            this.client.database = mongo.connection.db
+            // todo: add mysql with mysql2 package connection to database
+            const connection = await createConnection({
+                host: process.env.DATABASE_HOST!, 
+                user: process.env.DATABASE_USER!, 
+                password: process.env.DATABASE_PASSWORD!, 
+                database: process.env.DATABASE_NAME!,
+                port: Number(process.env.DATABASE_PORT!),
+            })
+            this.client.database = connection
+            initializeDatabase(this.client.database)
+            // const mongo = await mongoose.connect(process.env.MONGO_URL!)
+            // this.client.database = mongo.connection.db
+
         } catch (error) {
             console.log('There was en error while connecting to database:\n',error)
         }
