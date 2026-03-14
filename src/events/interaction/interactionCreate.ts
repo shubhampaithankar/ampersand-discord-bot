@@ -1,9 +1,12 @@
-import Client from "../../client";
-import { MainEvent, MainInteraction } from "../../classes";
-import { InteractionType } from "../../types";
-import * as MusicService from "../../models/music/music.service";
 import { Events, GuildMember } from "discord.js";
-import { checkPermissions, formatMissingPermissions } from "../../services/discord.permissions";
+import { MainEvent, MainInteraction } from "../../classes";
+import Client from "../../client";
+import * as MusicService from "../../models/music/music.service";
+import {
+  checkPermissions,
+  formatMissingPermissions,
+} from "../../services/discord.permissions";
+import { InteractionType } from "../../types";
 
 export default class InteractionCreate extends MainEvent {
   constructor(client: Client) {
@@ -34,13 +37,21 @@ export default class InteractionCreate extends MainEvent {
       command.bot = bot;
 
       if (command.permissions) {
-        const { botAllowed, memberAllowed, missingBotPermissions, missingMemberPermissions } =
-          checkPermissions(bot, member, command.permissions);
+        const {
+          botAllowed,
+          memberAllowed,
+          missingBotPermissions,
+          missingMemberPermissions,
+        } = checkPermissions(bot, member, command.permissions);
 
         if (!botAllowed) {
           await command.reject({
             interaction,
-            message: formatMissingPermissions(missingBotPermissions, bot, 'bot'),
+            message: formatMissingPermissions(
+              missingBotPermissions,
+              bot,
+              "bot",
+            ),
           });
           return;
         }
@@ -48,7 +59,11 @@ export default class InteractionCreate extends MainEvent {
         if (!memberAllowed) {
           await command.reject({
             interaction,
-            message: formatMissingPermissions(missingMemberPermissions, member, 'member'),
+            message: formatMissingPermissions(
+              missingMemberPermissions,
+              member,
+              "member",
+            ),
           });
           return;
         }
@@ -71,10 +86,10 @@ export default class InteractionCreate extends MainEvent {
 
         switch (command.category) {
           case "Music": {
-            if (!channel || !await verifyMusicCommand(guild.id, channel.id)) {
+            if (!channel || !(await verifyMusicCommand(guild.id, channel.id))) {
               await command.reject({
                 interaction,
-                message: `**${channel?.toString() ?? 'This channel'}** is \`not present\` in music database for **${guild.name}**.\n Add it by using the \`/addmusicchannel\` command.`,
+                message: `**${channel?.toString() ?? "This channel"}** is \`not present\` in music database for **${guild.name}**.\n Add it by using the \`/addmusicchannel\` command.`,
               });
               return;
             }
@@ -96,7 +111,7 @@ export default class InteractionCreate extends MainEvent {
 }
 
 const verifyMusicCommand = async (guildId: string, channelId: string) => {
-  const guildMusicData = await MusicService.getGuildMusicData(guildId);
+  const guildMusicData = await MusicService.getMusic(guildId);
   if (!guildMusicData || !guildMusicData.enabled) return false;
   return guildMusicData.channelIds.includes(channelId);
 };

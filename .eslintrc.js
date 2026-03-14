@@ -1,42 +1,34 @@
-module.exports = {
-    'env': {
-        'browser': true,
-        'es2021': true
+export default {
+  env: {
+    browser: true,
+    es2021: true,
+  },
+  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  overrides: [
+    {
+      env: {
+        node: true,
+      },
+      files: [".eslintrc.{js,cjs}"],
+      parserOptions: {
+        sourceType: "script",
+      },
     },
-    'extends': [
-        'eslint:recommended',
-        'plugin:@typescript-eslint/recommended'
-    ],
-    'overrides': [
-        {
-            'env': {
-                'node': true
-            },
-            'files': [
-                '.eslintrc.{js,cjs}'
-            ],
-            'parserOptions': {
-                'sourceType': 'script'
-            }
-        }
-    ],
-    'parser': '@typescript-eslint/parser',
-    'parserOptions': {
-        'ecmaVersion': 'latest',
-        'sourceType': 'module'
-    },
-    'plugins': [
-        '@typescript-eslint'
-    ],
-    'rules': {
-        'no-empty': 'off',
-        'quotes': ['error', 'single'],
-        'semi': ['error', 'never'],
-        'indent': ['error', 4, { 'SwitchCase': 1 }],
-        'no-multi-spaces': ['error'],
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/no-unused-vars': 'off',
-        'no-useless-catch': 'off'
-    }
-    
-}
+  ],
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    ecmaVersion: "latest",
+    sourceType: "module",
+  },
+  plugins: ["@typescript-eslint"],
+  rules: {
+    "no-empty": "off",
+    // 'quotes': ['error', 'single'],
+    semi: ["error", "never"],
+    // indent: ["error", 4, { SwitchCase: 1 }],
+    "no-multi-spaces": ["error"],
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "no-useless-catch": "off",
+  },
+};

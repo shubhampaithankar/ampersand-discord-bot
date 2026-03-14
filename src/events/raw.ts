@@ -8,14 +8,22 @@ export default class RawEvent extends MainEvent {
   }
 
   async run(data: any) {
-    if (this.client.poru) {
-      switch (data.t) {
-        case "VOICE_SERVER_UPDATE":
-        case "VOICE_STATE_UPDATE":
-          this.client.poru.updateVoiceState(data.d);
-          break;
-        // Handle other raw events here
-      }
-    }
+    handlePoruWebsocket(data, this.client);
   }
 }
+
+const handlePoruWebsocket = (data: any, client: Client) => {
+  try {
+    if (!client.poru) return;
+
+    switch (data.t) {
+      case "VOICE_SERVER_UPDATE":
+      case "VOICE_STATE_UPDATE":
+        client.poru.packetUpdate(data.d);
+        break;
+      // Handle other raw events here
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};

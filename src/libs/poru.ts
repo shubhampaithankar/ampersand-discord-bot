@@ -1,6 +1,7 @@
 import { Poru } from "poru";
-import { Spotify } from "poru-spotify";
 import type BaseClient from "../client";
+
+const SPOTIFY_ENABLED = false;
 
 export const createPoru = (client: BaseClient) =>
   new Poru(
@@ -17,11 +18,13 @@ export const createPoru = (client: BaseClient) =>
     {
       library: "discord.js",
       defaultPlatform: "ytsearch",
-      plugins: [
-        new Spotify({
-          clientID: `${process.env.SPOTIFY_CLIENT_ID}`,
-          clientSecret: `${process.env.SPOTIFY_CLIENT_SECRET}`,
-        }),
-      ],
+      // plugins: SPOTIFY_ENABLED
+      //   ? [
+      //       new Spotify({
+      //         clientID: `${process.env.SPOTIFY_CLIENT_ID}`,
+      //         clientSecret: `${process.env.SPOTIFY_CLIENT_SECRET}`,
+      //       }),
+      //     ]
+      //   : [],
     },
   );
