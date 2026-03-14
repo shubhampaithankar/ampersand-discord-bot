@@ -1,27 +1,19 @@
-# Use a lightweight Node.js base image
-FROM node:18-alpine AS builder
+FROM oven/bun:alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json (or yarn.lock)
-COPY package*.json ./
+COPY package.json bun.lock ./
 
-# Install dependencies
-RUN npm install
+RUN bun install --frozen-lockfile
 
-# Copy the rest of your bot code
 COPY . .
 
-# Build a slimmer image for production
-FROM node:18-alpine
+FROM oven/bun:alpine
 
-# Copy only the production dependencies and your bot code
-COPY --from=builder /app/node_modules /app/node_modules
+WORKDIR /app
+
 COPY --from=builder /app .
 
-# Expose the port your bot listens on (adjust if needed)
 EXPOSE 3000
 
-# Set the command to run your bot application
-CMD [ "npm", "start" ]
+CMD [ "bun", "run", "app.ts" ]
