@@ -12,6 +12,7 @@ import {
   TextChannel,
 } from "discord.js";
 import * as MusicService from "../../../models/music/music.service";
+import { getError } from "../../../services/general.utils";
 
 export default class AddMusicChannelInteraction extends MainInteraction {
   guildMusicData: any;
@@ -99,7 +100,7 @@ export default class AddMusicChannelInteraction extends MainInteraction {
         },
       );
     } catch (error: any) {
-      const message = this.client.utils.getError(error);
+      const message = getError(error);
       console.log(
         "There was an error in addMusicChannel followUp command: ",
         error,

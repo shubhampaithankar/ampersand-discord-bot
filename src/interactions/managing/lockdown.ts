@@ -14,6 +14,8 @@ import {
   buildCustomIds,
   createButtonHandler,
 } from "../../services/interaction.collector";
+import { botAuthor, errorEmbed } from "../../services/embed.builder";
+import type { ChannelPermissionSet } from "../../types/permission.types";
 
 export default class LockdownInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -37,10 +39,7 @@ export default class LockdownInteraction extends MainInteraction {
       const isEnabled = !!guildLockdown && guildLockdown.enabled;
 
       // Capture original permissions before locking (used by restore handlers below)
-      const originalPermissions = new Map<
-        string,
-        { Connect: boolean; SendMessages: boolean }
-      >();
+      const originalPermissions = new Map<string, ChannelPermissionSet>();
 
       try {
         for (const channel of channels.values()) {
@@ -74,19 +73,13 @@ export default class LockdownInteraction extends MainInteraction {
         throw error;
       }
 
-      const embed = await this.client.utils.createMessageEmbed({
-        author: {
-          name: this.client.user!.displayName,
-          iconURL: this.client.user?.avatarURL() || undefined,
-        },
-        color: "Red",
-        title: "Lockdown Command",
-        description: `**Lockdown ${!isEnabled ? "Enabled" : "Disabled"}** for server: \`${guild.name}\`\n${!isEnabled ? "\nClick on **Remove Lockdown** button to remove it\n**OR**\nUse command **/lockdown** again" : ""}`,
-        timestamp: Date.now(),
-        footer: { text: interaction.member!.user.username },
+      const embed = errorEmbed({
+        author: botAuthor(this.client),
+        title: `Lockdown ${!isEnabled ? "Enabled" : "Disabled"}`,
+        description: `Server \`${guild.name}\` is now **${!isEnabled ? "locked down" : "unlocked"}**.${!isEnabled ? "\n\nUse **Remove Lockdown** below or run **/lockdown** again to unlock." : ""}`,
+        footer: interaction.member!.user.username,
+        timestamp: true,
       });
-
-      if (!embed) throw new Error("Unable to create embed");
 
       const ids = buildCustomIds(
         interaction,
@@ -129,21 +122,17 @@ export default class LockdownInteraction extends MainInteraction {
       };
 
       const buildEndEmbed = () =>
-        this.client.utils.createMessageEmbed({
-          author: {
-            name: this.client.user!.displayName,
-            iconURL: this.client.user?.avatarURL() || undefined,
-          },
-          color: "Red",
-          title: "Lockdown Command",
-          description: `**Lockdown Disabled** for server: \`${guild.name}\``,
-          timestamp: Date.now(),
-          footer: { text: interaction.member!.user.username },
+        errorEmbed({
+          author: botAuthor(this.client),
+          title: "Lockdown Disabled",
+          description: `Server \`${guild.name}\` has been unlocked.`,
+          footer: interaction.member!.user.username,
+          timestamp: true,
         });
 
-      createButtonHandler(
-        interaction.channel!,
-        {
+      createButtonHandler({
+        channel: interaction.channel!,
+        handlers: {
           [ids.removeLockdown]: async (i) => {
             await i.deferUpdate();
             await restoreLockdown();
@@ -156,17 +145,15 @@ export default class LockdownInteraction extends MainInteraction {
             });
           },
         },
-        (i) =>
+        filter: (i) =>
           [ids.removeLockdown, ids.removeLockdownAfterSchedule].includes(
             i.customId,
           ) && i.user.id === interaction.user.id,
-        1e3 * 60 * 60 * 12, // 12 hours
-        async () => {
-          const endEmbed = await buildEndEmbed();
-          if (!endEmbed) return;
-          await interaction.editReply({ embeds: [endEmbed], components: [] });
+        time: 1e3 * 60 * 60 * 12, // 12 hours
+        onEnd: async () => {
+          await interaction.editReply({ embeds: [buildEndEmbed()], components: [] });
         },
-      );
+      });
     } catch (error: any) {
       console.log("There was an error in Lockdown command: ", error);
       await interaction.editReply(`There was an error \`${error.message}\``);

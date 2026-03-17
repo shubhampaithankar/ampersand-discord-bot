@@ -6,8 +6,13 @@ import {
   PermissionResolvable,
   ShardingManager,
 } from "discord.js";
-import { InteractionConfig } from "./types";
 import { Poru } from "poru";
+import type {
+  EventConfig,
+  InteractionConfig,
+  RejectPayload,
+} from "./types/interaction.types";
+import { getError } from "./services/general.utils";
 
 export class MainInteraction {
   client: Client;
@@ -37,7 +42,7 @@ export class MainInteraction {
     try {
       throw new Error(`Interaction ${this.data} doesn't provide a run method!`);
     } catch (error: unknown) {
-      const message = this.client.utils.getError(error);
+      const message = getError(error);
       console.log(`There was an error in ${this.data} followUp: `, error);
       await interaction.editReply({
         content: `There was an error \`${message}\``,
@@ -52,7 +57,7 @@ export class MainInteraction {
       const collector = this.collector!;
       collector.on("collect", (interaction: any) => {});
     } catch (error: unknown) {
-      const message = this.client.utils.getError(error);
+      const message = getError(error);
       console.log(`There was an error in ${this.data} followUp: `, error);
       await prevInteraction.editReply({
         content: `There was an error \`${message}\``,
@@ -62,7 +67,7 @@ export class MainInteraction {
     }
   }
 
-  async reject({ interaction, message }: any) {
+  async reject({ interaction, message }: RejectPayload) {
     try {
       await interaction.reply(message);
     } catch (error) {
@@ -76,7 +81,7 @@ export class MainEvent {
   name: string;
   type: string;
   emitter: Client;
-  constructor(client: Client, name: string, config: any = {}) {
+  constructor(client: Client, name: string, config: EventConfig = {}) {
     this.client = client;
     this.name = name;
     this.type = config && config.once ? "once" : "on";
@@ -98,7 +103,7 @@ export class MainShardEvent {
   name: string;
   type: string;
   emitter: ShardingManager | null;
-  constructor(client: Client, name: string, config: any = {}) {
+  constructor(client: Client, name: string, config: EventConfig = {}) {
     this.client = client;
     this.name = name;
     this.type = config && config.once ? "once" : "on";
@@ -120,7 +125,7 @@ export class MainMusicEvent {
   name: string;
   type: string;
   emitter: Poru | null;
-  constructor(client: Client, name: string, config: any = {}) {
+  constructor(client: Client, name: string, config: EventConfig = {}) {
     this.client = client;
     this.name = name;
     this.type = config && config.once ? "once" : "on";

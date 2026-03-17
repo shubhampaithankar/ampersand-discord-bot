@@ -11,6 +11,8 @@ import { default as BaseClient, default as Client } from "../client";
 import * as JTCService from "../models/jtc/jtc.service";
 import { checkSinglePermissions } from "../services/discord.permissions";
 import * as jtc from "../services/jtc.redis";
+import { sleepFor } from "../services/general.utils";
+import type { JtcData } from "../types/jtc.types";
 
 export default class VoiceStateUpdateEvent extends MainEvent {
   constructor(client: Client) {
@@ -19,6 +21,8 @@ export default class VoiceStateUpdateEvent extends MainEvent {
   async run(oldState: VoiceState, newState: VoiceState) {
     if (newState.member?.guild === null) return;
     const { guild } = newState.member! || oldState.member!;
+
+    disconnectPlayer({ client: this.client, guild, oldState });
 
     handleJTC({
       client: this.client,
@@ -45,11 +49,10 @@ const handleJTC = async ({
     const bot = guild.members.cache.get(client.user!.id!);
     if (!bot) return;
 
-    const { isAllowed } = checkSinglePermissions(bot, [
-      "ManageChannels",
-      "ManageRoles",
-      "MoveMembers",
-    ]);
+    const { isAllowed } = checkSinglePermissions({
+      member: bot,
+      permissions: ["ManageChannels", "ManageRoles", "MoveMembers"],
+    });
     if (!isAllowed) return;
 
     const jtcData = await JTCService.getJTC(guild.id);
@@ -58,7 +61,7 @@ const handleJTC = async ({
     if (oldState.channelId === jtcData.channelId) return; // No action on leaving jtc channel
 
     await Promise.all([
-      createJTCChannel(guild, newState, jtcData, bot, client),
+      createJTCChannel({ guild, newState, jtcData, bot, client }),
       deleteJTCChannel(guild, oldState),
     ]);
   } catch (error) {
@@ -66,24 +69,30 @@ const handleJTC = async ({
   }
 };
 
-const createJTCChannel = async (
-  guild: Guild,
-  newState: VoiceState,
-  jtcData: any,
-  bot: GuildMember,
-  client: Client,
-) => {
+const createJTCChannel = async ({
+  guild,
+  newState,
+  jtcData,
+  bot,
+  client,
+}: {
+  guild: Guild;
+  newState: VoiceState;
+  jtcData: JtcData;
+  bot: GuildMember;
+  client: Client;
+}) => {
   // On joining the JTC channel
   try {
     if (newState?.channel?.id !== jtcData.channelId) return;
     const jtcChannel = guild.channels.cache.get(
       jtcData.channelId,
     ) as VoiceChannel;
-    const { isAllowed: isJTCChannelAllowed } = checkSinglePermissions(
-      bot,
-      "ViewChannel",
-      jtcChannel,
-    );
+    const { isAllowed: isJTCChannelAllowed } = checkSinglePermissions({
+      member: bot,
+      permissions: "ViewChannel",
+      channel: jtcChannel,
+    });
 
     if (!jtcChannel || !isJTCChannelAllowed) return;
 
@@ -95,11 +104,11 @@ const createJTCChannel = async (
         type: ChannelType.GuildVoice,
       });
     } else {
-      const { isAllowed: isParentAllowed } = checkSinglePermissions(
-        bot,
-        "ViewChannel",
-        jtcChannel.parent,
-      );
+      const { isAllowed: isParentAllowed } = checkSinglePermissions({
+        member: bot,
+        permissions: "ViewChannel",
+        channel: jtcChannel.parent,
+      });
       if (!isParentAllowed) return;
 
       channel = await jtcChannel.parent.children.create({
@@ -113,14 +122,14 @@ const createJTCChannel = async (
       Connect: false,
     });
 
-    await client.utils.sleepFor(200); // 200ms delay
+    await sleepFor(200); // 200ms delay
 
     if (channel && newState.member && newState.member.voice) {
       await newState.member.voice.setChannel(channel);
       await jtc.addToSet(guild.id, channel.id);
     }
 
-    await client.utils.sleepFor(1000 * 3); // 3 seconds delay
+    await sleepFor(1000 * 3); // 3 seconds delay
 
     if (!jtcChannel) return;
     await jtcChannel.permissionOverwrites.edit(guild.roles.everyone, {
@@ -157,4 +166,30 @@ const deleteJTCChannel = async (guild: Guild, oldState: VoiceState) => {
   } catch (error) {
     console.log(error);
   }
+};
+
+const disconnectPlayer = ({
+  client,
+  guild,
+  oldState,
+}: {
+  client: BaseClient;
+  guild: Guild;
+  oldState: VoiceState;
+}) => {
+  if (!oldState.channel) return;
+
+  const botId = client.user!.id;
+  const { members } = oldState.channel;
+
+  // Only act if bot is in the channel that was just left
+  if (!members.has(botId)) return;
+
+  // Bot is the only one left
+  if (members.size !== 1) return;
+
+  const player = client.poru?.get(guild.id);
+  if (!player) return;
+
+  player.destroy();
 };

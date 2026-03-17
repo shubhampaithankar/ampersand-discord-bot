@@ -1,7 +1,9 @@
 import Client from '../client'
 import { MainInteraction } from '../classes'
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
-import { EmbedDataType, HelpInteractionType } from '../types'
+import { APIEmbedField, ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
+import { HelpInteractionType } from '../types/interaction.types'
+import { botAuthor, infoEmbed } from '../services/embed.builder'
+import { capitalizeString } from '../services/general.utils'
 
 export default class HelpInteraction extends MainInteraction {
     constructor(client: Client) {
@@ -16,20 +18,9 @@ export default class HelpInteraction extends MainInteraction {
 
     run = async (interaction: ChatInputCommandInteraction) => {
         try {
-            const embedData: EmbedDataType = {
-                author: {
-                    name: this.client.user!.displayName,
-                    iconURL: this.client.user?.avatarURL() || undefined
-                },
-                color: 'Aqua',
-                title: 'Help Command',
-                timestamp: Date.now(),
-                footer: {
-                    text: interaction.member!.user.username,
-                },
-                fields: []
-            }
             const query = interaction.options.getString('query')?.toLowerCase()
+            const fields: APIEmbedField[] = []
+            let title = 'Help'
 
             const interactions: HelpInteractionType = {}
             this.client.interactions.forEach(interaction => {
@@ -45,17 +36,17 @@ export default class HelpInteraction extends MainInteraction {
             if (!query) {
                 categories.forEach(category => {
                     const commandsString = interactions[category !== 'misc' ? category : ''].map((item) => `\`${item.name}\``).join(' ')
-                    embedData.fields!.push({
-                        name: this.client.utils.capitalizeString(category),
+                    fields.push({
+                        name: capitalizeString(category),
                         value: commandsString
                     })
                 })
             } else {
-                const commands: string[] = [] 
+                const commands: string[] = []
                 Object.values(interactions).forEach(item => item.forEach(command => commands.push(command.name.toLowerCase()))) as unknown as string[]
                 if (commands.includes(query)) {
                     const command = Object.values(interactions).map(item => item.find(command => command.name === query))[0]!
-                    embedData.fields!.push({
+                    fields.push({
                         name: 'Name',
                         value: `\`${command.name}\``,
                         inline: true
@@ -64,33 +55,34 @@ export default class HelpInteraction extends MainInteraction {
                         value: `${command.description}`
                     })
                     const options = command.options.map(option => `\`${option.toJSON().name}\``).join(', ')
-                    embedData.fields!.push({
+                    fields.push({
                         name: 'Params',
                         value: options
                     })
                 } else if (categories.includes(query)) {
                     const category = query === 'misc' ? '' : query
                     const data = interactions[category]
+                    title = `${capitalizeString(query)} Category`
 
                     for (const command of data) {
-                        embedData.fields!.push({
+                        fields.push({
                             name: command.name,
                             value: `\`${command.description}\``
                         })
                     }
-
-                    embedData.title = `${this.client.utils.capitalizeString(query)} Category`
                 }
             }
 
-            const embed = await this.client.utils.createMessageEmbed(embedData)
-            if (!embed) throw new Error('There was an error in Help command')
-
-            await interaction.reply({
-                embeds: [embed]
+            const embed = infoEmbed({
+                author: botAuthor(this.client),
+                title,
+                fields,
+                footer: interaction.member!.user.username,
+                timestamp: true,
             })
 
-            return 
+            await interaction.reply({ embeds: [embed] })
+            return
         } catch (error: any) {
             console.log('There was an error in Help command: ', error)
             await interaction.reply(`There was an error \`${error.message}\``)

@@ -11,7 +11,6 @@ import {
   MainMusicEvent,
 } from "./classes";
 import Loader from "./loader";
-import Utils from "./utils";
 
 export default class BaseClient extends Client {
   interactions: Collection<string, MainInteraction>;
@@ -27,7 +26,6 @@ export default class BaseClient extends Client {
   manager: ShardingManager | null = null;
 
   loader = new Loader(this);
-  utils = new Utils(this);
 
   rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN!);
 

@@ -8,6 +8,9 @@ import {
 } from "discord.js";
 import { MainInteraction } from "../../classes";
 import Client from "../../client";
+import { botAuthor, musicEmbed } from "../../services/embed.builder";
+import { getMusicPlayer } from "../../services/guild.player";
+import { formatDuration } from "../../services/general.utils";
 import {
   buildCustomIds,
   createPaginator,
@@ -33,7 +36,7 @@ export default class QueueInteraction extends MainInteraction {
       const member = guild.members.cache.get(interaction.member!.user.id);
       if (!member) return;
 
-      const player = await this.client.utils.getMusicPlayer(guild.id);
+      const player = getMusicPlayer({ client: this.client, guildId: guild.id });
       if (!player || !player.isConnected) {
         await interaction.editReply("No player found in any voice channels");
         return;
@@ -58,9 +61,9 @@ export default class QueueInteraction extends MainInteraction {
 
       const tracks = player.queue.map(
         (track, i) =>
-          `**${i + 1}.** - [${track.info.title}](${track.info.uri || ""}) - \`${this.client.utils.formatDuration(track.info.length)}\` • ${track.info.requester}`,
+          `**${i + 1}.** - [${track.info.title}](${track.info.uri || ""}) - \`${formatDuration(track.info.length)}\` • ${track.info.requester}`,
       );
-      const queueDuration = this.client.utils.formatDuration(
+      const queueDuration = formatDuration(
         player.queue
           .map((track) => track.info.length)
           .reduce((acc, curr) => acc + curr, 0),
@@ -71,22 +74,12 @@ export default class QueueInteraction extends MainInteraction {
 
       for (let i = 0; i < pagesNumber; i++) {
         const str = tracks.slice(i * 10, i * 10 + 10).join("\n");
-        const page = await this.client.utils.createMessageEmbed({
-          author: {
-            name: this.client.user!.username,
-            iconURL: this.client.user?.avatarURL() || undefined,
-          },
-          color: "Blue",
-          title: "Queue Command",
-          description: `
-                        **Now Playing:**\n[${currentTrack.info.title}](${currentTrack.info.uri || ""}) - \`${this.client.utils.formatDuration(currentTrack.info.length)}\` • ${currentTrack.info.requester}\n
-                        ${str === "" ? " Nothing" : "\n" + str}
-                    `,
-          footer: {
-            text: `${pagesNumber > 0 ? `${i + 1} / ${pagesNumber}` : ""} • Total Duration ${queueDuration} • ${interaction.member!.user.username}`,
-          },
+        const page = musicEmbed({
+          author: botAuthor(this.client),
+          title: "Queue",
+          description: `**Now Playing:**\n[${currentTrack.info.title}](${currentTrack.info.uri || ""}) — \`${formatDuration(currentTrack.info.length)}\` • ${currentTrack.info.requester}\n\n${str === "" ? "*Nothing in queue*" : str}`,
+          footer: `${pagesNumber > 0 ? `${i + 1} / ${pagesNumber}` : ""} • Total Duration ${queueDuration} • ${interaction.member!.user.username}`,
         });
-        if (!page) throw new Error("Unable to create page");
         pages.push(page);
       }
 
@@ -117,12 +110,12 @@ export default class QueueInteraction extends MainInteraction {
       });
 
       if (moreThanOne) {
-        createPaginator(
+        createPaginator({
           interaction,
           pages,
-          { prev: ids.prevPage, next: ids.nextPage, cancel: ids.cancel },
+          customIds: { prev: ids.prevPage, next: ids.nextPage, cancel: ids.cancel },
           buttonRow,
-        );
+        });
       }
     } catch (error: any) {
       console.log("There was an error in Queue command: ", error);

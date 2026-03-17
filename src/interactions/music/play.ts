@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { Response } from "poru";
 import { MainInteraction } from "../../classes";
 import Client from "../../client";
+import { getMusicPlayer } from "../../services/guild.player";
 
 export default class PlayInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -36,12 +37,13 @@ export default class PlayInteraction extends MainInteraction {
         return;
       }
 
-      const player = await this.client.utils.getMusicPlayer(
-        guild.id,
-        channel.id,
-        interaction.channelId,
-        true,
-      );
+      const player = getMusicPlayer({
+        client: this.client,
+        guildId: guild.id,
+        voiceChannel: channel.id,
+        textChannel: interaction.channelId,
+        create: true,
+      });
       if (!player) {
         await interaction.editReply(
           "There was an error while creating a player",

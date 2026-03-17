@@ -3,27 +3,24 @@ import {
   GuildMember,
   PermissionResolvable,
 } from "discord.js";
+import type {
+  DualPermissionCheckResult,
+  PermissionCheckResult,
+} from "../types/permission.types";
 
-export type PermissionCheckResult = {
-  isAllowed: boolean;
-  missingPermissions: string[];
-};
+export type { PermissionCheckResult, DualPermissionCheckResult };
 
-export type DualPermissionCheckResult = {
-  /** True only when both bot and member pass */
-  isAllowed: boolean;
-  botAllowed: boolean;
-  memberAllowed: boolean;
-  missingBotPermissions: string[];
-  missingMemberPermissions: string[];
-};
-
-export const checkPermissions = (
-  bot: GuildMember,
-  member: GuildMember,
-  permissions: PermissionResolvable,
-  channel?: GuildBasedChannel,
-): DualPermissionCheckResult => {
+export const checkPermissions = ({
+  bot,
+  member,
+  permissions,
+  channel,
+}: {
+  bot: GuildMember;
+  member: GuildMember;
+  permissions: PermissionResolvable;
+  channel?: GuildBasedChannel;
+}): DualPermissionCheckResult => {
   const botPerms = channel ? channel.permissionsFor(bot) : bot.permissions;
   const memberPerms = channel
     ? channel.permissionsFor(member)
@@ -41,11 +38,15 @@ export const checkPermissions = (
   };
 };
 
-export const checkSinglePermissions = (
-  member: GuildMember,
-  permissions: PermissionResolvable,
-  channel?: GuildBasedChannel,
-): PermissionCheckResult => {
+export const checkSinglePermissions = ({
+  member,
+  permissions,
+  channel,
+}: {
+  member: GuildMember;
+  permissions: PermissionResolvable;
+  channel?: GuildBasedChannel;
+}): PermissionCheckResult => {
   const perms = channel ? channel.permissionsFor(member) : member.permissions;
 
   return {
@@ -54,11 +55,15 @@ export const checkSinglePermissions = (
   };
 };
 
-export const formatMissingPermissions = (
-  missing: string[],
-  member: GuildMember,
-  label: "bot" | "member" = "member",
-): string => {
+export const formatMissingPermissions = ({
+  missing,
+  member,
+  label = "member",
+}: {
+  missing: string[];
+  member: GuildMember;
+  label?: "bot" | "member";
+}): string => {
   const formatted = missing.map((p) => `\`${p}\``).join(", ");
   const who = label === "bot" ? "Bot" : `<@${member.user.id}>`;
   return `**Not enough permissions for ${who}. Missing:** ${formatted}`;

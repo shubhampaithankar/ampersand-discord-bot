@@ -1,4 +1,4 @@
-import { Events, GuildMember } from "discord.js";
+import { CacheType, Events, GuildMember, RepliableInteraction } from "discord.js";
 import { MainEvent, MainInteraction } from "../../classes";
 import Client from "../../client";
 import * as MusicService from "../../models/music/music.service";
@@ -6,7 +6,7 @@ import {
   checkPermissions,
   formatMissingPermissions,
 } from "../../services/discord.permissions";
-import { InteractionType } from "../../types";
+import { InteractionType } from "../../types/interaction.types";
 
 export default class InteractionCreate extends MainEvent {
   constructor(client: Client) {
@@ -42,28 +42,28 @@ export default class InteractionCreate extends MainEvent {
           memberAllowed,
           missingBotPermissions,
           missingMemberPermissions,
-        } = checkPermissions(bot, member, command.permissions);
+        } = checkPermissions({ bot, member, permissions: command.permissions });
 
         if (!botAllowed) {
           await command.reject({
-            interaction,
-            message: formatMissingPermissions(
-              missingBotPermissions,
-              bot,
-              "bot",
-            ),
+            interaction: interaction as RepliableInteraction<CacheType>,
+            message: formatMissingPermissions({
+              missing: missingBotPermissions,
+              member: bot,
+              label: "bot",
+            }),
           });
           return;
         }
 
         if (!memberAllowed) {
           await command.reject({
-            interaction,
-            message: formatMissingPermissions(
-              missingMemberPermissions,
+            interaction: interaction as RepliableInteraction<CacheType>,
+            message: formatMissingPermissions({
+              missing: missingMemberPermissions,
               member,
-              "member",
-            ),
+              label: "member",
+            }),
           });
           return;
         }
@@ -93,7 +93,7 @@ export default class InteractionCreate extends MainEvent {
 
             if (!channelIds) {
               await command.reject({
-                interaction,
+                interaction: interaction as RepliableInteraction<CacheType>,
                 message: `Music module is currently disabled. Run /setmusic command to enable it.`,
               });
               return;
@@ -101,7 +101,7 @@ export default class InteractionCreate extends MainEvent {
 
             if (!channelIds?.includes(channel?.id ?? "")) {
               await command.reject({
-                interaction,
+                interaction: interaction as RepliableInteraction<CacheType>,
                 message: `**${channel?.toString() ?? "This channel"}** is \`not present\` in music database for **${guild.name}**.\n Add it by using the \`/addmusicchannel\` command.`,
               });
               return;
@@ -156,7 +156,7 @@ const handleCooldown = async ({
     if (now < expirationTime) {
       const timeLeft = (expirationTime - now) / 1000; // Convert milliseconds to seconds
       await command.reject({
-        interaction,
+        interaction: interaction as RepliableInteraction<CacheType>,
         message: `You're on cooldown for this command. Please wait ${timeLeft.toFixed(1)} seconds.`,
       });
       return null;

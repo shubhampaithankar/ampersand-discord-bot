@@ -9,6 +9,9 @@ import {
   InteractionCollector,
   TextBasedChannel,
 } from "discord.js";
+import type { ButtonHandlerMap } from "../types/collector.types";
+
+export type { ButtonHandlerMap };
 
 /**
  * Generate consistent button custom IDs anchored to a slash command interaction,
@@ -38,13 +41,21 @@ export const buildCustomIds = <T extends string>(
  *
  * @returns The underlying collector, or null if there is only one page.
  */
-export const createPaginator = (
-  interaction: ChatInputCommandInteraction,
-  pages: EmbedBuilder[],
-  customIds: { prev: string; next: string; cancel: string },
-  buttonRow: ActionRowBuilder<ButtonBuilder>,
-  { time = 1000 * 60 * 15, userId }: { time?: number; userId?: string } = {},
-): InteractionCollector<ButtonInteraction> | null => {
+export const createPaginator = ({
+  interaction,
+  pages,
+  customIds,
+  buttonRow,
+  time = 1000 * 60 * 15,
+  userId,
+}: {
+  interaction: ChatInputCommandInteraction;
+  pages: EmbedBuilder[];
+  customIds: { prev: string; next: string; cancel: string };
+  buttonRow: ActionRowBuilder<ButtonBuilder>;
+  time?: number;
+  userId?: string;
+}): InteractionCollector<ButtonInteraction> | null => {
   if (!interaction.channel || pages.length <= 1) return null;
 
   let currentPage = 0;
@@ -86,31 +97,27 @@ export const createPaginator = (
   return collector;
 };
 
-export type ButtonHandlerMap = Record<
-  string,
-  (interaction: ButtonInteraction) => Promise<void>
->;
 
 /**
  * Create a one-shot button handler that maps customIds to async handler functions.
  * The collector stops after the first matching click (max: 1).
- *
- * @param channel   Channel to listen on.
- * @param handlers  Map of customId → async handler.
- * @param filter    Filter function (e.g. user ID check + customId check).
- * @param time      Collector timeout in milliseconds.
- * @param onEnd     Optional callback when the collector ends (timeout or manual stop).
  */
-export const createButtonHandler = (
-  channel: TextBasedChannel,
-  handlers: ButtonHandlerMap,
-  filter: (i: ButtonInteraction) => boolean | Promise<boolean>,
-  time: number,
+export const createButtonHandler = ({
+  channel,
+  handlers,
+  filter,
+  time,
+  onEnd,
+}: {
+  channel: TextBasedChannel;
+  handlers: ButtonHandlerMap;
+  filter: (i: ButtonInteraction) => boolean | Promise<boolean>;
+  time: number;
   onEnd?: (
     collection: Collection<string, ButtonInteraction>,
     reason: string,
-  ) => Promise<void>,
-): InteractionCollector<ButtonInteraction> => {
+  ) => Promise<void>;
+}): InteractionCollector<ButtonInteraction> => {
   const collector = channel.createMessageComponentCollector({
     componentType: ComponentType.Button,
     filter,
