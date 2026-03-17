@@ -33,7 +33,7 @@ export default class ReadyEvent extends MainEvent {
           amount: "auto",
         });
 
-      if (this.client.poru) this.client.poru.init(this.client);
+      if (this.client.poru) await this.client.poru.init();
 
       this.client.user!.setPresence({
         status: "dnd",

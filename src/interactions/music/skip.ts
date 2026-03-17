@@ -42,7 +42,7 @@ export default class SkipInteraction extends MainInteraction {
                 await interaction.editReply('There is no music playing')
                 return
             }
-            player.stop()
+            await player.skip()
             await interaction.editReply(`Skipped current track: \`${player.currentTrack.info.title}\``)
             return
 

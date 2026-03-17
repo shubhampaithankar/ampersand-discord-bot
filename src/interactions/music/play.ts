@@ -72,7 +72,8 @@ export default class PlayInteraction extends MainInteraction {
         });
         if (res.loadType === "error") {
           if (!player.currentTrack) player.destroy();
-          throw new Error("There was an error while resolving tracks");
+          console.log(res);
+          // throw new Error("There was an error while resolving tracks");
         }
       } catch (err) {
         console.log(err);

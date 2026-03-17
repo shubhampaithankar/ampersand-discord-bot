@@ -17,7 +17,7 @@ export const createPoru = (client: BaseClient) =>
     ],
     {
       library: "discord.js",
-      defaultPlatform: "ytsearch",
+      defaultPlatform: "ytmsearch",
       // plugins: SPOTIFY_ENABLED
       //   ? [
       //       new Spotify({

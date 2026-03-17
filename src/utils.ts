@@ -10,13 +10,13 @@ import {
   TextChannel,
 } from "discord.js";
 import { capitalize } from "lodash";
-import BaseClient from "./client";
-import { EmbedDataType } from "./types";
 import moment from "moment";
+import BaseClient from "./client";
 import {
   checkSinglePermissions,
   formatMissingPermissions,
 } from "./services/discord.permissions";
+import { EmbedDataType } from "./types";
 
 export default class Utils {
   client: BaseClient;

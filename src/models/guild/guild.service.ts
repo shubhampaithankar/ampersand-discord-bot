@@ -5,7 +5,7 @@ export const getGuild = (guildId: string) =>
     .lean()
     .catch(() => null);
 
-export const createGuild = (body) =>
+export const createGuild = (body: any) =>
   Guild.create(body).catch((e) =>
     console.log("Database Error: while adding guild data:\n", e),
   );

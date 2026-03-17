@@ -14,7 +14,7 @@ export default class GuildDeleteEvent extends MainEvent {
 }
 
 export const onLeave = async (guild: Guild) => {
-  const guildData = await GuildService.getGuildData(guild.id);
+  const guildData = await GuildService.getGuild(guild.id);
   if (!guildData) return;
   await GuildService.deleteGuild(guild.id);
 };

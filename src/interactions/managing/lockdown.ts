@@ -56,9 +56,9 @@ export default class LockdownInteraction extends MainInteraction {
             });
           } else {
             await channel.permissionOverwrites.edit(everyone, {
-              Connect: guildLockdown.originalPermissions.get(channel.id)
+              Connect: (guildLockdown.originalPermissions as any).get(channel.id)
                 ?.Connect,
-              SendMessages: guildLockdown.originalPermissions.get(channel.id)
+              SendMessages: (guildLockdown.originalPermissions as any).get(channel.id)
                 ?.SendMessages,
             });
           }

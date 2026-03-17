@@ -98,8 +98,8 @@ export default class SetMusicInteraction extends MainInteraction {
               try {
                 const buttonId = `${prevInter.channelId}_${prevInter.id}_onModule${name}`;
                 const buttonComponent =
-                  inter.message.components[0].components.find(
-                    (component) => component.customId === buttonId,
+                  (inter.message.components[0] as any).components.find(
+                    (component: any) => component.customId === buttonId,
                   );
 
                 if (buttonComponent) {

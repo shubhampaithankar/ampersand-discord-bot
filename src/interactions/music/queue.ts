@@ -51,6 +51,10 @@ export default class QueueInteraction extends MainInteraction {
       }
 
       const { currentTrack } = player;
+      if (!currentTrack) {
+        await interaction.editReply("There is no music playing");
+        return;
+      }
 
       const tracks = player.queue.map(
         (track, i) =>
