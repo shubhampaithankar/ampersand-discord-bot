@@ -86,7 +86,20 @@ export default class InteractionCreate extends MainEvent {
 
         switch (command.category) {
           case "Music": {
-            if (!channel || !(await verifyMusicCommand(guild.id, channel.id))) {
+            const channelIds = await verifyMusicCommand(
+              guild.id,
+              channel?.id ?? "",
+            );
+
+            if (!channelIds) {
+              await command.reject({
+                interaction,
+                message: `Music module is currently disabled. Run /setmusic command to enable it.`,
+              });
+              return;
+            }
+
+            if (!channelIds?.includes(channel?.id ?? "")) {
               await command.reject({
                 interaction,
                 message: `**${channel?.toString() ?? "This channel"}** is \`not present\` in music database for **${guild.name}**.\n Add it by using the \`/addmusicchannel\` command.`,
@@ -112,8 +125,8 @@ export default class InteractionCreate extends MainEvent {
 
 const verifyMusicCommand = async (guildId: string, channelId: string) => {
   const guildMusicData = await MusicService.getMusic(guildId);
-  if (!guildMusicData || !guildMusicData.enabled) return false;
-  return guildMusicData.channelIds.includes(channelId);
+  if (!guildMusicData || !guildMusicData.enabled) return null;
+  return guildMusicData.channelIds;
 };
 
 const handleCooldown = async ({

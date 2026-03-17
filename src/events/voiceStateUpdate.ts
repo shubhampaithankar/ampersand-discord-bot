@@ -126,7 +126,6 @@ const createJTCChannel = async (
     await jtcChannel.permissionOverwrites.edit(guild.roles.everyone, {
       Connect: null,
     });
-    console.log(`working till here`);
   } catch (error) {
     console.log(error);
   }

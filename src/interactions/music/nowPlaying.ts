@@ -15,6 +15,7 @@ export default class NowPlayingInteraction extends MainInteraction {
     }
 
     run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
+        await interaction.deferReply()
         try {
             const guild = this.client.guilds.cache.get(interaction.guildId!)
             if (!guild) return
@@ -24,22 +25,22 @@ export default class NowPlayingInteraction extends MainInteraction {
       
             const player = await this.client.utils.getMusicPlayer(guild.id)
             if (!player || !player.isConnected) {
-                await interaction.reply('No player found in any voice channels')
+                await interaction.editReply('No player found in any voice channels')
                 return
             }
     
             const { channel } = member.voice
             if (!channel) {
-                await interaction.reply('You need to join the voice channel')
+                await interaction.editReply('You need to join the voice channel')
                 return
             }
     
             if (player.voiceChannel !== channel.id) {
-                await interaction.reply('You\'re not in the same voice channel')
+                await interaction.editReply('You\'re not in the same voice channel')
                 return
             }
             if (!player.currentTrack) {
-                await interaction.reply('There is no music playing')
+                await interaction.editReply('There is no music playing')
                 return
             }
 
@@ -60,12 +61,12 @@ export default class NowPlayingInteraction extends MainInteraction {
                 thumbnail: currentTrack.info.artworkUrl || undefined
             })
 
-            await interaction.reply({ embeds: [embed!]})
+            await interaction.editReply({ embeds: [embed!]})
             return
 
         } catch (error: any) {
             console.log('There was an error in NowPlaying command: ', error)
-            await interaction.reply(`There was an error \`${error.message}\``)
+            await interaction.editReply(`There was an error \`${error.message}\``)
             return
         }
 

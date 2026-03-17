@@ -1,7 +1,7 @@
+import { TextChannel } from "discord.js";
 import { Player, Track } from "poru";
 import { MainMusicEvent } from "../classes";
 import Client from "../client";
-import { TextChannel } from "discord.js";
 
 export default class QueueEndEvent extends MainMusicEvent {
   constructor(client: Client) {
@@ -10,7 +10,7 @@ export default class QueueEndEvent extends MainMusicEvent {
 
   async run(player: Player, track: Track) {
     try {
-      const existing = player.get("queueEndTimeout");
+      const existing = player.get("queueEndTimeout") as NodeJS.Timeout | null;
       if (existing) clearTimeout(existing);
 
       const timeout = setTimeout(async () => {

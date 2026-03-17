@@ -19,7 +19,7 @@ const handlePoruWebsocket = (data: any, client: Client) => {
     switch (data.t) {
       case "VOICE_SERVER_UPDATE":
       case "VOICE_STATE_UPDATE":
-        client.poru.packetUpdate(data.d);
+        client.poru.packetUpdate(data);
         break;
       // Handle other raw events here
     }

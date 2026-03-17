@@ -14,6 +14,7 @@ export default class JoinInteraction extends MainInteraction {
     }
 
     run = async (interaction: ChatInputCommandInteraction, ...args: string[]) => {
+        await interaction.deferReply()
         try {
             const guild = this.client.guilds.cache.get(interaction.guildId!)
             if (!guild) return
@@ -23,29 +24,29 @@ export default class JoinInteraction extends MainInteraction {
             
             const { channel } = member.voice
             if (!channel) {
-                await interaction.reply('You need to join a voice channel')
+                await interaction.editReply('You need to join a voice channel')
                 return
             }
       
             const player = await this.client.utils.getMusicPlayer(guild.id, channel.id, interaction.channelId, true)
             if (!player) {
-                await interaction.reply('Unable to create player')
+                await interaction.editReply('Unable to create player')
                 return
             }
     
             if (player.isConnected) {
                 if (player.voiceChannel !== channel.id) {
-                    await interaction.reply('There is a player already present in another voice channel')
+                    await interaction.editReply('There is a player already present in another voice channel')
                     return
                 }
             } 
     
             player.connect()
-            await interaction.reply(`Joined **${channel.name}**`)
+            await interaction.editReply(`Joined **${channel.name}**`)
             return
         } catch (error: any) {
             console.log('There was an error in Join command: ', error)
-            await interaction.reply(`There was an error \`${error.message}\``)
+            await interaction.editReply(`There was an error \`${error.message}\``)
             return
         }
 

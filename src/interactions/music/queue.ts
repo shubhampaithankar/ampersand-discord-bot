@@ -25,6 +25,7 @@ export default class QueueInteraction extends MainInteraction {
   }
 
   run = async (interaction: ChatInputCommandInteraction) => {
+    await interaction.deferReply();
     try {
       const guild = this.client.guilds.cache.get(interaction.guildId!);
       if (!guild) return;
@@ -34,18 +35,18 @@ export default class QueueInteraction extends MainInteraction {
 
       const player = await this.client.utils.getMusicPlayer(guild.id);
       if (!player || !player.isConnected) {
-        await interaction.reply("No player found in any voice channels");
+        await interaction.editReply("No player found in any voice channels");
         return;
       }
 
       const { channel } = member.voice;
       if (!channel) {
-        await interaction.reply("You need to join the voice channel");
+        await interaction.editReply("You need to join the voice channel");
         return;
       }
 
       if (player.voiceChannel !== channel.id) {
-        await interaction.reply("You're not in the same voice channel");
+        await interaction.editReply("You're not in the same voice channel");
         return;
       }
 
@@ -106,7 +107,7 @@ export default class QueueInteraction extends MainInteraction {
       );
 
       const moreThanOne = pagesNumber > 1;
-      await interaction.reply({
+      await interaction.editReply({
         embeds: [pages[0]],
         components: moreThanOne ? [buttonRow] : undefined,
       });
@@ -121,7 +122,7 @@ export default class QueueInteraction extends MainInteraction {
       }
     } catch (error: any) {
       console.log("There was an error in Queue command: ", error);
-      await interaction.reply(`There was an error \`${error.message}\``);
+      await interaction.editReply(`There was an error \`${error.message}\``);
     }
   };
 }
