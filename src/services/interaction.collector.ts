@@ -1,15 +1,14 @@
 import {
-  ActionRowBuilder,
-  ButtonBuilder,
+  ComponentType,
+  InteractionCollector,
   ButtonInteraction,
   ChatInputCommandInteraction,
-  Collection,
-  ComponentType,
-  EmbedBuilder,
-  InteractionCollector,
-  TextBasedChannel,
 } from "discord.js";
-import type { ButtonHandlerMap } from "../types/collector.types";
+import type {
+  ButtonHandlerMap,
+  CreateButtonHandlerParams,
+  CreatePaginatorParams,
+} from "../types/collector.types";
 
 export type { ButtonHandlerMap };
 
@@ -48,14 +47,7 @@ export const createPaginator = ({
   buttonRow,
   time = 1000 * 60 * 15,
   userId,
-}: {
-  interaction: ChatInputCommandInteraction;
-  pages: EmbedBuilder[];
-  customIds: { prev: string; next: string; cancel: string };
-  buttonRow: ActionRowBuilder<ButtonBuilder>;
-  time?: number;
-  userId?: string;
-}): InteractionCollector<ButtonInteraction> | null => {
+}: CreatePaginatorParams): InteractionCollector<ButtonInteraction> | null => {
   if (!interaction.channel || pages.length <= 1) return null;
 
   let currentPage = 0;
@@ -97,7 +89,6 @@ export const createPaginator = ({
   return collector;
 };
 
-
 /**
  * Create a one-shot button handler that maps customIds to async handler functions.
  * The collector stops after the first matching click (max: 1).
@@ -108,16 +99,7 @@ export const createButtonHandler = ({
   filter,
   time,
   onEnd,
-}: {
-  channel: TextBasedChannel;
-  handlers: ButtonHandlerMap;
-  filter: (i: ButtonInteraction) => boolean | Promise<boolean>;
-  time: number;
-  onEnd?: (
-    collection: Collection<string, ButtonInteraction>,
-    reason: string,
-  ) => Promise<void>;
-}): InteractionCollector<ButtonInteraction> => {
+}: CreateButtonHandlerParams): InteractionCollector<ButtonInteraction> => {
   const collector = channel.createMessageComponentCollector({
     componentType: ComponentType.Button,
     filter,

@@ -1,3 +1,24 @@
+import type { GuildBasedChannel, GuildMember, PermissionResolvable } from "discord.js";
+
+export type CheckPermissionsParams = {
+  bot: GuildMember;
+  member: GuildMember;
+  permissions: PermissionResolvable;
+  channel?: GuildBasedChannel;
+};
+
+export type CheckSinglePermissionsParams = {
+  member: GuildMember;
+  permissions: PermissionResolvable;
+  channel?: GuildBasedChannel;
+};
+
+export type FormatMissingPermissionsParams = {
+  missing: string[];
+  member: GuildMember;
+  label?: "bot" | "member";
+};
+
 export type PermissionCheckResult = {
   isAllowed: boolean;
   missingPermissions: string[];

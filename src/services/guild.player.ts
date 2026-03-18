@@ -1,4 +1,4 @@
-import type BaseClient from "../client";
+import type { GetMusicPlayerParams } from "../types/guild.player.types";
 
 export const getMusicPlayer = ({
   client,
@@ -6,13 +6,7 @@ export const getMusicPlayer = ({
   voiceChannel,
   textChannel,
   create,
-}: {
-  client: BaseClient;
-  guildId: string;
-  voiceChannel?: string;
-  textChannel?: string;
-  create?: boolean;
-}) => {
+}: GetMusicPlayerParams) => {
   if (!guildId || !client.poru) return null;
 
   let player = client.poru.get(guildId);

@@ -1,26 +1,17 @@
-import {
-  GuildBasedChannel,
-  GuildMember,
-  PermissionResolvable,
-} from "discord.js";
 import type {
+  CheckPermissionsParams,
+  CheckSinglePermissionsParams,
   DualPermissionCheckResult,
+  FormatMissingPermissionsParams,
   PermissionCheckResult,
 } from "../types/permission.types";
-
-export type { PermissionCheckResult, DualPermissionCheckResult };
 
 export const checkPermissions = ({
   bot,
   member,
   permissions,
   channel,
-}: {
-  bot: GuildMember;
-  member: GuildMember;
-  permissions: PermissionResolvable;
-  channel?: GuildBasedChannel;
-}): DualPermissionCheckResult => {
+}: CheckPermissionsParams): DualPermissionCheckResult => {
   const botPerms = channel ? channel.permissionsFor(bot) : bot.permissions;
   const memberPerms = channel
     ? channel.permissionsFor(member)
@@ -42,11 +33,7 @@ export const checkSinglePermissions = ({
   member,
   permissions,
   channel,
-}: {
-  member: GuildMember;
-  permissions: PermissionResolvable;
-  channel?: GuildBasedChannel;
-}): PermissionCheckResult => {
+}: CheckSinglePermissionsParams): PermissionCheckResult => {
   const perms = channel ? channel.permissionsFor(member) : member.permissions;
 
   return {
@@ -59,11 +46,7 @@ export const formatMissingPermissions = ({
   missing,
   member,
   label = "member",
-}: {
-  missing: string[];
-  member: GuildMember;
-  label?: "bot" | "member";
-}): string => {
+}: FormatMissingPermissionsParams): string => {
   const formatted = missing.map((p) => `\`${p}\``).join(", ");
   const who = label === "bot" ? "Bot" : `<@${member.user.id}>`;
   return `**Not enough permissions for ${who}. Missing:** ${formatted}`;

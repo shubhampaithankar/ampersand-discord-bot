@@ -2,17 +2,20 @@ import {
   ChannelType,
   Events,
   Guild,
-  GuildMember,
   VoiceChannel,
   VoiceState,
 } from "discord.js";
 import { MainEvent } from "../classes";
-import { default as BaseClient, default as Client } from "../client";
+import { default as Client } from "../client";
 import * as JTCService from "../models/jtc/jtc.service";
 import { checkSinglePermissions } from "../services/discord.permissions";
-import * as jtc from "../services/jtc.redis";
 import { sleepFor } from "../services/general.utils";
-import type { JtcData } from "../types/jtc.types";
+import * as jtc from "../services/jtc.redis";
+import type {
+  CreateJTCChannelParams,
+  DisconnectPlayerParams,
+  HandleJTCParams,
+} from "../types/jtc.types";
 
 export default class VoiceStateUpdateEvent extends MainEvent {
   constructor(client: Client) {
@@ -39,12 +42,7 @@ const handleJTC = async ({
   guild,
   oldState,
   newState,
-}: {
-  client: BaseClient;
-  guild: Guild;
-  oldState: VoiceState;
-  newState: VoiceState;
-}) => {
+}: HandleJTCParams) => {
   try {
     const bot = guild.members.cache.get(client.user!.id!);
     if (!bot) return;
@@ -75,13 +73,7 @@ const createJTCChannel = async ({
   jtcData,
   bot,
   client,
-}: {
-  guild: Guild;
-  newState: VoiceState;
-  jtcData: JtcData;
-  bot: GuildMember;
-  client: Client;
-}) => {
+}: CreateJTCChannelParams) => {
   // On joining the JTC channel
   try {
     if (newState?.channel?.id !== jtcData.channelId) return;
@@ -172,11 +164,7 @@ const disconnectPlayer = ({
   client,
   guild,
   oldState,
-}: {
-  client: BaseClient;
-  guild: Guild;
-  oldState: VoiceState;
-}) => {
+}: DisconnectPlayerParams) => {
   if (!oldState.channel) return;
 
   const botId = client.user!.id;

@@ -15,7 +15,6 @@ import Loader from "./loader";
 export default class BaseClient extends Client {
   interactions: Collection<string, MainInteraction>;
   aliases: Collection<string, MainInteraction>;
-  cooldowns: Collection<string, Map<string, number>>;
   events: Collection<string, MainEvent>;
   shardEvents: Collection<string, MainShardEvent>;
   musicEvents: Collection<string, MainMusicEvent>;
@@ -47,7 +46,6 @@ export default class BaseClient extends Client {
     });
     this.interactions = new Collection();
     this.aliases = new Collection();
-    this.cooldowns = new Collection();
     this.events = new Collection();
     this.musicEvents = new Collection();
     this.shardEvents = new Collection();

@@ -1,11 +1,16 @@
-import { CacheType, Events, GuildMember, RepliableInteraction } from "discord.js";
-import { MainEvent, MainInteraction } from "../../classes";
+import { CacheType, Events, RepliableInteraction } from "discord.js";
+import { MainEvent } from "../../classes";
 import Client from "../../client";
 import * as MusicService from "../../models/music/music.service";
 import {
   checkPermissions,
   formatMissingPermissions,
 } from "../../services/discord.permissions";
+import {
+  getRemainingCooldown,
+  setCooldown,
+} from "../../services/cooldown.redis";
+import type { HandleCooldownParams } from "../../types/cooldown.types";
 import { InteractionType } from "../../types/interaction.types";
 
 export default class InteractionCreate extends MainEvent {
@@ -70,17 +75,8 @@ export default class InteractionCreate extends MainEvent {
       }
 
       if (!interaction.customId) {
-        const { cooldowns } = this.client;
-
-        const timestamps = await handleCooldown({
-          member,
-          commandName,
-          cooldowns,
-          command,
-          interaction,
-        });
-
-        if (!timestamps) return;
+        const onCooldown = await handleCooldown({ member, commandName, command, interaction });
+        if (!onCooldown) return;
 
         const channel = interaction.channel;
 
@@ -113,7 +109,7 @@ export default class InteractionCreate extends MainEvent {
             break;
         }
 
-        timestamps.set(member.user.id, Date.now());
+        await setCooldown({ commandName, userId: member.user.id, ttlSeconds: command.cooldown || 2 });
         await command.run(interaction);
       }
     } catch (error) {
@@ -132,36 +128,19 @@ const verifyMusicCommand = async (guildId: string, channelId: string) => {
 const handleCooldown = async ({
   member,
   commandName,
-  cooldowns,
   command,
   interaction,
-}: {
-  member: GuildMember;
-  commandName: string;
-  cooldowns: Map<string, Map<string, number>>;
-  command: MainInteraction;
-  interaction: InteractionType;
-}) => {
-  if (!cooldowns.has(commandName)) {
-    cooldowns.set(commandName, new Map());
+}: HandleCooldownParams): Promise<boolean> => {
+  const remaining = await getRemainingCooldown(commandName, member.user.id);
+
+  if (remaining > 0) {
+    const timeLeft = remaining / 1000;
+    await command.reject({
+      interaction: interaction as RepliableInteraction<CacheType>,
+      message: `You're on cooldown for this command. Please wait ${timeLeft.toFixed(1)} seconds.`,
+    });
+    return false;
   }
 
-  const now = Date.now();
-  const timestamps = cooldowns.get(commandName)!;
-  const cooldownAmount = (command.cooldown || 2) * 1000;
-
-  if (timestamps.has(member.user.id)) {
-    const expirationTime = timestamps.get(member.user.id)! + cooldownAmount;
-
-    if (now < expirationTime) {
-      const timeLeft = (expirationTime - now) / 1000; // Convert milliseconds to seconds
-      await command.reject({
-        interaction: interaction as RepliableInteraction<CacheType>,
-        message: `You're on cooldown for this command. Please wait ${timeLeft.toFixed(1)} seconds.`,
-      });
-      return null;
-    }
-  }
-
-  return timestamps;
+  return true;
 };
