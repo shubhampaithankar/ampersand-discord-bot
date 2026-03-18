@@ -15,7 +15,7 @@ export default class GuildCreateEvent extends MainEvent {
 
 const onJoin = async (guild: Guild) => {
   const payload = {
-    id: guild.id,
+    guildId: guild.id,
     name: guild.name,
     ownerId: guild.ownerId,
     joinedAt: [guild.joinedAt],
