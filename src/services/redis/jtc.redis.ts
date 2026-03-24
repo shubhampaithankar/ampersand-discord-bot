@@ -1,5 +1,5 @@
-import { getRedis } from "../libs/redis";
-import type BaseClient from "../client";
+import { getRedis } from "../../libs/redis";
+import type BaseClient from "../../client";
 
 const jtcKey = (guildId: string) => `jtc:${guildId}`;
 

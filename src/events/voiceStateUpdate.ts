@@ -7,10 +7,10 @@ import {
 } from "discord.js";
 import { MainEvent } from "../classes";
 import { default as Client } from "../client";
-import * as JTCService from "../models/jtc/jtc.service";
-import { checkSinglePermissions } from "../services/discord.permissions";
+import * as JTCService from "../models/guild/jtc.service";
+import { checkSinglePermissions } from "../services/discord/discord.permissions";
 import { sleepFor } from "../services/general.utils";
-import * as jtc from "../services/jtc.redis";
+import * as jtc from "../services/redis/jtc.redis";
 import type {
   CreateJTCChannelParams,
   DisconnectPlayerParams,
@@ -54,12 +54,12 @@ const handleJTC = async ({
     if (!isAllowed) return;
 
     const jtcData = await JTCService.getJTC(guild.id);
-    if (!jtcData || !jtcData.enabled) return; // Check if JTC is enabled
+    if (!jtcData?.jtc || !jtcData.jtc.enabled) return; // Check if JTC is enabled
 
-    if (oldState.channelId === jtcData.channelId) return; // No action on leaving jtc channel
+    if (oldState.channelId === jtcData.jtc.channelId) return; // No action on leaving jtc channel
 
     await Promise.all([
-      createJTCChannel({ guild, newState, jtcData, bot, client }),
+      createJTCChannel({ guild, newState, jtcData: jtcData.jtc, bot, client }),
       deleteJTCChannel(guild, oldState),
     ]);
   } catch (error) {

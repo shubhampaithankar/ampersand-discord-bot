@@ -1,7 +1,9 @@
 import { ActivityType, Events } from "discord.js";
 import { MainEvent } from "../classes";
 import Client from "../client";
-import { cleanupJTCChannels } from "../services/jtc.redis";
+import { cleanupJTCChannels } from "../services/redis/jtc.redis";
+import { seedBotGuilds } from "../services/redis/guild.redis";
+import { recoverLockdowns } from "../models/lockdown/lockdown.restore";
 
 export default class ReadyEvent extends MainEvent {
   constructor(client: Client) {
@@ -26,7 +28,9 @@ export default class ReadyEvent extends MainEvent {
         })}`,
       );
 
+      await seedBotGuilds([...this.client.guilds.cache.keys()]);
       await cleanupJTCChannels(this.client);
+      await recoverLockdowns(this.client);
 
       if (this.client.manager)
         await this.client.manager.spawn({

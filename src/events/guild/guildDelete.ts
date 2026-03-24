@@ -2,6 +2,7 @@ import { Events, Guild } from "discord.js";
 import { MainEvent } from "../../classes";
 import Client from "../../client";
 import * as GuildService from "../../models/guild/guild.service";
+import { removeBotGuild, evictGuildCache } from "../../services/redis/guild.redis";
 
 // Emitted whenever a guild kicks the client or the guild is deleted/left.
 export default class GuildDeleteEvent extends MainEvent {
@@ -15,6 +16,8 @@ export default class GuildDeleteEvent extends MainEvent {
 
 export const onLeave = async (guild: Guild) => {
   const guildData = await GuildService.getGuild(guild.id);
+  await removeBotGuild(guild.id);
+  await evictGuildCache(guild.id);
   if (!guildData) return;
   await GuildService.deleteGuild(guild.id);
 };

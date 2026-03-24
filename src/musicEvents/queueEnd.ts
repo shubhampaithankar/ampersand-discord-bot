@@ -2,7 +2,7 @@ import { TextChannel } from "discord.js";
 import { Player, Track } from "poru";
 import { MainMusicEvent } from "../classes";
 import Client from "../client";
-import { getMusicPlayer } from "../services/guild.player";
+import { getMusicPlayer } from "../services/discord/guild.player";
 
 export default class QueueEndEvent extends MainMusicEvent {
   constructor(client: Client) {
@@ -16,7 +16,10 @@ export default class QueueEndEvent extends MainMusicEvent {
 
       const timeout = setTimeout(async () => {
         try {
-          const guildPlayer = getMusicPlayer({ client: this.client, guildId: player.guildId });
+          const guildPlayer = getMusicPlayer({
+            client: this.client,
+            guildId: player.guildId,
+          });
           if (!guildPlayer) return;
 
           if (

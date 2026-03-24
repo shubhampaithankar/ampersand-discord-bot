@@ -1,10 +1,8 @@
 import {
-  ActionRowBuilder,
-  ButtonBuilder,
   ButtonStyle,
   ChatInputCommandInteraction,
-  Collection,
   GuildChannel,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import { MainInteraction } from "../../classes";
@@ -13,9 +11,11 @@ import * as LockdownService from "../../models/lockdown/lockdown.service";
 import {
   buildCustomIds,
   createButtonHandler,
-} from "../../services/interaction.collector";
-import { botAuthor, errorEmbed } from "../../services/embed.builder";
-import type { ChannelPermissionSet } from "../../types/permission.types";
+} from "../../services/discord/interaction.collector";
+import { botAuthor, errorEmbed } from "../../services/discord/embed.builder";
+import { buildButton, buildRow } from "../../services/discord/button.builder";
+import { restoreGuildLockdown } from "../../models/lockdown/lockdown.restore";
+import type { ChannelSnapshot } from "../../types/permission.types";
 
 export default class LockdownInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -32,116 +32,97 @@ export default class LockdownInteraction extends MainInteraction {
     await interaction.deferReply().catch((err) => console.log(err.message));
     try {
       const guild = interaction.guild!;
-      const channels = guild.channels.cache as Collection<string, GuildChannel>;
       const { everyone } = guild.roles;
 
       const guildLockdown = await LockdownService.getLockdown(guild.id);
-      const isEnabled = !!guildLockdown && guildLockdown.enabled;
+      const isEnabled = !!guildLockdown?.enabled;
 
-      // Capture original permissions before locking (used by restore handlers below)
-      const originalPermissions = new Map<string, ChannelPermissionSet>();
-
-      try {
-        for (const channel of channels.values()) {
-          if (!isEnabled) {
-            const perms = channel.permissionsFor(everyone).serialize();
-            originalPermissions.set(channel.id, {
-              Connect: perms.Connect,
-              SendMessages: perms.SendMessages,
-            });
-            await channel.permissionOverwrites.edit(everyone, {
-              Connect: false,
-              SendMessages: false,
-            });
-          } else {
-            await channel.permissionOverwrites.edit(everyone, {
-              Connect: (guildLockdown.originalPermissions as any).get(channel.id)
-                ?.Connect,
-              SendMessages: (guildLockdown.originalPermissions as any).get(channel.id)
-                ?.SendMessages,
-            });
-          }
-        }
-
-        await LockdownService.updateLockdown(
-          guild.id,
-          !isEnabled
-            ? { enabled: true, originalPermissions }
-            : { enabled: false, originalPermissions: null },
-        );
-      } catch (error) {
-        throw error;
-      }
-
-      const embed = errorEmbed({
-        author: botAuthor(this.client),
-        title: `Lockdown ${!isEnabled ? "Enabled" : "Disabled"}`,
-        description: `Server \`${guild.name}\` is now **${!isEnabled ? "locked down" : "unlocked"}**.${!isEnabled ? "\n\nUse **Remove Lockdown** below or run **/lockdown** again to unlock." : ""}`,
-        footer: interaction.member!.user.username,
-        timestamp: true,
-      });
-
-      const ids = buildCustomIds(
-        interaction,
-        "removeLockdown",
-        "removeLockdownAfterSchedule",
-      );
-
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setLabel("Remove Lockdown")
-          .setStyle(ButtonStyle.Danger)
-          .setCustomId(ids.removeLockdown),
-        new ButtonBuilder()
-          .setLabel("Schedule Remove (6h)")
-          .setStyle(ButtonStyle.Secondary)
-          .setCustomId(ids.removeLockdownAfterSchedule),
-      );
-
-      await interaction.editReply({
-        embeds: [embed],
-        components: !isEnabled ? [row] : [],
-      });
-
-      // If lockdown was already active and we just disabled it, we're done
-      if (isEnabled) return;
-
-      // Restore channel permissions and update the database
-      const restoreLockdown = async () => {
-        for (const channel of channels.values()) {
-          const saved = originalPermissions.get(channel.id);
-          await channel.permissionOverwrites.edit(everyone, {
-            Connect: saved?.Connect,
-            SendMessages: saved?.SendMessages,
-          });
-        }
-        await LockdownService.updateLockdown(guild.id, {
-          enabled: false,
-          originalPermissions: null,
-        });
-      };
-
-      const buildEndEmbed = () =>
+      const buildEmbed = (locked: boolean) =>
         errorEmbed({
           author: botAuthor(this.client),
-          title: "Lockdown Disabled",
-          description: `Server \`${guild.name}\` has been unlocked.`,
+          title: `Lockdown ${locked ? "Enabled" : "Disabled"}`,
+          description: `Server \`${guild.name}\` is now **${locked ? "locked down" : "unlocked"}**.${locked ? "\n\nUse **Remove Lockdown** below or run **/lockdown** again to unlock." : ""}`,
           footer: interaction.member!.user.username,
           timestamp: true,
         });
+
+      // ── Disable path ────────────────────────────────────────────────────────
+      if (isEnabled) {
+        await restoreGuildLockdown({
+          client: this.client,
+          guildId: guild.id,
+          channels: (guildLockdown as any).channels ?? [],
+        });
+        await interaction.editReply({
+          embeds: [buildEmbed(false)],
+          components: [],
+        });
+        return;
+      }
+
+      // ── Enable path ─────────────────────────────────────────────────────────
+      // Capture every role/user overwrite on every channel, then replace with
+      // a single @everyone deny overwrite to lock the channel.
+      const channelSnapshots: ChannelSnapshot[] = [];
+
+      for (const channel of guild.channels.cache.values()) {
+        if (channel.isThread() || !("permissionOverwrites" in channel)) continue;
+        const ch = channel as GuildChannel;
+
+        const overwrites = ch.permissionOverwrites.cache.map((ow) => ({
+          id: ow.id,
+          type: ow.type as 0 | 1,
+          allow: ow.allow.bitfield.toString(),
+          deny: ow.deny.bitfield.toString(),
+        }));
+
+        channelSnapshots.push({ channelId: ch.id, overwrites });
+
+        await ch.permissionOverwrites
+          .set([{ id: everyone.id, type: 0, deny: ["Connect", "SendMessages"] }])
+          .catch(() => {});
+      }
+
+      await LockdownService.updateLockdown(guild.id, {
+        enabled: true,
+        lockedAt: new Date(),
+        expiresAt: null,
+        channels: channelSnapshots,
+      });
+
+      const ids = buildCustomIds({
+        interaction,
+        actions: ["removeLockdown", "removeLockdownAfterSchedule"] as const,
+      });
+
+      const row = buildRow(
+        buildButton({ label: "Remove Lockdown", style: ButtonStyle.Danger, customId: ids.removeLockdown }),
+        buildButton({ label: "Schedule Remove (6h)", style: ButtonStyle.Secondary, customId: ids.removeLockdownAfterSchedule }),
+      );
+
+      await interaction.editReply({ embeds: [buildEmbed(true)], components: [row] });
 
       createButtonHandler({
         channel: interaction.channel!,
         handlers: {
           [ids.removeLockdown]: async (i) => {
             await i.deferUpdate();
-            await restoreLockdown();
+            await restoreGuildLockdown({ client: this.client, guildId: guild.id, channels: channelSnapshots });
+            await interaction.editReply({
+              embeds: [buildEmbed(false)],
+              components: [],
+            });
           },
           [ids.removeLockdownAfterSchedule]: async (i) => {
-            setTimeout(restoreLockdown, 1e3 * 60 * 60 * 6); // 6 hours
+            const expiresAt = new Date(Date.now() + 1e3 * 60 * 60 * 6);
+            await LockdownService.updateLockdown(guild.id, { expiresAt });
+            setTimeout(
+              () => restoreGuildLockdown({ client: this.client, guildId: guild.id, channels: channelSnapshots }),
+              1e3 * 60 * 60 * 6,
+            );
             await i.reply({
               content: "Lockdown will be removed in 6 hours.",
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
           },
         },
@@ -149,9 +130,13 @@ export default class LockdownInteraction extends MainInteraction {
           [ids.removeLockdown, ids.removeLockdownAfterSchedule].includes(
             i.customId,
           ) && i.user.id === interaction.user.id,
+        max: 1,
         time: 1e3 * 60 * 60 * 12, // 12 hours
         onEnd: async () => {
-          await interaction.editReply({ embeds: [buildEndEmbed()], components: [] });
+          // Remove buttons when the collector expires (either button was clicked
+          // or 12h passed with no interaction). The embed content is already
+          // updated by the handler if removeLockdown was used.
+          await interaction.editReply({ components: [] }).catch(() => {});
         },
       });
     } catch (error: any) {

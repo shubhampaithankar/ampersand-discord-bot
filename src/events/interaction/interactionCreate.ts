@@ -1,15 +1,16 @@
 import { CacheType, Events, RepliableInteraction } from "discord.js";
 import { MainEvent } from "../../classes";
 import Client from "../../client";
-import * as MusicService from "../../models/music/music.service";
+import * as MusicService from "../../models/guild/music.service";
 import {
   checkPermissions,
   formatMissingPermissions,
-} from "../../services/discord.permissions";
+} from "../../services/discord/discord.permissions";
 import {
   getRemainingCooldown,
   setCooldown,
-} from "../../services/cooldown.redis";
+} from "../../services/redis/cooldown.redis";
+import { isBotInGuild } from "../../services/redis/guild.redis";
 import type { HandleCooldownParams } from "../../types/cooldown.types";
 import { InteractionType } from "../../types/interaction.types";
 
@@ -22,7 +23,8 @@ export default class InteractionCreate extends MainEvent {
       if (!interaction.inGuild()) return;
       const guild = interaction.guild!;
 
-      const bot = guild.members.cache.get(this.client.user!.id!);
+      if (!(await isBotInGuild(guild.id))) return;
+      const bot = guild.members.me ?? guild.members.cache.get(this.client.user!.id!);
       if (!bot) return;
 
       const member = guild.members.cache.get(interaction.member.user.id);
@@ -121,8 +123,8 @@ export default class InteractionCreate extends MainEvent {
 
 const verifyMusicCommand = async (guildId: string, channelId: string) => {
   const guildMusicData = await MusicService.getMusic(guildId);
-  if (!guildMusicData || !guildMusicData.enabled) return null;
-  return guildMusicData.channelIds;
+  if (!guildMusicData?.music || !guildMusicData.music.enabled) return null;
+  return guildMusicData.music.channelIds;
 };
 
 const handleCooldown = async ({

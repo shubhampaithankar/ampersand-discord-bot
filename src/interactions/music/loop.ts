@@ -1,7 +1,11 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { MainInteraction } from "../../classes";
 import Client from "../../client";
-import { getMusicPlayer } from "../../services/guild.player";
+import { botAuthor, successEmbed } from "../../services/discord/embed.builder";
+import { validateMusicContext } from "../../services/discord/guild.player";
+
+const MODE_LABELS = { NONE: "Off", TRACK: "Track", QUEUE: "Queue" } as const;
+const MODE_ICONS = { NONE: "➡️", TRACK: "🔂", QUEUE: "🔁" } as const;
 
 export default class LoopInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -28,42 +32,26 @@ export default class LoopInteraction extends MainInteraction {
   run = async (interaction: ChatInputCommandInteraction) => {
     await interaction.deferReply();
     try {
-      const guild = this.client.guilds.cache.get(interaction.guildId!);
-      if (!guild) return;
+      const ctx = await validateMusicContext(this.client, interaction);
+      if (!ctx) return;
 
-      const member = guild.members.cache.get(interaction.member!.user.id);
-      if (!member) return;
-
-      const player = getMusicPlayer({ client: this.client, guildId: guild.id });
-      if (!player || !player.isConnected) {
-        await interaction.editReply("No player found in any voice channels");
-        return;
-      }
-
-      const { channel } = member.voice;
-      if (!channel) {
-        await interaction.editReply("You need to join a voice channel");
-        return;
-      }
-
-      if (player.voiceChannel !== channel.id) {
-        await interaction.editReply("You're not in the same voice channel");
-        return;
-      }
-
-      if (!player.currentTrack) {
+      if (!ctx.player.currentTrack) {
         await interaction.editReply("There is no music playing");
         return;
       }
 
-      const mode = interaction.options.getString("mode", true) as
-        | "NONE"
-        | "TRACK"
-        | "QUEUE";
-      player.setLoop(mode);
+      const mode = interaction.options.getString("mode", true) as "NONE" | "TRACK" | "QUEUE";
+      ctx.player.setLoop(mode);
 
-      const modeLabels = { NONE: "off", TRACK: "track", QUEUE: "queue" };
-      await interaction.editReply(`Loop set to **${modeLabels[mode]}**`);
+      await interaction.editReply({
+        embeds: [
+          successEmbed({
+            author: botAuthor(this.client),
+            description: `${MODE_ICONS[mode]} Loop set to **${MODE_LABELS[mode]}**`,
+            footer: interaction.member!.user.username,
+          }),
+        ],
+      });
     } catch (error: any) {
       console.log("There was an error in Loop command: ", error);
       await interaction.editReply(`There was an error \`${error.message}\``);

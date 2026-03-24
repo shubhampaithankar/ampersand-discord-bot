@@ -1,14 +1,14 @@
-import { Client, Collection, ShardingManager } from "discord.js";
 import { REST } from "@discordjs/rest";
-import { Poru } from "poru";
-import mongoose from "mongoose";
+import { Client, Collection, ShardingManager } from "discord.js";
 import type Redis from "ioredis";
+import mongoose from "mongoose";
+import { Poru } from "poru";
 
 import {
   MainEvent,
   MainInteraction,
-  MainShardEvent,
   MainMusicEvent,
+  MainShardEvent,
 } from "./classes";
 import Loader from "./loader";
 

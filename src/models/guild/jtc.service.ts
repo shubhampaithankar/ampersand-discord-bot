@@ -1,11 +1,18 @@
-import JTC from "./jtc.model";
+import Guild from "./guild.model";
 
 export const getJTC = (guildId: string) =>
-  JTC.findOne({ guildId })
+  Guild.findOne({ guildId })
+    .select("jtc")
     .lean()
     .catch(() => null);
 
 export const updateJTC = (guildId: string, updateQuery: any) =>
-  JTC.findOneAndUpdate({ guildId }, updateQuery, { upsert: true })
+  Guild.findOneAndUpdate(
+    { guildId },
+    {
+      $set: { jtc: updateQuery },
+    },
+    { upsert: true },
+  )
     .lean()
     .catch((e) => console.log("Database Error: while updating JTC data:\n", e));
