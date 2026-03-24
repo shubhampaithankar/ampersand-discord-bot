@@ -1,5 +1,5 @@
-.claude
 .vscode
 .env
 node_modules
 build
+settings.local.json
