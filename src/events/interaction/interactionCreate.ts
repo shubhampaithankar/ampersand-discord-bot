@@ -10,6 +10,7 @@ import {
   getRemainingCooldown,
   setCooldown,
 } from "../../services/redis/cooldown.redis";
+import { isBotInGuild } from "../../services/redis/guild.redis";
 import type { HandleCooldownParams } from "../../types/cooldown.types";
 import { InteractionType } from "../../types/interaction.types";
 
@@ -22,7 +23,8 @@ export default class InteractionCreate extends MainEvent {
       if (!interaction.inGuild()) return;
       const guild = interaction.guild!;
 
-      const bot = guild.members.cache.get(this.client.user!.id!);
+      if (!(await isBotInGuild(guild.id))) return;
+      const bot = guild.members.me ?? guild.members.cache.get(this.client.user!.id!);
       if (!bot) return;
 
       const member = guild.members.cache.get(interaction.member.user.id);

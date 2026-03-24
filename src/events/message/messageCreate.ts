@@ -3,7 +3,9 @@ import { Events, Message } from "discord.js";
 import { MainEvent } from "../../classes";
 import Client from "../../client";
 import * as AutoGambleService from "../../models/guild/autoGamble.service";
+import * as GuildService from "../../models/guild/guild.service";
 import { incrementGambleScore } from "../../services/redis/gamble.redis";
+import { cacheGuildExists, getCachedGuildExists } from "../../services/redis/guild.redis";
 
 export default class MessageCreate extends MainEvent {
   constructor(client: Client) {
@@ -12,6 +14,15 @@ export default class MessageCreate extends MainEvent {
 
   async run(message: Message) {
     if (message.author.bot || !message.inGuild()) return;
+
+    const guildId = message.guildId!;
+    const cached = await getCachedGuildExists(guildId);
+    if (cached === false) return;
+    if (cached === null) {
+      const doc = await GuildService.getGuild(guildId);
+      await cacheGuildExists(guildId, !!doc);
+      if (!doc) return;
+    }
 
     await handleAutoGamble(message);
   }
