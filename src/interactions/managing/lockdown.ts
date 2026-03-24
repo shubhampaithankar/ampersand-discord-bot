@@ -90,11 +90,10 @@ export default class LockdownInteraction extends MainInteraction {
         channels: channelSnapshots,
       });
 
-      const ids = buildCustomIds(
+      const ids = buildCustomIds({
         interaction,
-        "removeLockdown",
-        "removeLockdownAfterSchedule",
-      );
+        actions: ["removeLockdown", "removeLockdownAfterSchedule"] as const,
+      });
 
       const row = buildRow(
         buildButton({ label: "Remove Lockdown", style: ButtonStyle.Danger, customId: ids.removeLockdown }),

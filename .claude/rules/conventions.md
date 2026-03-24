@@ -39,6 +39,8 @@ ephemeral: true                // ❌ deprecated
 new EmbedBuilder().setTitle("...")
 new ButtonBuilder().setLabel("...")
 new ActionRowBuilder().addComponents(...)
+new ChannelSelectMenuBuilder().setCustomId(...)
+new StringSelectMenuBuilder().setCustomId(...)
 
 // ✅ Always
 infoEmbed({ title: "..." })          // blue
@@ -49,6 +51,8 @@ musicEmbed({ ... })                   // Spotify green
 buildButton({ label, style, customId })
 buildRow(btn1, btn2)
 toggleButton(enabled, customId)       // green Enable / red Disable
+buildChannelSelectRow({ customId, types, placeholder? })
+buildStringSelectRow({ customId, options, placeholder? })
 ```
 
 ## Collector Patterns
@@ -56,7 +60,7 @@ toggleButton(enabled, customId)       // green Enable / red Disable
 - `createButtonHandler` — persistent panels (omit `max`) or one-shot confirms (`max: 1`)
 - `createPaginator` — paginated embeds with prev/next/cancel buttons
 - `createChainedCollector` — multi-step flows (e.g. button → channel select)
-- `buildCustomIds(interaction, ...actions)` — always use this for custom IDs, never hardcode
+- `buildCustomIds({ interaction, actions })` — always use this for custom IDs, never hardcode
 
 **Timing rule:** never read DB state inside `onEnd` that was written inside `collect`.
 Discord fires `end` without awaiting the async `collect` handler. Do all DB reads + re-renders

@@ -23,10 +23,13 @@ export type { ButtonHandlerMap };
  * const ids = buildCustomIds(interaction, 'prevPage', 'nextPage', 'cancel');
  * // ids.prevPage === `${channelId}_${interactionId}_prevPage`
  */
-export const buildCustomIds = <T extends string>(
-  interaction: ChatInputCommandInteraction,
-  ...actions: T[]
-): Record<T, string> =>
+export const buildCustomIds = <T extends string>({
+  interaction,
+  actions,
+}: {
+  interaction: ChatInputCommandInteraction;
+  actions: readonly T[];
+}): Record<T, string> =>
   Object.fromEntries(
     actions.map((action) => [
       action,

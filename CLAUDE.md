@@ -40,7 +40,8 @@ SPOTIFY_CLIENT_ID  SPOTIFY_CLIENT_SECRET  NODE_ENV
 - `src/classes.ts` — `MainInteraction`, `MainEvent`, `MainMusicEvent`, `MainShardEvent`
 - `src/client.ts` — `BaseClient` extending discord.js `Client`
 - `src/services/discord/embed.builder.ts` — never use `EmbedBuilder` directly
-- `src/services/discord/button.builder.ts` — never use `ButtonBuilder`/`ActionRowBuilder` directly
+- `src/services/discord/button.builder.ts` — never use `ButtonBuilder`/`ActionRowBuilder<ButtonBuilder>` directly
+- `src/services/discord/select.builder.ts` — never use `ChannelSelectMenuBuilder`/`StringSelectMenuBuilder`/`ActionRowBuilder<SelectMenu>` directly
 - `src/services/discord/interaction.collector.ts` — all collector/paginator patterns
 - `src/services/discord/guild.player.ts` — `getMusicPlayer`, `validateMusicContext`
 
@@ -52,7 +53,7 @@ SPOTIFY_CLIENT_ID  SPOTIFY_CLIENT_SECRET  NODE_ENV
 
 - Use `npm`, `pnpm`, or `yarn`
 - Use `ephemeral: true` — use `flags: MessageFlags.Ephemeral`
-- Construct `EmbedBuilder`, `ButtonBuilder`, or `ActionRowBuilder` directly
+- Construct `EmbedBuilder`, `ButtonBuilder`, `ChannelSelectMenuBuilder`, `StringSelectMenuBuilder`, or any `ActionRowBuilder` directly
 - Use `$set: { subdoc: fullObject }` — use dot-notation keys to avoid wiping sibling fields
 - Skip `deferReply()` at the start of any interaction `run()`
 - Read DB state written inside `collect` from an `onEnd` callback

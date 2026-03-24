@@ -87,7 +87,7 @@ export default class NowPlayingInteraction extends MainInteraction {
         });
       };
 
-      const ids = buildCustomIds(interaction, "skip", "stop", "loop", "shuffle");
+      const ids = buildCustomIds({ interaction, actions: ["skip", "stop", "loop", "shuffle"] as const });
 
       const buttonRow = buildRow(
         buildButton({ label: "⏭ Skip", style: ButtonStyle.Primary, customId: ids.skip }),

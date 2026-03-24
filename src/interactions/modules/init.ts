@@ -1,13 +1,10 @@
 import {
-  ActionRowBuilder,
   ButtonStyle,
-  ChannelSelectMenuBuilder,
   ChannelSelectMenuInteraction,
   ChannelType,
   ChatInputCommandInteraction,
   ComponentType,
   SlashCommandBuilder,
-  StringSelectMenuBuilder,
   StringSelectMenuInteraction,
   TextChannel,
   VoiceChannel,
@@ -19,6 +16,7 @@ import * as JTCService from "../../models/guild/jtc.service";
 import * as AutoGambleService from "../../models/guild/autoGamble.service";
 import { botAuthor, infoEmbed } from "../../services/discord/embed.builder";
 import { buildButton, buildRow, toggleButton } from "../../services/discord/button.builder";
+import { buildChannelSelectRow, buildStringSelectRow } from "../../services/discord/select.builder";
 import {
   buildCustomIds,
   createButtonHandler,
@@ -67,14 +65,10 @@ export default class InitInteraction extends MainInteraction {
 
   handleMusic = async (interaction: ChatInputCommandInteraction) => {
     const guildId = interaction.guildId!;
-    const ids = buildCustomIds(
+    const ids = buildCustomIds({
       interaction,
-      "toggle",
-      "addChannel",
-      "removeChannel",
-      "selectAdd",
-      "selectRemove",
-    );
+      actions: ["toggle", "addChannel", "removeChannel", "selectAdd", "selectRemove"] as const,
+    });
 
     const fetchData = () => MusicService.getMusic(guildId);
 
@@ -143,11 +137,7 @@ export default class InitInteraction extends MainInteraction {
               content: "No channels configured. Select a text channel to enable the music module",
               embeds: [],
               components: [
-                new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(
-                  new ChannelSelectMenuBuilder()
-                    .setChannelTypes(ChannelType.GuildText)
-                    .setCustomId(ids.selectAdd),
-                ),
+                buildChannelSelectRow({ customId: ids.selectAdd, types: [ChannelType.GuildText] }),
               ],
             });
             createChainedCollector({
@@ -184,11 +174,7 @@ export default class InitInteraction extends MainInteraction {
             content: "Select a text channel to add to the music module",
             embeds: [],
             components: [
-              new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(
-                new ChannelSelectMenuBuilder()
-                  .setChannelTypes(ChannelType.GuildText)
-                  .setCustomId(ids.selectAdd),
-              ),
+              buildChannelSelectRow({ customId: ids.selectAdd, types: [ChannelType.GuildText] }),
             ],
           });
           createChainedCollector({
@@ -232,12 +218,7 @@ export default class InitInteraction extends MainInteraction {
             content: "Select a channel to remove",
             embeds: [],
             components: [
-              new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-                new StringSelectMenuBuilder()
-                  .setCustomId(ids.selectRemove)
-                  .setPlaceholder("Select a channel to remove")
-                  .addOptions(options),
-              ),
+              buildStringSelectRow({ customId: ids.selectRemove, options, placeholder: "Select a channel to remove" }),
             ],
           });
           createChainedCollector({
@@ -276,7 +257,7 @@ export default class InitInteraction extends MainInteraction {
 
   handleJTC = async (interaction: ChatInputCommandInteraction) => {
     const guildId = interaction.guildId!;
-    const ids = buildCustomIds(interaction, "toggle", "setChannel", "selectChannel");
+    const ids = buildCustomIds({ interaction, actions: ["toggle", "setChannel", "selectChannel"] as const });
 
     const fetchData = () => JTCService.getJTC(guildId);
 
@@ -338,11 +319,7 @@ export default class InitInteraction extends MainInteraction {
                 content: "Select the voice channel users should join to create a new channel",
                 embeds: [],
                 components: [
-                  new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(
-                    new ChannelSelectMenuBuilder()
-                      .setChannelTypes(ChannelType.GuildVoice)
-                      .setCustomId(ids.selectChannel),
-                  ),
+                  buildChannelSelectRow({ customId: ids.selectChannel, types: [ChannelType.GuildVoice] }),
                 ],
               });
               createChainedCollector({
@@ -392,11 +369,7 @@ export default class InitInteraction extends MainInteraction {
             content: "Select the voice channel users should join to create a new channel",
             embeds: [],
             components: [
-              new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(
-                new ChannelSelectMenuBuilder()
-                  .setChannelTypes(ChannelType.GuildVoice)
-                  .setCustomId(ids.selectChannel),
-              ),
+              buildChannelSelectRow({ customId: ids.selectChannel, types: [ChannelType.GuildVoice] }),
             ],
           });
           createChainedCollector({
@@ -442,17 +415,10 @@ export default class InitInteraction extends MainInteraction {
 
   handleAutoGamble = async (interaction: ChatInputCommandInteraction) => {
     const guildId = interaction.guildId!;
-    const ids = buildCustomIds(
+    const ids = buildCustomIds({
       interaction,
-      "toggle",
-      "addChannel",
-      "removeChannel",
-      "settings",
-      "selectAdd",
-      "selectRemove",
-      "selectChance",
-      "selectDuration",
-    );
+      actions: ["toggle", "addChannel", "removeChannel", "settings", "selectAdd", "selectRemove", "selectChance", "selectDuration"] as const,
+    });
 
     const fetchData = () => AutoGambleService.getAutoGamble(guildId);
 
@@ -528,11 +494,7 @@ export default class InitInteraction extends MainInteraction {
               content: "No channels configured. Select a text channel to enable the auto gamble module",
               embeds: [],
               components: [
-                new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(
-                  new ChannelSelectMenuBuilder()
-                    .setChannelTypes(ChannelType.GuildText)
-                    .setCustomId(ids.selectAdd),
-                ),
+                buildChannelSelectRow({ customId: ids.selectAdd, types: [ChannelType.GuildText] }),
               ],
             });
             createChainedCollector({
@@ -569,11 +531,7 @@ export default class InitInteraction extends MainInteraction {
             content: "Select a text channel to add to the auto gamble module",
             embeds: [],
             components: [
-              new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(
-                new ChannelSelectMenuBuilder()
-                  .setChannelTypes(ChannelType.GuildText)
-                  .setCustomId(ids.selectAdd),
-              ),
+              buildChannelSelectRow({ customId: ids.selectAdd, types: [ChannelType.GuildText] }),
             ],
           });
           createChainedCollector({
@@ -617,12 +575,7 @@ export default class InitInteraction extends MainInteraction {
             content: "Select a channel to remove",
             embeds: [],
             components: [
-              new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-                new StringSelectMenuBuilder()
-                  .setCustomId(ids.selectRemove)
-                  .setPlaceholder("Select a channel to remove")
-                  .addOptions(options),
-              ),
+              buildStringSelectRow({ customId: ids.selectRemove, options, placeholder: "Select a channel to remove" }),
             ],
           });
           createChainedCollector({
@@ -652,19 +605,18 @@ export default class InitInteraction extends MainInteraction {
             content: "Select the roll chance (probability of timeout per message)",
             embeds: [],
             components: [
-              new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-                new StringSelectMenuBuilder()
-                  .setCustomId(ids.selectChance)
-                  .setPlaceholder("Select roll chance")
-                  .addOptions([
-                    { label: "5%", value: "5" },
-                    { label: "10% (default)", value: "10" },
-                    { label: "15%", value: "15" },
-                    { label: "20%", value: "20" },
-                    { label: "25%", value: "25" },
-                    { label: "30%", value: "30" },
-                  ]),
-              ),
+              buildStringSelectRow({
+                customId: ids.selectChance,
+                placeholder: "Select roll chance",
+                options: [
+                  { label: "5%", value: "5" },
+                  { label: "10% (default)", value: "10" },
+                  { label: "15%", value: "15" },
+                  { label: "20%", value: "20" },
+                  { label: "25%", value: "25" },
+                  { label: "30%", value: "30" },
+                ],
+              }),
             ],
           });
           createChainedCollector({
@@ -681,19 +633,18 @@ export default class InitInteraction extends MainInteraction {
                   content: "Now select the timeout duration",
                   embeds: [],
                   components: [
-                    new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-                      new StringSelectMenuBuilder()
-                        .setCustomId(ids.selectDuration)
-                        .setPlaceholder("Select timeout duration")
-                        .addOptions([
-                          { label: "15 seconds", value: "15" },
-                          { label: "30 seconds (default)", value: "30" },
-                          { label: "1 minute", value: "60" },
-                          { label: "2 minutes", value: "120" },
-                          { label: "5 minutes", value: "300" },
-                          { label: "10 minutes", value: "600" },
-                        ]),
-                    ),
+                    buildStringSelectRow({
+                      customId: ids.selectDuration,
+                      placeholder: "Select timeout duration",
+                      options: [
+                        { label: "15 seconds", value: "15" },
+                        { label: "30 seconds (default)", value: "30" },
+                        { label: "1 minute", value: "60" },
+                        { label: "2 minutes", value: "120" },
+                        { label: "5 minutes", value: "300" },
+                        { label: "10 minutes", value: "600" },
+                      ],
+                    }),
                   ],
                 });
                 return {

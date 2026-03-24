@@ -63,7 +63,7 @@ export default class QueueInteraction extends MainInteraction {
         pages.push(page);
       }
 
-      const ids = buildCustomIds(interaction, "prevPage", "nextPage", "cancel");
+      const ids = buildCustomIds({ interaction, actions: ["prevPage", "nextPage", "cancel"] as const });
 
       const buttonRow = buildRow(
         buildButton({ label: "Previous", style: ButtonStyle.Secondary, customId: ids.prevPage }),
