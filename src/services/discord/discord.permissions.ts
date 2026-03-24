@@ -4,7 +4,7 @@ import type {
   DualPermissionCheckResult,
   FormatMissingPermissionsParams,
   PermissionCheckResult,
-} from "../types/permission.types";
+} from "../../types/permission.types";
 
 export const checkPermissions = ({
   bot,

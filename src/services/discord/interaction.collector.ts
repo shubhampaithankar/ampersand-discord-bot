@@ -3,12 +3,15 @@ import {
   InteractionCollector,
   ButtonInteraction,
   ChatInputCommandInteraction,
+  MessageComponentInteraction,
 } from "discord.js";
 import type {
   ButtonHandlerMap,
+  ChainedCollectorStep,
   CreateButtonHandlerParams,
+  CreateChainedCollectorParams,
   CreatePaginatorParams,
-} from "../types/collector.types";
+} from "../../types/collector.types";
 
 export type { ButtonHandlerMap };
 
@@ -90,21 +93,24 @@ export const createPaginator = ({
 };
 
 /**
- * Create a one-shot button handler that maps customIds to async handler functions.
- * The collector stops after the first matching click (max: 1).
+ * Create a button handler that maps customIds to async handler functions.
+ *
+ * Pass `max: 1` for a one-shot handler (e.g. confirm dialogs).
+ * Omit `max` for a persistent panel handler that stays active until `time` expires.
  */
 export const createButtonHandler = ({
   channel,
   handlers,
   filter,
   time,
+  max,
   onEnd,
 }: CreateButtonHandlerParams): InteractionCollector<ButtonInteraction> => {
   const collector = channel.createMessageComponentCollector({
     componentType: ComponentType.Button,
     filter,
     time,
-    max: 1,
+    ...(max !== undefined && { max }),
   }) as InteractionCollector<ButtonInteraction>;
 
   collector.on("collect", async (i: ButtonInteraction) => {
@@ -115,4 +121,46 @@ export const createButtonHandler = ({
   if (onEnd) collector.on("end", onEnd);
 
   return collector;
+};
+
+/**
+ * Create a multi-step component collector that chains steps sequentially.
+ *
+ * Each step's handler receives the interaction and returns either the next
+ * step's config (to continue the chain) or null (to terminate).
+ *
+ * @example
+ * createChainedCollector({
+ *   channel: interaction.channel!,
+ *   step: {
+ *     componentType: ComponentType.Button,
+ *     filter: (i) => i.customId === ids.confirm && i.user.id === userId,
+ *     time: 60_000,
+ *     handler: async (i) => {
+ *       await i.deferUpdate();
+ *       // optionally return next step config or null
+ *       return null;
+ *     },
+ *   },
+ * });
+ */
+export const createChainedCollector = ({
+  channel,
+  step,
+}: CreateChainedCollectorParams): void => {
+  const collector = channel.createMessageComponentCollector({
+    componentType: step.componentType as any,
+    filter: step.filter as any,
+    time: step.time,
+    max: step.max ?? 1,
+  });
+
+  collector.on("collect", async (i: MessageComponentInteraction) => {
+    const nextStep = await step.handler(i);
+    if (nextStep) {
+      createChainedCollector({ channel, step: nextStep });
+    }
+  });
+
+  if (step.onEnd) collector.on("end", step.onEnd as any);
 };

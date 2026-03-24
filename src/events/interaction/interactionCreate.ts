@@ -1,15 +1,15 @@
 import { CacheType, Events, RepliableInteraction } from "discord.js";
 import { MainEvent } from "../../classes";
 import Client from "../../client";
-import * as MusicService from "../../models/music/music.service";
+import * as MusicService from "../../models/guild/music.service";
 import {
   checkPermissions,
   formatMissingPermissions,
-} from "../../services/discord.permissions";
+} from "../../services/discord/discord.permissions";
 import {
   getRemainingCooldown,
   setCooldown,
-} from "../../services/cooldown.redis";
+} from "../../services/redis/cooldown.redis";
 import type { HandleCooldownParams } from "../../types/cooldown.types";
 import { InteractionType } from "../../types/interaction.types";
 
@@ -121,8 +121,8 @@ export default class InteractionCreate extends MainEvent {
 
 const verifyMusicCommand = async (guildId: string, channelId: string) => {
   const guildMusicData = await MusicService.getMusic(guildId);
-  if (!guildMusicData || !guildMusicData.enabled) return null;
-  return guildMusicData.channelIds;
+  if (!guildMusicData?.music || !guildMusicData.music.enabled) return null;
+  return guildMusicData.music.channelIds;
 };
 
 const handleCooldown = async ({
