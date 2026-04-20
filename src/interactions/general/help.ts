@@ -1,8 +1,4 @@
-import {
-  APIEmbedField,
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
-} from "discord.js";
+import { APIEmbedField, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { MainInteraction } from "../../classes";
 import Client from "../../client";
 import { botAuthor, infoEmbed } from "../../services/discord/embed.builder";
@@ -42,18 +38,12 @@ export default class HelpInteraction extends MainInteraction {
       });
 
       const categories = Array.from(
-        new Set(
-          Object.keys(interactions).map((item) =>
-            item !== "" ? item : "misc",
-          ),
-        ),
+        new Set(Object.keys(interactions).map((item) => (item !== "" ? item : "misc"))),
       );
 
       if (!query) {
         categories.forEach((category) => {
-          const commandsString = interactions[
-            category !== "misc" ? category : ""
-          ]
+          const commandsString = interactions[category !== "misc" ? category : ""]
             .map((item) => `\`${item.name}\``)
             .join(" ");
           fields.push({
@@ -81,9 +71,7 @@ export default class HelpInteraction extends MainInteraction {
               value: `${command.description}`,
             },
           );
-          const options = command.options
-            .map((option) => `\`${option.toJSON().name}\``)
-            .join(", ");
+          const options = command.options.map((option) => `\`${option.toJSON().name}\``).join(", ");
           fields.push({
             name: "Params",
             value: options || "None",

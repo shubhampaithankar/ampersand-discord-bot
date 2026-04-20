@@ -14,10 +14,7 @@ export default class PlayInteraction extends MainInteraction {
         .setName("play")
         .setDescription("plays music in user's voice channel")
         .addStringOption((option) =>
-          option
-            .setName("song")
-            .setDescription("plays the song by name or url")
-            .setRequired(true),
+          option.setName("song").setDescription("plays the song by name or url").setRequired(true),
         ),
     });
   }
@@ -34,7 +31,15 @@ export default class PlayInteraction extends MainInteraction {
 
       const { channel } = member.voice;
       if (!channel) {
-        await interaction.editReply({ embeds: [errorEmbed({ author: botAuthor(this.client), description: "You need to join a voice channel", footer: member.user.username })] });
+        await interaction.editReply({
+          embeds: [
+            errorEmbed({
+              author: botAuthor(this.client),
+              description: "You need to join a voice channel",
+              footer: member.user.username,
+            }),
+          ],
+        });
         return;
       }
 
@@ -46,12 +51,28 @@ export default class PlayInteraction extends MainInteraction {
         create: true,
       });
       if (!player) {
-        await interaction.editReply({ embeds: [errorEmbed({ author: botAuthor(this.client), description: "There was an error while creating a player", footer: member.user.username })] });
+        await interaction.editReply({
+          embeds: [
+            errorEmbed({
+              author: botAuthor(this.client),
+              description: "There was an error while creating a player",
+              footer: member.user.username,
+            }),
+          ],
+        });
         return;
       }
 
       if (channel.id !== player.voiceChannel) {
-        await interaction.editReply({ embeds: [errorEmbed({ author: botAuthor(this.client), description: "You're not in the same voice channel", footer: member.user.username })] });
+        await interaction.editReply({
+          embeds: [
+            errorEmbed({
+              author: botAuthor(this.client),
+              description: "You're not in the same voice channel",
+              footer: member.user.username,
+            }),
+          ],
+        });
         return;
       }
 
@@ -60,7 +81,15 @@ export default class PlayInteraction extends MainInteraction {
 
       const search = interaction.options.getString("song") || "";
       if (!search.length) {
-        await interaction.editReply({ embeds: [errorEmbed({ author: botAuthor(this.client), description: "Please enter a search term or URL", footer: member.user.username })] });
+        await interaction.editReply({
+          embeds: [
+            errorEmbed({
+              author: botAuthor(this.client),
+              description: "Please enter a search term or URL",
+              footer: member.user.username,
+            }),
+          ],
+        });
         return;
       }
 
@@ -73,41 +102,99 @@ export default class PlayInteraction extends MainInteraction {
         });
       } catch (err) {
         console.log(err);
-        await interaction.editReply({ embeds: [errorEmbed({ author: botAuthor(this.client), description: "There was an error while searching", footer: member.user.username })] });
+        await interaction.editReply({
+          embeds: [
+            errorEmbed({
+              author: botAuthor(this.client),
+              description: "There was an error while searching",
+              footer: member.user.username,
+            }),
+          ],
+        });
         return;
       }
 
       if (!res) {
-        await interaction.editReply({ embeds: [errorEmbed({ author: botAuthor(this.client), description: `No results found for **${search}**`, footer: member.user.username })] });
+        await interaction.editReply({
+          embeds: [
+            errorEmbed({
+              author: botAuthor(this.client),
+              description: `No results found for **${search}**`,
+              footer: member.user.username,
+            }),
+          ],
+        });
         return;
       }
 
       switch (res.loadType) {
         case "error": {
           if (!player.currentTrack) player.destroy();
-          await interaction.editReply({ embeds: [errorEmbed({ author: botAuthor(this.client), description: `Failed to load **${search}**`, footer: member.user.username })] });
+          await interaction.editReply({
+            embeds: [
+              errorEmbed({
+                author: botAuthor(this.client),
+                description: `Failed to load **${search}**`,
+                footer: member.user.username,
+              }),
+            ],
+          });
           return;
         }
         case "empty": {
           if (!player.currentTrack) player.destroy();
-          await interaction.editReply({ embeds: [errorEmbed({ author: botAuthor(this.client), description: `No results found for **${search}**`, footer: member.user.username })] });
+          await interaction.editReply({
+            embeds: [
+              errorEmbed({
+                author: botAuthor(this.client),
+                description: `No results found for **${search}**`,
+                footer: member.user.username,
+              }),
+            ],
+          });
           return;
         }
         case "track": {
           player.queue.add(res.tracks[0]);
-          await interaction.editReply({ embeds: [musicEmbed({ author: botAuthor(this.client), description: `🎵 Added **[${res.tracks[0].info.title}](${res.tracks[0].info.uri || ""})** to the queue`, footer: member.user.username, thumbnail: res.tracks[0].info.artworkUrl || undefined })] });
+          await interaction.editReply({
+            embeds: [
+              musicEmbed({
+                author: botAuthor(this.client),
+                description: `🎵 Added **[${res.tracks[0].info.title}](${res.tracks[0].info.uri || ""})** to the queue`,
+                footer: member.user.username,
+                thumbnail: res.tracks[0].info.artworkUrl || undefined,
+              }),
+            ],
+          });
           if (!player.isPlaying) await player.play();
           return;
         }
         case "playlist": {
           for (const track of res.tracks) player.queue.add(track);
-          await interaction.editReply({ embeds: [musicEmbed({ author: botAuthor(this.client), description: `🎶 Queued playlist **${res.playlistInfo.name}** — ${res.tracks.length} tracks`, footer: member.user.username })] });
+          await interaction.editReply({
+            embeds: [
+              musicEmbed({
+                author: botAuthor(this.client),
+                description: `🎶 Queued playlist **${res.playlistInfo.name}** — ${res.tracks.length} tracks`,
+                footer: member.user.username,
+              }),
+            ],
+          });
           if (!player.isPlaying) await player.play();
           return;
         }
         case "search": {
           player.queue.add(res.tracks[0]);
-          await interaction.editReply({ embeds: [musicEmbed({ author: botAuthor(this.client), description: `🎵 Added **[${res.tracks[0].info.title}](${res.tracks[0].info.uri || ""})** to the queue`, footer: member.user.username, thumbnail: res.tracks[0].info.artworkUrl || undefined })] });
+          await interaction.editReply({
+            embeds: [
+              musicEmbed({
+                author: botAuthor(this.client),
+                description: `🎵 Added **[${res.tracks[0].info.title}](${res.tracks[0].info.uri || ""})** to the queue`,
+                footer: member.user.username,
+                thumbnail: res.tracks[0].info.artworkUrl || undefined,
+              }),
+            ],
+          });
           if (!player.isPlaying) await player.play();
           return;
         }

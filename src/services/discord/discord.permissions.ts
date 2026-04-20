@@ -13,9 +13,7 @@ export const checkPermissions = ({
   channel,
 }: CheckPermissionsParams): DualPermissionCheckResult => {
   const botPerms = channel ? channel.permissionsFor(bot) : bot.permissions;
-  const memberPerms = channel
-    ? channel.permissionsFor(member)
-    : member.permissions;
+  const memberPerms = channel ? channel.permissionsFor(member) : member.permissions;
 
   const botAllowed = botPerms?.has(permissions, true) ?? false;
   const memberAllowed = memberPerms?.has(permissions, true) ?? false;

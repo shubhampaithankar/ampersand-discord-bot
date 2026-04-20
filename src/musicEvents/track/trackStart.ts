@@ -10,14 +10,10 @@ export default class TrackStartEvent extends MainMusicEvent {
       player.set("queueEndTimeout", null);
     }
 
-    const channel = this.client.channels.cache.get(
-      player.textChannel!,
-    ) as TextChannel;
+    const channel = this.client.channels.cache.get(player.textChannel!) as TextChannel;
 
     if (!channel) return;
 
-    channel.send(
-      `Now playing: \`${track.info.title}\`, requested by \`${track.info.requester}\`.`,
-    );
+    channel.send(`Now playing: \`${track.info.title}\`, requested by \`${track.info.requester}\`.`);
   }
 }

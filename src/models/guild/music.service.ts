@@ -15,9 +15,7 @@ export const updateMusic = (guildId: string, updateQuery: any) =>
     { upsert: true },
   )
     .lean()
-    .catch((e) =>
-      console.log("Database Error: while updating music data:\n", e),
-    );
+    .catch((e) => console.log("Database Error: while updating music data:\n", e));
 
 export const addMusicChannel = (guildId: string, channelId: string) =>
   Guild.findOneAndUpdate(
@@ -26,16 +24,9 @@ export const addMusicChannel = (guildId: string, channelId: string) =>
     { upsert: true },
   )
     .lean()
-    .catch((e) =>
-      console.log("Database Error: while adding music channel:\n", e),
-    );
+    .catch((e) => console.log("Database Error: while adding music channel:\n", e));
 
 export const removeMusicChannel = (guildId: string, channelId: string) =>
-  Guild.findOneAndUpdate(
-    { guildId },
-    { $pull: { "music.channelIds": channelId } },
-  )
+  Guild.findOneAndUpdate({ guildId }, { $pull: { "music.channelIds": channelId } })
     .lean()
-    .catch((e) =>
-      console.log("Database Error: while removing music channel:\n", e),
-    );
+    .catch((e) => console.log("Database Error: while removing music channel:\n", e));

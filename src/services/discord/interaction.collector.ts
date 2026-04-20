@@ -31,10 +31,7 @@ export const buildCustomIds = <T extends string>({
   actions: readonly T[];
 }): Record<T, string> =>
   Object.fromEntries(
-    actions.map((action) => [
-      action,
-      `${interaction.channelId}_${interaction.id}_${action}`,
-    ]),
+    actions.map((action) => [action, `${interaction.channelId}_${interaction.id}_${action}`]),
   ) as Record<T, string>;
 
 /**
@@ -147,10 +144,7 @@ export const createButtonHandler = ({
  *   },
  * });
  */
-export const createChainedCollector = ({
-  channel,
-  step,
-}: CreateChainedCollectorParams): void => {
+export const createChainedCollector = ({ channel, step }: CreateChainedCollectorParams): void => {
   const collector = channel.createMessageComponentCollector({
     componentType: step.componentType as any,
     filter: step.filter as any,

@@ -6,10 +6,7 @@ import {
   checkPermissions,
   formatMissingPermissions,
 } from "../../services/discord/discord.permissions";
-import {
-  getRemainingCooldown,
-  setCooldown,
-} from "../../services/redis/cooldown.redis";
+import { getRemainingCooldown, setCooldown } from "../../services/redis/cooldown.redis";
 import { isBotInGuild } from "../../services/redis/guild.redis";
 import type { HandleCooldownParams } from "../../types/cooldown.types";
 import { InteractionType } from "../../types/interaction.types";
@@ -31,25 +28,18 @@ export default class InteractionCreate extends MainEvent {
       if (!member) return;
 
       const commandName: string | null =
-        interaction.message?.interaction?.commandName ||
-        interaction.commandName ||
-        null;
+        interaction.message?.interaction?.commandName || interaction.commandName || null;
       if (!commandName) return;
 
       const command =
-        this.client.interactions.get(commandName) ||
-        this.client.aliases.get(commandName);
+        this.client.interactions.get(commandName) || this.client.aliases.get(commandName);
       if (!command) return;
 
       command.bot = bot;
 
       if (command.permissions) {
-        const {
-          botAllowed,
-          memberAllowed,
-          missingBotPermissions,
-          missingMemberPermissions,
-        } = checkPermissions({ bot, member, permissions: command.permissions });
+        const { botAllowed, memberAllowed, missingBotPermissions, missingMemberPermissions } =
+          checkPermissions({ bot, member, permissions: command.permissions });
 
         if (!botAllowed) {
           await command.reject({
@@ -84,10 +74,7 @@ export default class InteractionCreate extends MainEvent {
 
         switch (command.category) {
           case "Music": {
-            const channelIds = await verifyMusicCommand(
-              guild.id,
-              channel?.id ?? "",
-            );
+            const channelIds = await verifyMusicCommand(guild.id, channel?.id ?? "");
 
             if (!channelIds) {
               await command.reject({
@@ -111,7 +98,11 @@ export default class InteractionCreate extends MainEvent {
             break;
         }
 
-        await setCooldown({ commandName, userId: member.user.id, ttlSeconds: command.cooldown || 2 });
+        await setCooldown({
+          commandName,
+          userId: member.user.id,
+          ttlSeconds: command.cooldown || 2,
+        });
         await command.run(interaction);
       }
     } catch (error) {

@@ -1,10 +1,6 @@
 import Client from "../../client";
 import { MainInteraction } from "../../classes";
-import {
-  BaseGuildTextChannel,
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
-} from "discord.js";
+import { BaseGuildTextChannel, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class PurgeInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -40,9 +36,7 @@ export default class PurgeInteraction extends MainInteraction {
 
       const deletedMessages = await channel.bulkDelete(messagesToDelete, true);
 
-      await interaction.editReply(
-        `Purged ${deletedMessages.size} messages in the channel.`,
-      );
+      await interaction.editReply(`Purged ${deletedMessages.size} messages in the channel.`);
       return;
     } catch (error: any) {
       console.log("There was an error in Purge command: ", error);

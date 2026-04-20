@@ -9,9 +9,7 @@ export default class ShuffleInteraction extends MainInteraction {
     super(client, {
       type: 1,
       category: "Music",
-      data: new SlashCommandBuilder()
-        .setName("shuffle")
-        .setDescription("shuffles the queue"),
+      data: new SlashCommandBuilder().setName("shuffle").setDescription("shuffles the queue"),
     });
   }
 

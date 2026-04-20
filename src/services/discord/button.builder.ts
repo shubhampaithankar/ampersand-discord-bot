@@ -1,8 +1,4 @@
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-} from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import type { ButtonOpts } from "../../types/button.types";
 
 export type { ButtonOpts };
@@ -19,9 +15,7 @@ export const buildButton = (opts: ButtonOpts): ButtonBuilder => {
 };
 
 /** Wraps buttons into a single ActionRow. */
-export const buildRow = (
-  ...buttons: ButtonBuilder[]
-): ActionRowBuilder<ButtonBuilder> =>
+export const buildRow = (...buttons: ButtonBuilder[]): ActionRowBuilder<ButtonBuilder> =>
   new ActionRowBuilder<ButtonBuilder>().addComponents(...buttons);
 
 /**

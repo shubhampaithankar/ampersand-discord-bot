@@ -1,8 +1,7 @@
 import { capitalize } from "lodash";
 import moment from "moment";
 
-export const capitalizeString = (s: string) =>
-  s && s.length > 0 ? capitalize(s) : "";
+export const capitalizeString = (s: string) => (s && s.length > 0 ? capitalize(s) : "");
 
 export const getError = (error: unknown): unknown =>
   typeof error === "string"
@@ -31,5 +30,4 @@ export const formatDuration = (milliseconds: number): string => {
   }
 };
 
-export const sleepFor = (time: number) =>
-  new Promise((resolve) => setTimeout(resolve, time));
+export const sleepFor = (time: number) => new Promise((resolve) => setTimeout(resolve, time));

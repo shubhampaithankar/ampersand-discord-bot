@@ -14,12 +14,7 @@ export const getGambleLeaderboard = async (
 ): Promise<{ userId: string; score: number }[]> => {
   const redis = getRedis();
   if (!redis) return [];
-  const results = await redis.zrevrange(
-    leaderboardKey(guildId),
-    0,
-    limit - 1,
-    "WITHSCORES",
-  );
+  const results = await redis.zrevrange(leaderboardKey(guildId), 0, limit - 1, "WITHSCORES");
   const entries: { userId: string; score: number }[] = [];
   for (let i = 0; i < results.length; i += 2) {
     entries.push({ userId: results[i], score: parseInt(results[i + 1], 10) });

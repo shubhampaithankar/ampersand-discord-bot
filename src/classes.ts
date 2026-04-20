@@ -7,11 +7,7 @@ import {
   ShardingManager,
 } from "discord.js";
 import { Poru } from "poru";
-import type {
-  EventConfig,
-  InteractionConfig,
-  RejectPayload,
-} from "./types/interaction.types";
+import type { EventConfig, InteractionConfig, RejectPayload } from "./types/interaction.types";
 import { getError } from "./services/general.utils";
 
 export class MainInteraction {
@@ -89,9 +85,7 @@ export class MainEvent {
   }
   async run(...args: any[]) {
     try {
-      throw new Error(
-        `The run method has not been implemented in ${this.name}`,
-      );
+      throw new Error(`The run method has not been implemented in ${this.name}`);
     } catch (error) {
       console.log(error);
     }
@@ -111,9 +105,7 @@ export class MainShardEvent {
   }
   async run(...args: any[]) {
     try {
-      throw new Error(
-        `The run method has not been implemented in ${this.name}`,
-      );
+      throw new Error(`The run method has not been implemented in ${this.name}`);
     } catch (error) {
       console.log(error);
     }
@@ -133,9 +125,7 @@ export class MainMusicEvent {
   }
   async run(...args: any[]) {
     try {
-      throw new Error(
-        `The run method has not been implemented in ${this.name}`,
-      );
+      throw new Error(`The run method has not been implemented in ${this.name}`);
     } catch (error) {
       console.log(error);
     }

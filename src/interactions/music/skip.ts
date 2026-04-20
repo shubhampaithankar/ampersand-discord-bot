@@ -9,9 +9,7 @@ export default class SkipInteraction extends MainInteraction {
     super(client, {
       type: 1,
       category: "Music",
-      data: new SlashCommandBuilder()
-        .setName("skip")
-        .setDescription("skips current track"),
+      data: new SlashCommandBuilder().setName("skip").setDescription("skips current track"),
     });
   }
 

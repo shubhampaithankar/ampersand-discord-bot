@@ -20,9 +20,7 @@ export const restoreGuildLockdown = async ({
   if (!guild) return;
 
   for (const snapshot of channels) {
-    const channel = guild.channels.cache.get(snapshot.channelId) as
-      | GuildChannel
-      | undefined;
+    const channel = guild.channels.cache.get(snapshot.channelId) as GuildChannel | undefined;
     if (!channel || !("permissionOverwrites" in channel)) continue;
 
     await channel.permissionOverwrites
@@ -63,12 +61,19 @@ export const recoverLockdowns = async (client: Client) => {
 
     if (expiresAt <= now) {
       console.log(`[Lockdown] Auto-restoring expired lockdown for guild ${lockdown.guildId}`);
-      await restoreGuildLockdown({ client, guildId: lockdown.guildId, channels: lockdown.channels });
+      await restoreGuildLockdown({
+        client,
+        guildId: lockdown.guildId,
+        channels: lockdown.channels,
+      });
     } else {
       const remaining = expiresAt - now;
-      console.log(`[Lockdown] Scheduling restore for guild ${lockdown.guildId} in ${Math.round(remaining / 60000)}m`);
+      console.log(
+        `[Lockdown] Scheduling restore for guild ${lockdown.guildId} in ${Math.round(remaining / 60000)}m`,
+      );
       setTimeout(
-        () => restoreGuildLockdown({ client, guildId: lockdown.guildId, channels: lockdown.channels }),
+        () =>
+          restoreGuildLockdown({ client, guildId: lockdown.guildId, channels: lockdown.channels }),
         remaining,
       );
     }

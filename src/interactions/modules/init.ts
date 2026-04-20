@@ -98,7 +98,12 @@ export default class InitInteraction extends MainInteraction {
       const row = buildRow(
         toggleButton(enabled, ids.toggle),
         buildButton({ label: "Add Channel", style: ButtonStyle.Primary, customId: ids.addChannel }),
-        buildButton({ label: "Remove Channel", style: ButtonStyle.Secondary, customId: ids.removeChannel, disabled: channelIds.length === 0 }),
+        buildButton({
+          label: "Remove Channel",
+          style: ButtonStyle.Secondary,
+          customId: ids.removeChannel,
+          disabled: channelIds.length === 0,
+        }),
       );
 
       return { embed, row, enabled, channelIds };
@@ -144,8 +149,7 @@ export default class InitInteraction extends MainInteraction {
               channel: interaction.channel!,
               step: {
                 componentType: ComponentType.ChannelSelect,
-                filter: (s) =>
-                  s.customId === ids.selectAdd && s.user.id === interaction.user.id,
+                filter: (s) => s.customId === ids.selectAdd && s.user.id === interaction.user.id,
                 time: 60_000,
                 handler: async (s) => {
                   const sel = s as ChannelSelectMenuInteraction;
@@ -181,8 +185,7 @@ export default class InitInteraction extends MainInteraction {
             channel: interaction.channel!,
             step: {
               componentType: ComponentType.ChannelSelect,
-              filter: (s) =>
-                s.customId === ids.selectAdd && s.user.id === interaction.user.id,
+              filter: (s) => s.customId === ids.selectAdd && s.user.id === interaction.user.id,
               time: 60_000,
               handler: async (s) => {
                 const sel = s as ChannelSelectMenuInteraction;
@@ -218,15 +221,18 @@ export default class InitInteraction extends MainInteraction {
             content: "Select a channel to remove",
             embeds: [],
             components: [
-              buildStringSelectRow({ customId: ids.selectRemove, options, placeholder: "Select a channel to remove" }),
+              buildStringSelectRow({
+                customId: ids.selectRemove,
+                options,
+                placeholder: "Select a channel to remove",
+              }),
             ],
           });
           createChainedCollector({
             channel: interaction.channel!,
             step: {
               componentType: ComponentType.StringSelect,
-              filter: (s) =>
-                s.customId === ids.selectRemove && s.user.id === interaction.user.id,
+              filter: (s) => s.customId === ids.selectRemove && s.user.id === interaction.user.id,
               time: 60_000,
               handler: async (s) => {
                 const sel = s as StringSelectMenuInteraction;
@@ -257,7 +263,10 @@ export default class InitInteraction extends MainInteraction {
 
   handleJTC = async (interaction: ChatInputCommandInteraction) => {
     const guildId = interaction.guildId!;
-    const ids = buildCustomIds({ interaction, actions: ["toggle", "setChannel", "selectChannel"] as const });
+    const ids = buildCustomIds({
+      interaction,
+      actions: ["toggle", "setChannel", "selectChannel"] as const,
+    });
 
     const fetchData = () => JTCService.getJTC(guildId);
 
@@ -266,9 +275,7 @@ export default class InitInteraction extends MainInteraction {
       const jtc = data?.jtc as any;
       const enabled: boolean = jtc?.enabled ?? false;
       const channelId: string | undefined = jtc?.channelId;
-      const channel = channelId
-        ? interaction.guild!.channels.cache.get(channelId)
-        : null;
+      const channel = channelId ? interaction.guild!.channels.cache.get(channelId) : null;
 
       const embed = infoEmbed({
         author: botAuthor(this.client),
@@ -319,7 +326,10 @@ export default class InitInteraction extends MainInteraction {
                 content: "Select the voice channel users should join to create a new channel",
                 embeds: [],
                 components: [
-                  buildChannelSelectRow({ customId: ids.selectChannel, types: [ChannelType.GuildVoice] }),
+                  buildChannelSelectRow({
+                    customId: ids.selectChannel,
+                    types: [ChannelType.GuildVoice],
+                  }),
                 ],
               });
               createChainedCollector({
@@ -369,15 +379,17 @@ export default class InitInteraction extends MainInteraction {
             content: "Select the voice channel users should join to create a new channel",
             embeds: [],
             components: [
-              buildChannelSelectRow({ customId: ids.selectChannel, types: [ChannelType.GuildVoice] }),
+              buildChannelSelectRow({
+                customId: ids.selectChannel,
+                types: [ChannelType.GuildVoice],
+              }),
             ],
           });
           createChainedCollector({
             channel: interaction.channel!,
             step: {
               componentType: ComponentType.ChannelSelect,
-              filter: (s) =>
-                s.customId === ids.selectChannel && s.user.id === interaction.user.id,
+              filter: (s) => s.customId === ids.selectChannel && s.user.id === interaction.user.id,
               time: 60_000,
               handler: async (s) => {
                 const sel = s as ChannelSelectMenuInteraction;
@@ -401,8 +413,7 @@ export default class InitInteraction extends MainInteraction {
         },
       },
       filter: (i) =>
-        [ids.toggle, ids.setChannel].includes(i.customId) &&
-        i.user.id === interaction.user.id,
+        [ids.toggle, ids.setChannel].includes(i.customId) && i.user.id === interaction.user.id,
       time: 1000 * 60 * 15,
       onEnd: async () => {
         const { embed } = await buildPanel();
@@ -417,7 +428,16 @@ export default class InitInteraction extends MainInteraction {
     const guildId = interaction.guildId!;
     const ids = buildCustomIds({
       interaction,
-      actions: ["toggle", "addChannel", "removeChannel", "settings", "selectAdd", "selectRemove", "selectChance", "selectDuration"] as const,
+      actions: [
+        "toggle",
+        "addChannel",
+        "removeChannel",
+        "settings",
+        "selectAdd",
+        "selectRemove",
+        "selectChance",
+        "selectDuration",
+      ] as const,
     });
 
     const fetchData = () => AutoGambleService.getAutoGamble(guildId);
@@ -452,7 +472,12 @@ export default class InitInteraction extends MainInteraction {
       const row1 = buildRow(
         toggleButton(enabled, ids.toggle),
         buildButton({ label: "Add Channel", style: ButtonStyle.Primary, customId: ids.addChannel }),
-        buildButton({ label: "Remove Channel", style: ButtonStyle.Secondary, customId: ids.removeChannel, disabled: channelIds.length === 0 }),
+        buildButton({
+          label: "Remove Channel",
+          style: ButtonStyle.Secondary,
+          customId: ids.removeChannel,
+          disabled: channelIds.length === 0,
+        }),
       );
       const row2 = buildRow(
         buildButton({ label: "⚙️ Settings", style: ButtonStyle.Secondary, customId: ids.settings }),
@@ -491,7 +516,8 @@ export default class InitInteraction extends MainInteraction {
           } else {
             // No channels configured — prompt to add one first
             await interaction.editReply({
-              content: "No channels configured. Select a text channel to enable the auto gamble module",
+              content:
+                "No channels configured. Select a text channel to enable the auto gamble module",
               embeds: [],
               components: [
                 buildChannelSelectRow({ customId: ids.selectAdd, types: [ChannelType.GuildText] }),
@@ -501,8 +527,7 @@ export default class InitInteraction extends MainInteraction {
               channel: interaction.channel!,
               step: {
                 componentType: ComponentType.ChannelSelect,
-                filter: (s) =>
-                  s.customId === ids.selectAdd && s.user.id === interaction.user.id,
+                filter: (s) => s.customId === ids.selectAdd && s.user.id === interaction.user.id,
                 time: 60_000,
                 handler: async (s) => {
                   const sel = s as ChannelSelectMenuInteraction;
@@ -538,8 +563,7 @@ export default class InitInteraction extends MainInteraction {
             channel: interaction.channel!,
             step: {
               componentType: ComponentType.ChannelSelect,
-              filter: (s) =>
-                s.customId === ids.selectAdd && s.user.id === interaction.user.id,
+              filter: (s) => s.customId === ids.selectAdd && s.user.id === interaction.user.id,
               time: 60_000,
               handler: async (s) => {
                 const sel = s as ChannelSelectMenuInteraction;
@@ -575,15 +599,18 @@ export default class InitInteraction extends MainInteraction {
             content: "Select a channel to remove",
             embeds: [],
             components: [
-              buildStringSelectRow({ customId: ids.selectRemove, options, placeholder: "Select a channel to remove" }),
+              buildStringSelectRow({
+                customId: ids.selectRemove,
+                options,
+                placeholder: "Select a channel to remove",
+              }),
             ],
           });
           createChainedCollector({
             channel: interaction.channel!,
             step: {
               componentType: ComponentType.StringSelect,
-              filter: (s) =>
-                s.customId === ids.selectRemove && s.user.id === interaction.user.id,
+              filter: (s) => s.customId === ids.selectRemove && s.user.id === interaction.user.id,
               time: 60_000,
               handler: async (s) => {
                 const sel = s as StringSelectMenuInteraction;
@@ -628,7 +655,9 @@ export default class InitInteraction extends MainInteraction {
               handler: async (s) => {
                 const sel = s as StringSelectMenuInteraction;
                 await sel.deferUpdate();
-                await AutoGambleService.updateAutoGamble(guildId, { chance: parseInt(sel.values[0], 10) });
+                await AutoGambleService.updateAutoGamble(guildId, {
+                  chance: parseInt(sel.values[0], 10),
+                });
                 await interaction.editReply({
                   content: "Now select the timeout duration",
                   embeds: [],
@@ -649,12 +678,15 @@ export default class InitInteraction extends MainInteraction {
                 });
                 return {
                   componentType: ComponentType.StringSelect,
-                  filter: (s: any) => s.customId === ids.selectDuration && s.user.id === interaction.user.id,
+                  filter: (s: any) =>
+                    s.customId === ids.selectDuration && s.user.id === interaction.user.id,
                   time: 60_000,
                   handler: async (s: any) => {
                     const sel2 = s as StringSelectMenuInteraction;
                     await sel2.deferUpdate();
-                    await AutoGambleService.updateAutoGamble(guildId, { timeoutDuration: parseInt(sel2.values[0], 10) });
+                    await AutoGambleService.updateAutoGamble(guildId, {
+                      timeoutDuration: parseInt(sel2.values[0], 10),
+                    });
                     await showPanel();
                     return null;
                   },

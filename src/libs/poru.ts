@@ -1,30 +1,36 @@
 import { Poru } from "poru";
+import type { Plugin } from "poru";
+import { Spotify } from "poru-spotify";
 import type BaseClient from "../client";
-
-const SPOTIFY_ENABLED = false;
+import {
+  DISCORD_CLIENT_NAME,
+  LAVALINK_HOST,
+  LAVALINK_PASSWORD,
+  LAVALINK_PORT,
+  SPOTIFY_CLIENT_ID,
+  SPOTIFY_CLIENT_SECRET,
+} from "../constants";
 
 export const createPoru = (client: BaseClient) =>
   new Poru(
     client,
     [
       {
-        host: `${process.env.LAVALINK_HOST!}`,
-        port: Number(process.env.LAVALINK_PORT),
-        password: `${process.env.LAVALINK_PASSWORD}`,
+        host: `${LAVALINK_HOST!}`,
+        port: Number(LAVALINK_PORT),
+        password: `${LAVALINK_PASSWORD}`,
         secure: false,
-        name: `${process.env.DISCORD_CLIENT_NAME}-discord-client`,
+        name: `${DISCORD_CLIENT_NAME}-discord-client`,
       },
     ],
     {
       library: "discord.js",
       defaultPlatform: "ytmsearch",
-      // plugins: SPOTIFY_ENABLED
-      //   ? [
-      //       new Spotify({
-      //         clientID: `${process.env.SPOTIFY_CLIENT_ID}`,
-      //         clientSecret: `${process.env.SPOTIFY_CLIENT_SECRET}`,
-      //       }),
-      //     ]
-      //   : [],
+      plugins: [
+        new Spotify({
+          clientID: `${SPOTIFY_CLIENT_ID}`,
+          clientSecret: `${SPOTIFY_CLIENT_SECRET}`,
+        }) as unknown as Plugin,
+      ],
     },
   );
