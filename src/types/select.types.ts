@@ -16,3 +16,13 @@ export interface StringSelectOpts {
   options: StringSelectOption[];
   placeholder?: string;
 }
+
+export interface RoleSelectOpts {
+  customId: string;
+  placeholder?: string;
+}
+
+export interface UserSelectOpts {
+  customId: string;
+  placeholder?: string;
+}

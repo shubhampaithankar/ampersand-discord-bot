@@ -4,26 +4,43 @@ import {
   ChannelType,
   ChatInputCommandInteraction,
   ComponentType,
+  RoleSelectMenuInteraction,
   SlashCommandBuilder,
   StringSelectMenuInteraction,
   TextChannel,
+  UserSelectMenuInteraction,
   VoiceChannel,
 } from "discord.js";
 import { MainInteraction } from "../../classes";
 import Client from "../../client";
-import * as MusicService from "../../models/guild/music.service";
-import * as JTCService from "../../models/guild/jtc.service";
-import * as AutoGambleService from "../../models/guild/autoGamble.service";
-import { botAuthor, infoEmbed } from "../../services/discord/embed.builder";
+import { type CounterActor, type CounterActorType, CounterService } from "../../models/counter";
+import { AutoGambleService, JTCService, MusicService } from "../../models/guild";
 import { buildButton, buildRow, toggleButton } from "../../services/discord/button.builder";
-import { buildChannelSelectRow, buildStringSelectRow } from "../../services/discord/select.builder";
+import { describeActor } from "../../services/discord/counter.access";
+import { botAuthor, errorEmbed, infoEmbed } from "../../services/discord/embed.builder";
 import {
   buildCustomIds,
   createButtonHandler,
   createChainedCollector,
 } from "../../services/discord/interaction.collector";
+import { buildModal } from "../../services/discord/modal.builder";
+import {
+  buildChannelSelectRow,
+  buildRoleSelectRow,
+  buildStringSelectRow,
+  buildUserSelectRow,
+} from "../../services/discord/select.builder";
 
-type ModuleKey = "music" | "jtc" | "autogamble";
+type ModuleKey = "music" | "jtc" | "autogamble" | "counter";
+
+const COUNTER_NAME_PATTERN = /^[a-z0-9_-]{1,32}$/i;
+
+const ACTOR_TYPE_OPTIONS = [
+  { label: "Everyone", value: "everyone" },
+  { label: "Specific role", value: "role" },
+  { label: "Specific user", value: "user" },
+  { label: "Admins (ManageGuild)", value: "admin" },
+];
 
 export default class InitInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -43,6 +60,7 @@ export default class InitInteraction extends MainInteraction {
               { name: "Music", value: "music" },
               { name: "Join To Create", value: "jtc" },
               { name: "Auto Gamble", value: "autogamble" },
+              { name: "Counter", value: "counter" },
             ),
         ),
     });
@@ -54,6 +72,7 @@ export default class InitInteraction extends MainInteraction {
       const module = interaction.options.getString("module", true) as ModuleKey;
       if (module === "music") return await this.handleMusic(interaction);
       if (module === "jtc") return await this.handleJTC(interaction);
+      if (module === "counter") return await this.handleCounter(interaction);
       return await this.handleAutoGamble(interaction);
     } catch (error: any) {
       console.log("There was an error in Init command: ", error);
@@ -709,6 +728,307 @@ export default class InitInteraction extends MainInteraction {
       onEnd: async () => {
         const { embed, rows } = await buildPanel();
         await interaction.editReply({ embeds: [embed], components: rows }).catch(() => {});
+      },
+    });
+  };
+
+  // ─── Counter ──────────────────────────────────────────────────────────────
+
+  handleCounter = async (interaction: ChatInputCommandInteraction) => {
+    const guildId = interaction.guildId!;
+    const ids = buildCustomIds({
+      interaction,
+      actions: [
+        "create",
+        "edit",
+        "delete",
+        "nameModal",
+        "selectCounter",
+        "selectActorType",
+        "selectRole",
+        "selectUser",
+      ] as const,
+    });
+
+    const fetchCounters = () => CounterService.listCounters(guildId);
+
+    const buildPanel = async () => {
+      const counters = await fetchCounters();
+      const lines = counters.length
+        ? counters
+            .slice(0, 25)
+            .map((c) => `• \`${c.name}\` — **${c.value}** · ${describeActor(c.actor)}`)
+            .join("\n")
+        : "_No counters yet. Click **+ New** to create one._";
+
+      const embed = infoEmbed({
+        author: botAuthor(this.client),
+        title: "🔢 Counter Module",
+        description: lines,
+        footer: interaction.member!.user.username,
+        timestamp: true,
+      });
+
+      const row = buildRow(
+        buildButton({ label: "+ New", style: ButtonStyle.Success, customId: ids.create }),
+        buildButton({
+          label: "Edit",
+          style: ButtonStyle.Primary,
+          customId: ids.edit,
+          disabled: counters.length === 0,
+        }),
+        buildButton({
+          label: "Delete",
+          style: ButtonStyle.Danger,
+          customId: ids.delete,
+          disabled: counters.length === 0,
+        }),
+      );
+
+      return { embed, row, counters };
+    };
+
+    const showPanel = async () => {
+      const { embed, row } = await buildPanel();
+      await interaction.editReply({ content: null, embeds: [embed], components: [row] });
+    };
+
+    const showError = async (title: string, description: string) => {
+      await interaction.editReply({
+        content: null,
+        embeds: [
+          errorEmbed({
+            author: botAuthor(this.client),
+            title,
+            description,
+            timestamp: true,
+          }),
+        ],
+        components: [],
+      });
+      setTimeout(() => showPanel(), 3000);
+    };
+
+    const promptActorFlow = async (
+      name: string,
+      onActor: (actor: CounterActor) => Promise<void>,
+    ) => {
+      await interaction.editReply({
+        content: `Pick who can modify \`${name}\``,
+        embeds: [],
+        components: [
+          buildStringSelectRow({
+            customId: ids.selectActorType,
+            options: ACTOR_TYPE_OPTIONS,
+            placeholder: "Select actor type",
+          }),
+        ],
+      });
+
+      createChainedCollector({
+        channel: interaction.channel!,
+        step: {
+          componentType: ComponentType.StringSelect,
+          filter: (s) => s.customId === ids.selectActorType && s.user.id === interaction.user.id,
+          time: 60_000,
+          handler: async (s) => {
+            const sel = s as StringSelectMenuInteraction;
+            await sel.deferUpdate();
+            const type = sel.values[0] as CounterActorType;
+
+            if (type === "everyone" || type === "admin") {
+              await onActor({ type });
+              return null;
+            }
+
+            if (type === "role") {
+              await interaction.editReply({
+                content: `Pick the role allowed to modify \`${name}\``,
+                components: [
+                  buildRoleSelectRow({ customId: ids.selectRole, placeholder: "Select a role" }),
+                ],
+              });
+              return {
+                componentType: ComponentType.RoleSelect,
+                filter: (r: any) =>
+                  r.customId === ids.selectRole && r.user.id === interaction.user.id,
+                time: 60_000,
+                handler: async (r: any) => {
+                  const rsel = r as RoleSelectMenuInteraction;
+                  await rsel.deferUpdate();
+                  const role = rsel.roles.first();
+                  if (role) await onActor({ type: "role", targetId: role.id });
+                  else await showPanel();
+                  return null;
+                },
+                onEnd: async (_: any, reason: string) => {
+                  if (reason !== "limit") await showPanel();
+                },
+              };
+            }
+
+            await interaction.editReply({
+              content: `Pick the user allowed to modify \`${name}\``,
+              components: [
+                buildUserSelectRow({ customId: ids.selectUser, placeholder: "Select a user" }),
+              ],
+            });
+            return {
+              componentType: ComponentType.UserSelect,
+              filter: (u: any) =>
+                u.customId === ids.selectUser && u.user.id === interaction.user.id,
+              time: 60_000,
+              handler: async (u: any) => {
+                const usel = u as UserSelectMenuInteraction;
+                await usel.deferUpdate();
+                const user = usel.users.first();
+                if (user) await onActor({ type: "user", targetId: user.id });
+                else await showPanel();
+                return null;
+              },
+              onEnd: async (_: any, reason: string) => {
+                if (reason !== "limit") await showPanel();
+              },
+            };
+          },
+          onEnd: async (_, reason) => {
+            if (reason !== "limit") await showPanel();
+          },
+        },
+      });
+    };
+
+    const promptCounterSelect = async (
+      counters: { name: string; value: number }[],
+      placeholder: string,
+      onPick: (name: string) => Promise<void>,
+    ) => {
+      const options = counters
+        .slice(0, 25)
+        .map((c) => ({ label: c.name, value: c.name, description: `Current: ${c.value}` }));
+
+      await interaction.editReply({
+        content: null,
+        embeds: [],
+        components: [buildStringSelectRow({ customId: ids.selectCounter, options, placeholder })],
+      });
+
+      createChainedCollector({
+        channel: interaction.channel!,
+        step: {
+          componentType: ComponentType.StringSelect,
+          filter: (s) => s.customId === ids.selectCounter && s.user.id === interaction.user.id,
+          time: 60_000,
+          handler: async (s) => {
+            const sel = s as StringSelectMenuInteraction;
+            await sel.deferUpdate();
+            await onPick(sel.values[0]);
+            return null;
+          },
+          onEnd: async (_, reason) => {
+            if (reason !== "limit") await showPanel();
+          },
+        },
+      });
+    };
+
+    await showPanel();
+
+    createButtonHandler({
+      channel: interaction.channel!,
+      handlers: {
+        [ids.create]: async (i) => {
+          const modal = buildModal({
+            customId: ids.nameModal,
+            title: "New Counter",
+            inputs: [
+              {
+                customId: "name",
+                label: "Counter name (a-z, 0-9, _-)",
+                required: true,
+                minLength: 1,
+                maxLength: 32,
+              },
+            ],
+          });
+          await i.showModal(modal);
+          const submit = await i
+            .awaitModalSubmit({
+              filter: (s) => s.customId === ids.nameModal && s.user.id === interaction.user.id,
+              time: 60_000,
+            })
+            .catch(() => null);
+          if (!submit) return;
+          await submit.deferUpdate();
+
+          const name = submit.fields.getTextInputValue("name").trim();
+          if (!COUNTER_NAME_PATTERN.test(name)) {
+            await showError("Invalid name", "Use 1–32 chars from `a–z`, `0–9`, `_`, `-`.");
+            return;
+          }
+
+          const existing = await CounterService.getCounter(guildId, name);
+          if (existing) {
+            await showError(
+              "Already exists",
+              `A counter named \`${name.toLowerCase()}\` already exists.`,
+            );
+            return;
+          }
+
+          await promptActorFlow(name, async (actor) => {
+            try {
+              await CounterService.createCounter({
+                guildId,
+                name,
+                actor,
+                createdBy: interaction.user.id,
+              });
+            } catch (error: any) {
+              if (error?.code === 11000) {
+                await showError(
+                  "Already exists",
+                  `A counter named \`${name.toLowerCase()}\` already exists.`,
+                );
+                return;
+              }
+              throw error;
+            }
+            await showPanel();
+          });
+        },
+
+        [ids.edit]: async (i) => {
+          await i.deferUpdate();
+          const counters = await fetchCounters();
+          if (!counters.length) return showPanel();
+
+          await promptCounterSelect(counters, "Pick a counter to edit", async (name) => {
+            await promptActorFlow(name, async (actor) => {
+              await CounterService.updateCounter(guildId, name, { actor });
+              await showPanel();
+            });
+          });
+        },
+
+        [ids.delete]: async (i) => {
+          await i.deferUpdate();
+          const counters = await fetchCounters();
+          if (!counters.length) return showPanel();
+
+          await promptCounterSelect(counters, "Pick a counter to delete", async (name) => {
+            await CounterService.deleteCounter(guildId, name);
+            await showPanel();
+          });
+        },
+      },
+      filter: (i) =>
+        [ids.create, ids.edit, ids.delete].includes(i.customId) &&
+        i.user.id === interaction.user.id,
+      time: 1000 * 60 * 15,
+      onEnd: async () => {
+        const { embed } = await buildPanel();
+        await interaction.editReply({ embeds: [embed], components: [] }).catch(() => {});
       },
     });
   };

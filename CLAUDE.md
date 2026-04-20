@@ -5,7 +5,7 @@
 - Runtime: Bun (never npm/pnpm/yarn)
 - Language: TypeScript 5.x
 - Discord: discord.js v14 + @discordjs/rest v2
-- Music: Poru v5 (Lavalink) — Spotify plugin present but disabled
+- Music: Poru v5 (Lavalink) + poru-spotify enabled (cast as `Plugin` — poru-spotify bundles poru@v4 internally, duplicate type identity)
 - Database: MongoDB via Mongoose v7
 - Cache: Redis via ioredis v5
 - Container: Docker — `oven/bun:alpine` multi-stage
@@ -16,11 +16,16 @@
 bun --watch app.ts              # development (hot-reload)
 NODE_ENV=PROD bun run app.ts    # production
 docker compose up -d            # containerised
+bun run format                  # biome format --write .
+bun run lint                    # oxlint
+bun run check                   # biome check --write + oxlint
 ```
 
-No test suite configured.
+No test suite configured. Formatter is Biome, linter is Oxlint (eslint + prettier removed).
 
 ## Environment Variables
+
+All env vars read via `src/constants.ts` — never `process.env.*` directly in app code.
 
 ```
 DISCORD_CLIENT_ID  DISCORD_CLIENT_NAME  DISCORD_TOKEN  DISCORD_PERMISSION_INTEGER
@@ -39,11 +44,15 @@ SPOTIFY_CLIENT_ID  SPOTIFY_CLIENT_SECRET  NODE_ENV
 - `src/loader.ts` — auto-discovers and registers all events, interactions, music events
 - `src/classes.ts` — `MainInteraction`, `MainEvent`, `MainMusicEvent`, `MainShardEvent`
 - `src/client.ts` — `BaseClient` extending discord.js `Client`
+- `src/constants.ts` — single source of truth for env vars
 - `src/services/discord/embed.builder.ts` — never use `EmbedBuilder` directly
 - `src/services/discord/button.builder.ts` — never use `ButtonBuilder`/`ActionRowBuilder<ButtonBuilder>` directly
-- `src/services/discord/select.builder.ts` — never use `ChannelSelectMenuBuilder`/`StringSelectMenuBuilder`/`ActionRowBuilder<SelectMenu>` directly
+- `src/services/discord/select.builder.ts` — never use `ChannelSelectMenuBuilder`/`StringSelectMenuBuilder`/`RoleSelectMenuBuilder`/`UserSelectMenuBuilder`/`ActionRowBuilder<SelectMenu>` directly
+- `src/services/discord/modal.builder.ts` — never use `ModalBuilder`/`TextInputBuilder` directly
 - `src/services/discord/interaction.collector.ts` — all collector/paginator patterns
 - `src/services/discord/guild.player.ts` — `getMusicPlayer`, `validateMusicContext`
+- `src/services/discord/counter.access.ts` — `canActOnCounter`, `describeActor`
+- `src/services/discord/lockdown.restore.ts` — `restoreGuildLockdown`, `recoverLockdowns`
 
 ## Conventions
 
@@ -53,11 +62,14 @@ SPOTIFY_CLIENT_ID  SPOTIFY_CLIENT_SECRET  NODE_ENV
 
 - Use `npm`, `pnpm`, or `yarn`
 - Use `ephemeral: true` — use `flags: MessageFlags.Ephemeral`
-- Construct `EmbedBuilder`, `ButtonBuilder`, `ChannelSelectMenuBuilder`, `StringSelectMenuBuilder`, or any `ActionRowBuilder` directly
+- Construct `EmbedBuilder`, `ButtonBuilder`, `ChannelSelectMenuBuilder`, `StringSelectMenuBuilder`, `RoleSelectMenuBuilder`, `UserSelectMenuBuilder`, `ModalBuilder`, `TextInputBuilder`, or any `ActionRowBuilder` directly
 - Use `$set: { subdoc: fullObject }` — use dot-notation keys to avoid wiping sibling fields
 - Skip `deferReply()` at the start of any interaction `run()`
 - Read DB state written inside `collect` from an `onEnd` callback
 - Use `any` type
+- Put anything except `*.schema.ts`, `*.model.ts`, `*.service.ts`, `*.types.ts`, `index.ts` under `src/models/**` — Discord side-effect code lives in `src/services/discord/`
+- Import from `src/models/<x>/<y>.service.ts` directly — use the barrel: `import { XService } from "../../models/x"`
+- Read `process.env.*` directly in app code — import from `src/constants.ts`
 
 ## MCP Plugins
 

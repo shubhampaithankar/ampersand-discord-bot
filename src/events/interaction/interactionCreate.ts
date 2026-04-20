@@ -1,7 +1,7 @@
 import { CacheType, Events, RepliableInteraction } from "discord.js";
 import { MainEvent } from "../../classes";
 import Client from "../../client";
-import * as MusicService from "../../models/guild/music.service";
+import { MusicService } from "../../models/guild";
 import {
   checkPermissions,
   formatMissingPermissions,

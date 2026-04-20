@@ -7,12 +7,11 @@ import {
 } from "discord.js";
 import { MainInteraction } from "../../classes";
 import Client from "../../client";
-import * as LockdownService from "../../models/lockdown/lockdown.service";
-import { buildCustomIds, createButtonHandler } from "../../services/discord/interaction.collector";
-import { botAuthor, errorEmbed } from "../../services/discord/embed.builder";
+import { type ChannelSnapshot, LockdownService } from "../../models/lockdown";
 import { buildButton, buildRow } from "../../services/discord/button.builder";
-import { restoreGuildLockdown } from "../../models/lockdown/lockdown.restore";
-import type { ChannelSnapshot } from "../../types/permission.types";
+import { botAuthor, errorEmbed } from "../../services/discord/embed.builder";
+import { buildCustomIds, createButtonHandler } from "../../services/discord/interaction.collector";
+import { restoreGuildLockdown } from "../../services/discord/lockdown.restore";
 
 export default class LockdownInteraction extends MainInteraction {
   constructor(client: Client) {
