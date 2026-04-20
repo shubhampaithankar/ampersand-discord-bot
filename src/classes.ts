@@ -1,6 +1,7 @@
 import Client from "./client";
 import {
   ApplicationCommandDataResolvable,
+  AutocompleteInteraction,
   GuildMember,
   InteractionCollector,
   PermissionResolvable,
@@ -21,6 +22,7 @@ export class MainInteraction {
   permissions?: PermissionResolvable;
   bot?: GuildMember;
   data: ApplicationCommandDataResolvable;
+  autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
 
   constructor(client: Client, config: InteractionConfig) {
     this.client = client;

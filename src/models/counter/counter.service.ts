@@ -1,3 +1,4 @@
+import { escapeRegex } from "../../services/general.utils";
 import Counter from "./counter.model";
 import type { CounterActor, CounterData } from "./counter.types";
 
@@ -10,6 +11,16 @@ export const listCounters = (guildId: string) =>
   Counter.find({ guildId })
     .sort({ name: 1 })
     .limit(100)
+    .lean<CounterData[]>()
+    .catch(() => [] as CounterData[]);
+
+export const searchCountersByPrefix = (guildId: string, prefix: string, limit = 25) =>
+  Counter.find({
+    guildId,
+    name: { $regex: `^${escapeRegex(prefix.toLowerCase())}` },
+  })
+    .sort({ name: 1 })
+    .limit(limit)
     .lean<CounterData[]>()
     .catch(() => [] as CounterData[]);
 

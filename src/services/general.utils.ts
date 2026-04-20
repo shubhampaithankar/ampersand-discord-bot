@@ -31,3 +31,5 @@ export const formatDuration = (milliseconds: number): string => {
 };
 
 export const sleepFor = (time: number) => new Promise((resolve) => setTimeout(resolve, time));
+
+export const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

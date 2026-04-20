@@ -20,6 +20,12 @@ export default class InteractionCreate extends MainEvent {
       if (!interaction.inGuild()) return;
       const guild = interaction.guild!;
 
+      if (interaction.isAutocomplete()) {
+        const cmd = this.client.interactions.get(interaction.commandName);
+        if (cmd?.autocomplete) await cmd.autocomplete(interaction).catch(() => {});
+        return;
+      }
+
       if (!(await isBotInGuild(guild.id))) return;
       const bot = guild.members.me ?? guild.members.cache.get(this.client.user!.id!);
       if (!bot) return;

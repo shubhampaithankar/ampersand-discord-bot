@@ -742,7 +742,10 @@ export default class InitInteraction extends MainInteraction {
         "create",
         "edit",
         "delete",
+        "reset",
+        "setValue",
         "nameModal",
+        "valueModal",
         "selectCounter",
         "selectActorType",
         "selectRole",
@@ -769,28 +772,43 @@ export default class InitInteraction extends MainInteraction {
         timestamp: true,
       });
 
-      const row = buildRow(
+      const hasCounters = counters.length > 0;
+      const row1 = buildRow(
         buildButton({ label: "+ New", style: ButtonStyle.Success, customId: ids.create }),
         buildButton({
           label: "Edit",
           style: ButtonStyle.Primary,
           customId: ids.edit,
-          disabled: counters.length === 0,
+          disabled: !hasCounters,
         }),
         buildButton({
           label: "Delete",
           style: ButtonStyle.Danger,
           customId: ids.delete,
-          disabled: counters.length === 0,
+          disabled: !hasCounters,
+        }),
+      );
+      const row2 = buildRow(
+        buildButton({
+          label: "Reset",
+          style: ButtonStyle.Secondary,
+          customId: ids.reset,
+          disabled: !hasCounters,
+        }),
+        buildButton({
+          label: "Set Value",
+          style: ButtonStyle.Secondary,
+          customId: ids.setValue,
+          disabled: !hasCounters,
         }),
       );
 
-      return { embed, row, counters };
+      return { embed, rows: [row1, row2], counters };
     };
 
     const showPanel = async () => {
-      const { embed, row } = await buildPanel();
-      await interaction.editReply({ content: null, embeds: [embed], components: [row] });
+      const { embed, rows } = await buildPanel();
+      await interaction.editReply({ content: null, embeds: [embed], components: rows });
     };
 
     const showError = async (title: string, description: string) => {
@@ -1021,9 +1039,102 @@ export default class InitInteraction extends MainInteraction {
             await showPanel();
           });
         },
+
+        [ids.reset]: async (i) => {
+          await i.deferUpdate();
+          const counters = await fetchCounters();
+          if (!counters.length) return showPanel();
+
+          await promptCounterSelect(counters, "Pick a counter to reset to 0", async (name) => {
+            await CounterService.updateCounter(guildId, name, { value: 0 });
+            await showPanel();
+          });
+        },
+
+        [ids.setValue]: async (i) => {
+          await i.deferUpdate();
+          const counters = await fetchCounters();
+          if (!counters.length) return showPanel();
+
+          await promptCounterSelect(counters, "Pick a counter to set value", async (name) => {
+            // Use the StringSelect's button interaction to show modal — but at
+            // this point we only have deferUpdate'd. Fall back to a secondary
+            // button click: prompt user to click a "Submit value" button that
+            // shows the modal. Simpler path: chain an extra button step.
+            const openIds = buildCustomIds({
+              interaction,
+              actions: ["openValueModal"] as const,
+            });
+            await interaction.editReply({
+              content: `Click below to set the value for \`${name}\``,
+              embeds: [],
+              components: [
+                buildRow(
+                  buildButton({
+                    label: "Enter value",
+                    style: ButtonStyle.Primary,
+                    customId: openIds.openValueModal,
+                  }),
+                ),
+              ],
+            });
+            createChainedCollector({
+              channel: interaction.channel!,
+              step: {
+                componentType: ComponentType.Button,
+                filter: (b) =>
+                  b.customId === openIds.openValueModal && b.user.id === interaction.user.id,
+                time: 60_000,
+                handler: async (b) => {
+                  const btn = b as any;
+                  const modal = buildModal({
+                    customId: ids.valueModal,
+                    title: `Set ${name}`,
+                    inputs: [
+                      {
+                        customId: "value",
+                        label: "New value (integer)",
+                        required: true,
+                        maxLength: 11,
+                      },
+                    ],
+                  });
+                  await btn.showModal(modal);
+                  const submit = await btn
+                    .awaitModalSubmit({
+                      filter: (s: any) =>
+                        s.customId === ids.valueModal && s.user.id === interaction.user.id,
+                      time: 60_000,
+                    })
+                    .catch(() => null);
+                  if (!submit) {
+                    await showPanel();
+                    return null;
+                  }
+                  await submit.deferUpdate();
+                  const raw = submit.fields.getTextInputValue("value").trim();
+                  const parsed = Number(raw);
+                  if (!Number.isInteger(parsed) || Math.abs(parsed) > 1_000_000) {
+                    await showError(
+                      "Invalid value",
+                      "Enter an integer in [-1,000,000, 1,000,000].",
+                    );
+                    return null;
+                  }
+                  await CounterService.updateCounter(guildId, name, { value: parsed });
+                  await showPanel();
+                  return null;
+                },
+                onEnd: async (_, reason) => {
+                  if (reason !== "limit") await showPanel();
+                },
+              },
+            });
+          });
+        },
       },
       filter: (i) =>
-        [ids.create, ids.edit, ids.delete].includes(i.customId) &&
+        [ids.create, ids.edit, ids.delete, ids.reset, ids.setValue].includes(i.customId) &&
         i.user.id === interaction.user.id,
       time: 1000 * 60 * 15,
       onEnd: async () => {

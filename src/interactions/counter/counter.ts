@@ -1,4 +1,6 @@
 import {
+  type AutocompleteInteraction,
+  ButtonStyle,
   type ChatInputCommandInteraction,
   type GuildMember,
   SlashCommandBuilder,
@@ -7,14 +9,22 @@ import {
 import { MainInteraction } from "../../classes";
 import Client from "../../client";
 import { CounterService } from "../../models/counter";
+import { buildButton, buildRow } from "../../services/discord/button.builder";
 import { canActOnCounter, describeActor } from "../../services/discord/counter.access";
 import { botAuthor, errorEmbed, infoEmbed } from "../../services/discord/embed.builder";
+import { buildCustomIds, createPaginator } from "../../services/discord/interaction.collector";
 import { getError } from "../../services/general.utils";
+import { getRemainingCooldown, setCooldown } from "../../services/redis/cooldown.redis";
 
 const LIST_PAGE_SIZE = 25;
+const COUNTER_COOLDOWN_SECONDS = 3;
+
+const counterCooldownKey = (name: string) => `counter:${name.toLowerCase()}`;
 
 const addNameOption = (sub: SlashCommandSubcommandBuilder) =>
-  sub.addStringOption((o) => o.setName("name").setDescription("Counter name").setRequired(true));
+  sub.addStringOption((o) =>
+    o.setName("name").setDescription("Counter name").setRequired(true).setAutocomplete(true),
+  );
 
 export default class CounterInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -65,6 +75,22 @@ export default class CounterInteraction extends MainInteraction {
     }
   };
 
+  autocomplete = async (interaction: AutocompleteInteraction) => {
+    try {
+      if (!interaction.guildId) {
+        await interaction.respond([]);
+        return;
+      }
+      const focused = interaction.options.getFocused();
+      const results = await CounterService.searchCountersByPrefix(interaction.guildId, focused, 25);
+      await interaction.respond(
+        results.map((c) => ({ name: `${c.name} (${c.value})`, value: c.name })),
+      );
+    } catch {
+      await interaction.respond([]).catch(() => {});
+    }
+  };
+
   private replyError({
     interaction,
     title,
@@ -109,6 +135,17 @@ export default class CounterInteraction extends MainInteraction {
       return;
     }
 
+    const cooldownKey = counterCooldownKey(counter.name);
+    const remaining = await getRemainingCooldown(cooldownKey, member.id);
+    if (remaining > 0) {
+      await this.replyError({
+        interaction,
+        title: "Slow down",
+        description: `Wait ${(remaining / 1000).toFixed(1)}s before touching \`${counter.name}\` again.`,
+      });
+      return;
+    }
+
     const mutator =
       op === "inc" ? CounterService.incrementCounter : CounterService.decrementCounter;
     const updated = await mutator(interaction.guildId!, name);
@@ -116,6 +153,12 @@ export default class CounterInteraction extends MainInteraction {
       await this.replyError({ interaction, title: "Update failed" });
       return;
     }
+
+    await setCooldown({
+      commandName: cooldownKey,
+      userId: member.id,
+      ttlSeconds: COUNTER_COOLDOWN_SECONDS,
+    });
 
     await interaction.editReply({
       embeds: [
@@ -168,22 +211,43 @@ export default class CounterInteraction extends MainInteraction {
       return;
     }
 
-    const shown = counters.slice(0, LIST_PAGE_SIZE);
-    const lines = shown.map((c) => `• \`${c.name}\` — **${c.value}** · ${describeActor(c.actor)}`);
-    const description =
-      counters.length > LIST_PAGE_SIZE
-        ? `${lines.join("\n")}\n\n…and ${counters.length - LIST_PAGE_SIZE} more.`
-        : lines.join("\n");
+    const totalPages = Math.max(1, Math.ceil(counters.length / LIST_PAGE_SIZE));
+    const pages = Array.from({ length: totalPages }, (_, i) => {
+      const chunk = counters.slice(i * LIST_PAGE_SIZE, (i + 1) * LIST_PAGE_SIZE);
+      const lines = chunk.map(
+        (c) => `• \`${c.name}\` — **${c.value}** · ${describeActor(c.actor)}`,
+      );
+      return infoEmbed({
+        author: botAuthor(this.client),
+        title: `Counters (${counters.length}) — Page ${i + 1}/${totalPages}`,
+        description: lines.join("\n"),
+        timestamp: true,
+      });
+    });
 
-    await interaction.editReply({
-      embeds: [
-        infoEmbed({
-          author: botAuthor(this.client),
-          title: `Counters (${counters.length})`,
-          description,
-          timestamp: true,
-        }),
-      ],
+    if (pages.length === 1) {
+      await interaction.editReply({ embeds: [pages[0]] });
+      return;
+    }
+
+    const ids = buildCustomIds({
+      interaction,
+      actions: ["prevPage", "nextPage", "cancel"] as const,
+    });
+    const buttonRow = buildRow(
+      buildButton({ label: "Prev", style: ButtonStyle.Secondary, customId: ids.prevPage }),
+      buildButton({ label: "Next", style: ButtonStyle.Primary, customId: ids.nextPage }),
+      buildButton({ label: "Close", style: ButtonStyle.Danger, customId: ids.cancel }),
+    );
+
+    await interaction.editReply({ embeds: [pages[0]], components: [buttonRow] });
+
+    createPaginator({
+      interaction,
+      pages,
+      customIds: { prev: ids.prevPage, next: ids.nextPage, cancel: ids.cancel },
+      buttonRow,
+      userId: interaction.user.id,
     });
   }
 }
