@@ -4,6 +4,7 @@ import { MainInteraction } from "@/classes";
 import Client from "@/client";
 import { botAuthor, errorEmbed, musicEmbed } from "@/services/discord/embed.builder";
 import { getMusicPlayer } from "@/services/discord/guild.player";
+import { mapInChunks } from "@/services/general.utils";
 import { isSpotifyUrl, resolveSpotifyUrl, spotifyKind } from "@/services/music/spotify.resolver";
 
 export default class PlayInteraction extends MainInteraction {
@@ -128,25 +129,29 @@ export default class PlayInteraction extends MainInteraction {
           return;
         }
 
-        let queued = 0;
-        let firstTitle = "";
-        for (const t of resolved) {
-          const q = `${t.artists} ${t.name}`;
-          const r = await player
+        const resolveYt = (t: { artists: string; name: string }) =>
+          player
             .resolve({
-              query: q,
+              query: `${t.artists} ${t.name}`,
               source: "ytmsearch",
               requester: member.user.username,
             })
+            .then((r) => r?.tracks?.[0])
             .catch(() => undefined);
-          const track = r?.tracks?.[0];
-          if (!track) continue;
-          player.queue.add(track);
-          if (!queued) firstTitle = track.info.title;
-          queued++;
+
+        // Resolve the first track that YouTube Music can match, so playback
+        // starts ASAP (within ~1 Lavalink round-trip) instead of after all N.
+        let firstIdx = -1;
+        let firstTrack: Awaited<ReturnType<typeof resolveYt>>;
+        for (let i = 0; i < resolved.length; i++) {
+          firstTrack = await resolveYt(resolved[i]);
+          if (firstTrack) {
+            firstIdx = i;
+            break;
+          }
         }
 
-        if (!queued) {
+        if (!firstTrack || firstIdx < 0) {
           if (!player.currentTrack) player.destroy();
           await interaction.editReply({
             embeds: [
@@ -160,21 +165,59 @@ export default class PlayInteraction extends MainInteraction {
           return;
         }
 
-        const desc =
-          kind === "track"
-            ? `🎵 Added **${firstTitle}** to the queue (via Spotify)`
-            : `🎶 Queued ${queued} track${queued === 1 ? "" : "s"} from Spotify ${kind}`;
+        player.queue.add(firstTrack);
+        if (!player.isPlaying) await player.play();
 
+        const firstTitle = firstTrack.info.title;
+
+        if (kind === "track" || resolved.length === 1) {
+          await interaction.editReply({
+            embeds: [
+              musicEmbed({
+                author: botAuthor(this.client),
+                description: `🎵 Added **${firstTitle}** to the queue (via Spotify)`,
+                footer: member.user.username,
+              }),
+            ],
+          });
+          return;
+        }
+
+        // Initial reply so the user sees progress while the rest resolve.
         await interaction.editReply({
           embeds: [
             musicEmbed({
               author: botAuthor(this.client),
-              description: desc,
+              description: `🎶 Playing **${firstTitle}** · queuing ${resolved.length - 1} more from Spotify ${kind}…`,
               footer: member.user.username,
             }),
           ],
         });
-        if (!player.isPlaying) await player.play();
+
+        // Resolve remaining tracks in bounded-parallel chunks so they hit
+        // Lavalink concurrently but don't flood it. Preserve playlist order
+        // by flushing each chunk to the queue in source order.
+        const rest = resolved.filter((_, i) => i !== firstIdx);
+        let queued = 1;
+        (async () => {
+          const tracks = await mapInChunks(rest, 5, resolveYt);
+          for (const track of tracks) {
+            if (!track) continue;
+            player.queue.add(track);
+            queued++;
+          }
+          await interaction
+            .editReply({
+              embeds: [
+                musicEmbed({
+                  author: botAuthor(this.client),
+                  description: `🎶 Queued ${queued} track${queued === 1 ? "" : "s"} from Spotify ${kind} (Now playing **${firstTitle}**)`,
+                  footer: member.user.username,
+                }),
+              ],
+            })
+            .catch(() => {});
+        })();
         return;
       }
 

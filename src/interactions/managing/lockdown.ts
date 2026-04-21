@@ -12,6 +12,7 @@ import { buildButton, buildRow } from "@/services/discord/button.builder";
 import { botAuthor, errorEmbed } from "@/services/discord/embed.builder";
 import { buildCustomIds, createButtonHandler } from "@/services/discord/interaction.collector";
 import { restoreGuildLockdown } from "@/services/discord/lockdown.restore";
+import { mapInChunks } from "@/services/general.utils";
 
 export default class LockdownInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -59,25 +60,28 @@ export default class LockdownInteraction extends MainInteraction {
       // ── Enable path ─────────────────────────────────────────────────────────
       // Capture every role/user overwrite on every channel, then replace with
       // a single @everyone deny overwrite to lock the channel.
-      const channelSnapshots: ChannelSnapshot[] = [];
+      const lockableChannels = [...guild.channels.cache.values()].filter(
+        (c) => !c.isThread() && "permissionOverwrites" in c,
+      ) as GuildChannel[];
 
-      for (const channel of guild.channels.cache.values()) {
-        if (channel.isThread() || !("permissionOverwrites" in channel)) continue;
-        const ch = channel as GuildChannel;
+      const channelSnapshots: ChannelSnapshot[] = await mapInChunks(
+        lockableChannels,
+        5,
+        async (ch) => {
+          const overwrites = ch.permissionOverwrites.cache.map((ow) => ({
+            id: ow.id,
+            type: ow.type as 0 | 1,
+            allow: ow.allow.bitfield.toString(),
+            deny: ow.deny.bitfield.toString(),
+          }));
 
-        const overwrites = ch.permissionOverwrites.cache.map((ow) => ({
-          id: ow.id,
-          type: ow.type as 0 | 1,
-          allow: ow.allow.bitfield.toString(),
-          deny: ow.deny.bitfield.toString(),
-        }));
+          await ch.permissionOverwrites
+            .set([{ id: everyone.id, type: 0, deny: ["Connect", "SendMessages"] }])
+            .catch(() => {});
 
-        channelSnapshots.push({ channelId: ch.id, overwrites });
-
-        await ch.permissionOverwrites
-          .set([{ id: everyone.id, type: 0, deny: ["Connect", "SendMessages"] }])
-          .catch(() => {});
-      }
+          return { channelId: ch.id, overwrites };
+        },
+      );
 
       await LockdownService.updateLockdown(guild.id, {
         enabled: true,

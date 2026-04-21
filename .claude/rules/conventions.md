@@ -72,7 +72,7 @@ buildTextInput({ customId, label, style?, placeholder?, required?, minLength?, m
 
 ## Action Constants
 
-customId action strings live in `src/models/<domain>/<domain>.constants.ts` as `as const` objects (SCREAMING_SNAKE keys → camelCase string values), exported via the barrel `index.ts`. Shared paginator actions (`prevPage`/`nextPage`/`cancel`) in `@/constants` as `PAGINATION_ACTIONS`. Modal input customIds go in the same file (e.g. `COUNTER_MODAL_INPUTS`). Pass the object directly to `buildCustomIds`; access returned record with either `ids.<action>` (TS-verified via Record key) or `ids[ACTIONS.KEY]` (explicit — use for clarity in shared-string blocks).
+customId action strings live in `src/models/<domain>/<domain>.constants.ts` as `as const` objects (SCREAMING_SNAKE keys → camelCase string values), exported via the barrel `index.ts`. Modal input customIds go in the same file (e.g. `COUNTER_MODAL_INPUTS`). Paginator actions (`prevPage`/`nextPage`/`cancel`) stay inline — shared across too few call sites to justify centralising. Pass the constants object directly to `buildCustomIds`; access returned record with either `ids.<action>` (TS-verified via Record key) or `ids[ACTIONS.KEY]` (explicit — use for clarity in shared-string blocks).
 
 **Timing rule:** never read DB state inside `onEnd` that was written inside `collect`.
 Discord fires `end` without awaiting the async `collect` handler. Do all DB reads + re-renders
