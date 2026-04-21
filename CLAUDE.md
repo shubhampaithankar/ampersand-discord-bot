@@ -5,7 +5,7 @@
 - Runtime: Bun (never npm/pnpm/yarn)
 - Language: TypeScript 5.x
 - Discord: discord.js v14 + @discordjs/rest v2
-- Music: Poru v5 (Lavalink) + poru-spotify enabled (cast as `Plugin` — poru-spotify bundles poru@v4 internally, duplicate type identity)
+- Music: Poru v5 (Lavalink). Spotify resolved **server-side** via the LavaSrc Lavalink plugin — client has no Spotify code. poru-spotify was removed (its v4 poru dep broke the runtime resolve hook against v5).
 - Database: MongoDB via Mongoose v7
 - Cache: Redis via ioredis v5
 - Container: Docker — `oven/bun:alpine` multi-stage

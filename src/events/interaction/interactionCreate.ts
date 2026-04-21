@@ -85,7 +85,7 @@ export default class InteractionCreate extends MainEvent {
             if (!channelIds) {
               await command.reject({
                 interaction: interaction as RepliableInteraction<CacheType>,
-                message: `Music module is currently disabled. Run /setmusic command to enable it.`,
+                message: `Music module is currently disabled. An admin can enable it via \`/init module:music\`.`,
               });
               return;
             }
@@ -93,7 +93,7 @@ export default class InteractionCreate extends MainEvent {
             if (!channelIds?.includes(channel?.id ?? "")) {
               await command.reject({
                 interaction: interaction as RepliableInteraction<CacheType>,
-                message: `**${channel?.toString() ?? "This channel"}** is \`not present\` in music database for **${guild.name}**.\n Add it by using the \`/addmusicchannel\` command.`,
+                message: `**${channel?.toString() ?? "This channel"}** is \`not present\` in the music channel list for **${guild.name}**.\nAn admin can add it via \`/init module:music\`.`,
               });
               return;
             }
