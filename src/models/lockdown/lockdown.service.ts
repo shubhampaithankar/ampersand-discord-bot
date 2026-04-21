@@ -1,4 +1,4 @@
-import Lockdown from "./lockdown.model";
+import Lockdown from "@/models/lockdown/lockdown.model";
 
 export const getLockdown = (guildId: string) =>
   Lockdown.findOne({ guildId })

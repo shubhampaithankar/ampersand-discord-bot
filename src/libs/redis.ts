@@ -1,6 +1,6 @@
 import Redis from "ioredis";
 
-import { REDIS_PASSWORD, REDIS_URL, REDIS_USERNAME } from "../constants";
+import { REDIS_PASSWORD, REDIS_URL, REDIS_USERNAME } from "@/constants";
 
 let redis: Redis | null = null;
 

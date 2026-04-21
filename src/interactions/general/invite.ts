@@ -1,7 +1,7 @@
-import Client from "../../client";
-import { MainInteraction } from "../../classes";
-import { DISCORD_CLIENT_ID } from "../../constants";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { DISCORD_CLIENT_ID } from "@/constants";
 
 export default class InviteInteraction extends MainInteraction {
   constructor(client: Client) {

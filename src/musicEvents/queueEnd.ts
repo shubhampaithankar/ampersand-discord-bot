@@ -1,8 +1,8 @@
 import { TextChannel } from "discord.js";
 import { Player, Track } from "poru";
-import { MainMusicEvent } from "../classes";
-import Client from "../client";
-import { getMusicPlayer } from "../services/discord/guild.player";
+import { MainMusicEvent } from "@/classes";
+import Client from "@/client";
+import { getMusicPlayer } from "@/services/discord/guild.player";
 
 export default class QueueEndEvent extends MainMusicEvent {
   constructor(client: Client) {

@@ -1,11 +1,12 @@
 import { ButtonStyle, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
-import { botAuthor, musicEmbed } from "../../services/discord/embed.builder";
-import { buildButton, buildRow } from "../../services/discord/button.builder";
-import { validateMusicContext } from "../../services/discord/guild.player";
-import { formatDuration } from "../../services/general.utils";
-import { buildCustomIds, createButtonHandler } from "../../services/discord/interaction.collector";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { MUSIC_PLAYER_ACTIONS } from "@/models/guild";
+import { buildButton, buildRow } from "@/services/discord/button.builder";
+import { botAuthor, musicEmbed } from "@/services/discord/embed.builder";
+import { validateMusicContext } from "@/services/discord/guild.player";
+import { buildCustomIds, createButtonHandler } from "@/services/discord/interaction.collector";
+import { formatDuration } from "@/services/general.utils";
 
 const BAR_LENGTH = 22;
 
@@ -74,16 +75,29 @@ export default class NowPlayingInteraction extends MainInteraction {
         });
       };
 
-      const ids = buildCustomIds({
-        interaction,
-        actions: ["skip", "stop", "loop", "shuffle"] as const,
-      });
+      const ids = buildCustomIds({ interaction, actions: MUSIC_PLAYER_ACTIONS });
 
       const buttonRow = buildRow(
-        buildButton({ label: "⏭ Skip", style: ButtonStyle.Primary, customId: ids.skip }),
-        buildButton({ label: "⏹ Stop", style: ButtonStyle.Danger, customId: ids.stop }),
-        buildButton({ label: "🔁 Loop", style: ButtonStyle.Secondary, customId: ids.loop }),
-        buildButton({ label: "🔀 Shuffle", style: ButtonStyle.Secondary, customId: ids.shuffle }),
+        buildButton({
+          label: "⏭ Skip",
+          style: ButtonStyle.Primary,
+          customId: ids[MUSIC_PLAYER_ACTIONS.SKIP],
+        }),
+        buildButton({
+          label: "⏹ Stop",
+          style: ButtonStyle.Danger,
+          customId: ids[MUSIC_PLAYER_ACTIONS.STOP],
+        }),
+        buildButton({
+          label: "🔁 Loop",
+          style: ButtonStyle.Secondary,
+          customId: ids[MUSIC_PLAYER_ACTIONS.LOOP],
+        }),
+        buildButton({
+          label: "🔀 Shuffle",
+          style: ButtonStyle.Secondary,
+          customId: ids[MUSIC_PLAYER_ACTIONS.SHUFFLE],
+        }),
       );
 
       await interaction.editReply({ embeds: [buildEmbed()], components: [buttonRow] });
@@ -91,7 +105,7 @@ export default class NowPlayingInteraction extends MainInteraction {
       createButtonHandler({
         channel: interaction.channel!,
         handlers: {
-          [ids.skip]: async (i) => {
+          [ids[MUSIC_PLAYER_ACTIONS.SKIP]]: async (i) => {
             await i.deferUpdate();
             const title = player.currentTrack?.info.title ?? "Unknown";
             await player.skip();
@@ -101,7 +115,7 @@ export default class NowPlayingInteraction extends MainInteraction {
               components: [],
             });
           },
-          [ids.stop]: async (i) => {
+          [ids[MUSIC_PLAYER_ACTIONS.STOP]]: async (i) => {
             await i.deferUpdate();
             await interaction.editReply({
               content: "⏹ Stopped playing and disconnected",
@@ -110,14 +124,14 @@ export default class NowPlayingInteraction extends MainInteraction {
             });
             player.destroy();
           },
-          [ids.loop]: async (i) => {
+          [ids[MUSIC_PLAYER_ACTIONS.LOOP]]: async (i) => {
             await i.deferUpdate();
             const modes = ["NONE", "TRACK", "QUEUE"] as const;
             const current = modes.indexOf((player.loop ?? "NONE") as (typeof modes)[number]);
             player.setLoop(modes[(current + 1) % modes.length]);
             await interaction.editReply({ embeds: [buildEmbed()], components: [buttonRow] });
           },
-          [ids.shuffle]: async (i) => {
+          [ids[MUSIC_PLAYER_ACTIONS.SHUFFLE]]: async (i) => {
             await i.deferUpdate();
             player.queue.shuffle();
             await interaction.editReply({ embeds: [buildEmbed()], components: [buttonRow] });

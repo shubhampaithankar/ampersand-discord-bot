@@ -1,5 +1,5 @@
-import Guild from "../guild.model";
-import type { AutoGambleData } from "./autoGamble.types";
+import type { AutoGambleData } from "@/models/guild/autoGamble/autoGamble.types";
+import Guild from "@/models/guild/guild.model";
 
 export const getAutoGamble = (guildId: string) =>
   Guild.findOne({ guildId })

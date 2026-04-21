@@ -10,7 +10,7 @@ import type {
   RoleSelectOpts,
   StringSelectOpts,
   UserSelectOpts,
-} from "../../types/select.types";
+} from "@/types/select.types";
 
 export const buildChannelSelectRow = ({
   customId,

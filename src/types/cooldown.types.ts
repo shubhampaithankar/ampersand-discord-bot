@@ -1,6 +1,6 @@
 import type { GuildMember } from "discord.js";
-import type { MainInteraction } from "../classes";
-import type { InteractionType } from "./interaction.types";
+import type { MainInteraction } from "@/classes";
+import type { InteractionType } from "@/types/interaction.types";
 
 export type SetCooldownParams = {
   commandName: string;

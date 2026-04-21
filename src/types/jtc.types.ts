@@ -1,6 +1,6 @@
 import type { Guild, GuildMember, VoiceState } from "discord.js";
-import type BaseClient from "../client";
-import type { JtcData } from "../models/guild/jtc/jtc.types";
+import type BaseClient from "@/client";
+import type { JtcData } from "@/models/guild/jtc/jtc.types";
 
 export type HandleJTCParams = {
   client: BaseClient;

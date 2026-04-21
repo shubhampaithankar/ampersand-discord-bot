@@ -1,9 +1,10 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { Response } from "poru";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
-import { getMusicPlayer } from "../../services/discord/guild.player";
-import { botAuthor, errorEmbed, musicEmbed } from "../../services/discord/embed.builder";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { botAuthor, errorEmbed, musicEmbed } from "@/services/discord/embed.builder";
+import { getMusicPlayer } from "@/services/discord/guild.player";
+import { isSpotifyUrl, resolveSpotifyUrl, spotifyKind } from "@/services/music/spotify.resolver";
 
 export default class PlayInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -90,6 +91,90 @@ export default class PlayInteraction extends MainInteraction {
             }),
           ],
         });
+        return;
+      }
+
+      if (isSpotifyUrl(search)) {
+        const kind = spotifyKind(search) ?? "track";
+        let resolved: { name: string; artists: string }[] = [];
+        try {
+          resolved = await resolveSpotifyUrl(search);
+        } catch (err) {
+          console.log("Spotify resolve error:", err);
+          await interaction.editReply({
+            embeds: [
+              errorEmbed({
+                author: botAuthor(this.client),
+                description:
+                  "Couldn't read that Spotify link. Try a direct song name or a YouTube URL.",
+                footer: member.user.username,
+              }),
+            ],
+          });
+          return;
+        }
+
+        if (!resolved.length) {
+          if (!player.currentTrack) player.destroy();
+          await interaction.editReply({
+            embeds: [
+              errorEmbed({
+                author: botAuthor(this.client),
+                description: `Spotify ${kind} had no playable tracks`,
+                footer: member.user.username,
+              }),
+            ],
+          });
+          return;
+        }
+
+        let queued = 0;
+        let firstTitle = "";
+        for (const t of resolved) {
+          const q = `${t.artists} ${t.name}`;
+          const r = await player
+            .resolve({
+              query: q,
+              source: "ytmsearch",
+              requester: member.user.username,
+            })
+            .catch(() => undefined);
+          const track = r?.tracks?.[0];
+          if (!track) continue;
+          player.queue.add(track);
+          if (!queued) firstTitle = track.info.title;
+          queued++;
+        }
+
+        if (!queued) {
+          if (!player.currentTrack) player.destroy();
+          await interaction.editReply({
+            embeds: [
+              errorEmbed({
+                author: botAuthor(this.client),
+                description: "Couldn't find YouTube matches for those Spotify tracks",
+                footer: member.user.username,
+              }),
+            ],
+          });
+          return;
+        }
+
+        const desc =
+          kind === "track"
+            ? `🎵 Added **${firstTitle}** to the queue (via Spotify)`
+            : `🎶 Queued ${queued} track${queued === 1 ? "" : "s"} from Spotify ${kind}`;
+
+        await interaction.editReply({
+          embeds: [
+            musicEmbed({
+              author: botAuthor(this.client),
+              description: desc,
+              footer: member.user.username,
+            }),
+          ],
+        });
+        if (!player.isPlaying) await player.play();
         return;
       }
 

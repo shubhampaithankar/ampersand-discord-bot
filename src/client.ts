@@ -4,9 +4,9 @@ import type Redis from "ioredis";
 import mongoose from "mongoose";
 import { Poru } from "poru";
 
-import { MainEvent, MainInteraction, MainMusicEvent, MainShardEvent } from "./classes";
-import { DISCORD_TOKEN } from "./constants";
-import Loader from "./loader";
+import { MainEvent, MainInteraction, MainMusicEvent, MainShardEvent } from "@/classes";
+import { DISCORD_TOKEN } from "@/constants";
+import Loader from "@/loader";
 
 export default class BaseClient extends Client {
   interactions: Collection<string, MainInteraction>;

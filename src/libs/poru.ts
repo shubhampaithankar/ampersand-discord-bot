@@ -1,11 +1,6 @@
 import { Poru } from "poru";
-import type BaseClient from "../client";
-import {
-  DISCORD_CLIENT_NAME,
-  LAVALINK_HOST,
-  LAVALINK_PASSWORD,
-  LAVALINK_PORT,
-} from "../constants";
+import type BaseClient from "@/client";
+import { DISCORD_CLIENT_NAME, LAVALINK_HOST, LAVALINK_PASSWORD, LAVALINK_PORT } from "@/constants";
 
 export const createPoru = (client: BaseClient) =>
   new Poru(
@@ -16,7 +11,7 @@ export const createPoru = (client: BaseClient) =>
         port: Number(LAVALINK_PORT),
         password: `${LAVALINK_PASSWORD}`,
         secure: false,
-        name: `${DISCORD_CLIENT_NAME}-discord-client`,
+        name: `${DISCORD_CLIENT_NAME}-poru-client`,
       },
     ],
     {

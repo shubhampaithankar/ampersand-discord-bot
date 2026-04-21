@@ -1,6 +1,6 @@
 import { Events } from "discord.js";
-import { MainEvent } from "../classes";
-import Client from "../client";
+import { MainEvent } from "@/classes";
+import Client from "@/client";
 
 export default class RawEvent extends MainEvent {
   constructor(client: Client) {

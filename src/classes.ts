@@ -1,4 +1,3 @@
-import Client from "./client";
 import {
   ApplicationCommandDataResolvable,
   AutocompleteInteraction,
@@ -8,8 +7,9 @@ import {
   ShardingManager,
 } from "discord.js";
 import { Poru } from "poru";
-import type { EventConfig, InteractionConfig, RejectPayload } from "./types/interaction.types";
-import { getError } from "./services/general.utils";
+import Client from "@/client";
+import { getError } from "@/services/general.utils";
+import type { EventConfig, InteractionConfig, RejectPayload } from "@/types/interaction.types";
 
 export class MainInteraction {
   client: Client;

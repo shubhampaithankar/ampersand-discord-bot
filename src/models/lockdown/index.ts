@@ -1,3 +1,4 @@
-export { default as Lockdown } from "./lockdown.model";
-export * as LockdownService from "./lockdown.service";
-export * from "./lockdown.types";
+export * from "@/models/lockdown/lockdown.constants";
+export { default as Lockdown } from "@/models/lockdown/lockdown.model";
+export * as LockdownService from "@/models/lockdown/lockdown.service";
+export * from "@/models/lockdown/lockdown.types";

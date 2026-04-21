@@ -1,3 +1,4 @@
-export { JTCSchema } from "./jtc.schema";
-export * as JTCService from "./jtc.service";
-export * from "./jtc.types";
+export * from "@/models/guild/jtc/jtc.constants";
+export { JTCSchema } from "@/models/guild/jtc/jtc.schema";
+export * as JTCService from "@/models/guild/jtc/jtc.service";
+export * from "@/models/guild/jtc/jtc.types";

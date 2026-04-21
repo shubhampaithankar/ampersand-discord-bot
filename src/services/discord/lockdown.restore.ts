@@ -1,6 +1,6 @@
 import type { GuildChannel } from "discord.js";
-import Client from "../../client";
-import { type ChannelSnapshot, LockdownService } from "../../models/lockdown";
+import Client from "@/client";
+import { type ChannelSnapshot, LockdownService } from "@/models/lockdown";
 
 export const restoreGuildLockdown = async ({
   client,

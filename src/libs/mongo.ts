@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import { MONGO_URL } from "../constants";
+import { MONGO_URL } from "@/constants";
 
 export const connectToMongo = async () => {
   const mongo = await mongoose.connect(MONGO_URL!);

@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
-import type { ButtonOpts } from "../../types/button.types";
+import type { ButtonOpts } from "@/types/button.types";
 
 export type { ButtonOpts };
 

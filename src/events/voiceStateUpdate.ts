@@ -1,15 +1,15 @@
 import { ChannelType, Events, Guild, VoiceChannel, VoiceState } from "discord.js";
-import { MainEvent } from "../classes";
-import { default as Client } from "../client";
-import { JTCService } from "../models/guild";
-import { checkSinglePermissions } from "../services/discord/discord.permissions";
-import { sleepFor } from "../services/general.utils";
-import * as jtc from "../services/redis/jtc.redis";
+import { MainEvent } from "@/classes";
+import { default as Client } from "@/client";
+import { JTCService } from "@/models/guild";
+import { checkSinglePermissions } from "@/services/discord/discord.permissions";
+import { sleepFor } from "@/services/general.utils";
+import * as jtc from "@/services/redis/jtc.redis";
 import type {
   CreateJTCChannelParams,
   DisconnectPlayerParams,
   HandleJTCParams,
-} from "../types/jtc.types";
+} from "@/types/jtc.types";
 
 export default class VoiceStateUpdateEvent extends MainEvent {
   constructor(client: Client) {

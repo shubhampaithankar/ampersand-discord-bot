@@ -1,14 +1,12 @@
-import path from "path";
-import Client from "./client";
-
 import { Routes, ShardingManager } from "discord.js";
 import { lstatSync, readdirSync } from "fs";
-
-import { MainEvent, MainInteraction, MainMusicEvent, MainShardEvent } from "./classes";
-import { DISCORD_CLIENT_ID, DISCORD_TOKEN } from "./constants";
-import { connectToMongo } from "./libs/mongo";
-import { createPoru } from "./libs/poru";
-import { connectToRedis } from "./libs/redis";
+import path from "path";
+import { MainEvent, MainInteraction, MainMusicEvent, MainShardEvent } from "@/classes";
+import Client from "@/client";
+import { DISCORD_CLIENT_ID, DISCORD_TOKEN } from "@/constants";
+import { connectToMongo } from "@/libs/mongo";
+import { createPoru } from "@/libs/poru";
+import { connectToRedis } from "@/libs/redis";
 
 export default class Loader {
   client: Client;

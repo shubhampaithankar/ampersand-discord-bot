@@ -5,7 +5,7 @@ import type {
   VoiceBasedChannel,
 } from "discord.js";
 import type { Player } from "poru";
-import type BaseClient from "../client";
+import type BaseClient from "@/client";
 
 export type GetMusicPlayerParams = {
   client: BaseClient;

@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
-import type { ModalOpts, TextInputOpts } from "../../types/modal.types";
+import type { ModalOpts, TextInputOpts } from "@/types/modal.types";
 
 export const buildTextInput = (opts: TextInputOpts): TextInputBuilder => {
   const input = new TextInputBuilder()

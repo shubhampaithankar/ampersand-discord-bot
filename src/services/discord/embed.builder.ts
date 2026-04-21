@@ -1,6 +1,6 @@
 import { EmbedAuthorOptions, EmbedBuilder } from "discord.js";
-import type BaseClient from "../../client";
-import type { EmbedOpts } from "../../types/embed.types";
+import type BaseClient from "@/client";
+import type { EmbedOpts } from "@/types/embed.types";
 
 export type { EmbedOpts };
 

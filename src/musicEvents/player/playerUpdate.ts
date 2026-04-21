@@ -1,5 +1,5 @@
-import { MainMusicEvent } from "../../classes";
 import { Player } from "poru";
+import { MainMusicEvent } from "@/classes";
 
 export default class PlayerUpdateEvent extends MainMusicEvent {
   async run(player: Player) {
