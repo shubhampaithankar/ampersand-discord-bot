@@ -41,6 +41,10 @@ new ButtonBuilder().setLabel("...")
 new ActionRowBuilder().addComponents(...)
 new ChannelSelectMenuBuilder().setCustomId(...)
 new StringSelectMenuBuilder().setCustomId(...)
+new RoleSelectMenuBuilder().setCustomId(...)
+new UserSelectMenuBuilder().setCustomId(...)
+new ModalBuilder().setCustomId(...)
+new TextInputBuilder().setLabel(...)
 
 // ✅ Always
 infoEmbed({ title: "..." })          // blue
@@ -53,6 +57,10 @@ buildRow(btn1, btn2)
 toggleButton(enabled, customId)       // green Enable / red Disable
 buildChannelSelectRow({ customId, types, placeholder? })
 buildStringSelectRow({ customId, options, placeholder? })
+buildRoleSelectRow({ customId, placeholder? })
+buildUserSelectRow({ customId, placeholder? })
+buildModal({ customId, title, inputs: [{ customId, label, ... }] })
+buildTextInput({ customId, label, style?, placeholder?, required?, minLength?, maxLength? })
 ```
 
 ## Collector Patterns
@@ -96,6 +104,8 @@ Exception: variadic rest params and simple 2-param functions.
 2. Default-export class extending `MainInteraction`
 3. Set `category: "Music"` for music commands (triggers channel check in routing)
 4. `deferReply()` first, `editReply()` throughout, try/catch wrapping
+5. For autocomplete on a string option: `.setAutocomplete(true)` on the option, then add `autocomplete = async (i: AutocompleteInteraction) => { await i.respond([{ name, value }]) }` as a method on the class. Routing dispatches it before guild/perm/cooldown checks.
+6. Import models via the barrel: `import { XService } from "../../models/x"` — never `import * as XService from ".../x.service"`.
 
 ## Adding a New Event
 

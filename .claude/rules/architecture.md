@@ -58,6 +58,7 @@ src/
 
 ## Interaction Routing Pipeline (`interactionCreate`)
 
+0. **Autocomplete short-circuit** — if `interaction.isAutocomplete()`, look up the command and call its optional `autocomplete()` method. Skips guild/perm/cooldown checks (read-only lookup, 3s Discord deadline).
 1. Guild check
 2. Resolve bot member + invoking member from cache
 3. Resolve command — `interaction.message?.interaction?.commandName` (button follow-up) OR `interaction.commandName`
