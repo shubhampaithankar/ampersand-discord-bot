@@ -1,4 +1,4 @@
-import Guild from "./guild.model";
+import Guild from "../guild.model";
 
 export const getJTC = (guildId: string) =>
   Guild.findOne({ guildId })

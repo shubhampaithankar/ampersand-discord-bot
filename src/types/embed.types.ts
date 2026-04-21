@@ -1,9 +1,4 @@
-import {
-  APIEmbedField,
-  ColorResolvable,
-  EmbedAuthorOptions,
-  EmbedFooterOptions,
-} from "discord.js";
+import { APIEmbedField, ColorResolvable, EmbedAuthorOptions, EmbedFooterOptions } from "discord.js";
 
 export type EmbedOpts = {
   title?: string;

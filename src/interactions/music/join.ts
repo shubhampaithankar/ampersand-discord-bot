@@ -43,9 +43,7 @@ export default class JoinInteraction extends MainInteraction {
 
       if (player.isConnected) {
         if (player.voiceChannel !== channel.id) {
-          await interaction.editReply(
-            "There is a player already present in another voice channel",
-          );
+          await interaction.editReply("There is a player already present in another voice channel");
           return;
         }
       }

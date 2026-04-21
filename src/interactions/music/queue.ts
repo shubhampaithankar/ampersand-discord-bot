@@ -10,19 +10,14 @@ import { botAuthor, musicEmbed } from "../../services/discord/embed.builder";
 import { buildButton, buildRow } from "../../services/discord/button.builder";
 import { validateMusicContext } from "../../services/discord/guild.player";
 import { formatDuration } from "../../services/general.utils";
-import {
-  buildCustomIds,
-  createPaginator,
-} from "../../services/discord/interaction.collector";
+import { buildCustomIds, createPaginator } from "../../services/discord/interaction.collector";
 
 export default class QueueInteraction extends MainInteraction {
   constructor(client: Client) {
     super(client, {
       type: 1,
       category: "Music",
-      data: new SlashCommandBuilder()
-        .setName("queue")
-        .setDescription("shows the current queue"),
+      data: new SlashCommandBuilder().setName("queue").setDescription("shows the current queue"),
     });
   }
 
@@ -44,9 +39,7 @@ export default class QueueInteraction extends MainInteraction {
           `**${i + 1}.** - [${track.info.title}](${track.info.uri || ""}) - \`${formatDuration(track.info.length)}\` • ${track.info.requester}`,
       );
       const queueDuration = formatDuration(
-        player.queue
-          .map((track) => track.info.length)
-          .reduce((acc, curr) => acc + curr, 0),
+        player.queue.map((track) => track.info.length).reduce((acc, curr) => acc + curr, 0),
       );
 
       const pages: EmbedBuilder[] = [];
@@ -63,7 +56,10 @@ export default class QueueInteraction extends MainInteraction {
         pages.push(page);
       }
 
-      const ids = buildCustomIds({ interaction, actions: ["prevPage", "nextPage", "cancel"] as const });
+      const ids = buildCustomIds({
+        interaction,
+        actions: ["prevPage", "nextPage", "cancel"] as const,
+      });
 
       const buttonRow = buildRow(
         buildButton({ label: "Previous", style: ButtonStyle.Secondary, customId: ids.prevPage }),

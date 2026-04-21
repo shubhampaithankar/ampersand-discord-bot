@@ -10,10 +10,7 @@ import {
   TextBasedChannel,
 } from "discord.js";
 
-export type ButtonHandlerMap = Record<
-  string,
-  (interaction: ButtonInteraction) => Promise<void>
->;
+export type ButtonHandlerMap = Record<string, (interaction: ButtonInteraction) => Promise<void>>;
 
 export type CreatePaginatorParams = {
   interaction: ChatInputCommandInteraction;
@@ -31,10 +28,7 @@ export type CreateButtonHandlerParams = {
   time: number;
   /** Omit for a persistent panel collector; pass 1 for a one-shot handler. */
   max?: number;
-  onEnd?: (
-    collection: Collection<string, ButtonInteraction>,
-    reason: string,
-  ) => Promise<void>;
+  onEnd?: (collection: Collection<string, ButtonInteraction>, reason: string) => Promise<void>;
 };
 
 export type ChainedCollectorStep = {

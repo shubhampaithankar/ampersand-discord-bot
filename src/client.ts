@@ -4,12 +4,8 @@ import type Redis from "ioredis";
 import mongoose from "mongoose";
 import { Poru } from "poru";
 
-import {
-  MainEvent,
-  MainInteraction,
-  MainMusicEvent,
-  MainShardEvent,
-} from "./classes";
+import { MainEvent, MainInteraction, MainMusicEvent, MainShardEvent } from "./classes";
+import { DISCORD_TOKEN } from "./constants";
 import Loader from "./loader";
 
 export default class BaseClient extends Client {
@@ -26,7 +22,7 @@ export default class BaseClient extends Client {
 
   loader = new Loader(this);
 
-  rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN!);
+  rest = new REST({ version: "10" }).setToken(DISCORD_TOKEN!);
 
   startTime: number;
 
@@ -56,7 +52,7 @@ export default class BaseClient extends Client {
     try {
       await this.loader.init();
 
-      await super.login(process.env.DISCORD_TOKEN);
+      await super.login(DISCORD_TOKEN);
     } catch (error) {
       console.log(error);
     }

@@ -1,13 +1,7 @@
-import {
-  ChannelType,
-  Events,
-  Guild,
-  VoiceChannel,
-  VoiceState,
-} from "discord.js";
+import { ChannelType, Events, Guild, VoiceChannel, VoiceState } from "discord.js";
 import { MainEvent } from "../classes";
 import { default as Client } from "../client";
-import * as JTCService from "../models/guild/jtc.service";
+import { JTCService } from "../models/guild";
 import { checkSinglePermissions } from "../services/discord/discord.permissions";
 import { sleepFor } from "../services/general.utils";
 import * as jtc from "../services/redis/jtc.redis";
@@ -37,12 +31,7 @@ export default class VoiceStateUpdateEvent extends MainEvent {
 }
 
 /** JOIN TO CREATE SYSTEM */
-const handleJTC = async ({
-  client,
-  guild,
-  oldState,
-  newState,
-}: HandleJTCParams) => {
+const handleJTC = async ({ client, guild, oldState, newState }: HandleJTCParams) => {
   try {
     const bot = guild.members.cache.get(client.user!.id!);
     if (!bot) return;
@@ -77,9 +66,7 @@ const createJTCChannel = async ({
   // On joining the JTC channel
   try {
     if (newState?.channel?.id !== jtcData.channelId) return;
-    const jtcChannel = guild.channels.cache.get(
-      jtcData.channelId,
-    ) as VoiceChannel;
+    const jtcChannel = guild.channels.cache.get(jtcData.channelId) as VoiceChannel;
     const { isAllowed: isJTCChannelAllowed } = checkSinglePermissions({
       member: bot,
       permissions: "ViewChannel",
@@ -140,18 +127,13 @@ const deleteJTCChannel = async (guild: Guild, oldState: VoiceState) => {
 
     if (!isJtc) return;
 
-    const channel = guild.channels.cache.get(
-      oldState.channel.id,
-    ) as VoiceChannel;
+    const channel = guild.channels.cache.get(oldState.channel.id) as VoiceChannel;
 
     const isEmptyChannel = channel && channel.members.size === 0;
     if (!isEmptyChannel) return;
 
     try {
-      await Promise.all([
-        channel.delete(),
-        jtc.removeFromSet(guild.id, channel.id),
-      ]);
+      await Promise.all([channel.delete(), jtc.removeFromSet(guild.id, channel.id)]);
     } catch (err) {
       console.log(err);
     }
@@ -160,11 +142,7 @@ const deleteJTCChannel = async (guild: Guild, oldState: VoiceState) => {
   }
 };
 
-const disconnectPlayer = ({
-  client,
-  guild,
-  oldState,
-}: DisconnectPlayerParams) => {
+const disconnectPlayer = ({ client, guild, oldState }: DisconnectPlayerParams) => {
   if (!oldState.channel) return;
 
   const botId = client.user!.id;

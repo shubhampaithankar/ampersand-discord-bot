@@ -25,14 +25,10 @@ export const buildEmbed = (opts: EmbedOpts = {}): EmbedBuilder => {
   if (opts.timestamp) embed.setTimestamp();
 
   if (opts.footer)
-    embed.setFooter(
-      typeof opts.footer === "string" ? { text: opts.footer } : opts.footer,
-    );
+    embed.setFooter(typeof opts.footer === "string" ? { text: opts.footer } : opts.footer);
 
   if (opts.author)
-    embed.setAuthor(
-      typeof opts.author === "string" ? { name: opts.author } : opts.author,
-    );
+    embed.setAuthor(typeof opts.author === "string" ? { name: opts.author } : opts.author);
 
   return embed;
 };

@@ -1,7 +1,7 @@
 import { Events, Guild } from "discord.js";
 import { MainEvent } from "../../classes";
 import Client from "../../client";
-import * as GuildService from "../../models/guild/guild.service";
+import { GuildService } from "../../models/guild";
 import { addBotGuild, cacheGuildExists } from "../../services/redis/guild.redis";
 
 // Emitted whenever the client joins a guild.

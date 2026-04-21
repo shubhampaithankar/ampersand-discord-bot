@@ -25,9 +25,10 @@ src/
     clientReady.ts      cleanupJTCChannels + recoverLockdowns on startup
     voiceStateUpdate.ts JTC lifecycle + player disconnect
   interactions/
+    counter/            counter (inc / dec / view / list — public)
     general/            help, invite, ping, uptime, gambletop
     managing/           lockdown, purge
-    modules/            init (music / jtc / autogamble config panels)
+    modules/            init (music / jtc / autogamble / counter config panels)
     music/              play, join, stop, skip, queue, clearQueue, loop, shuffle, nowPlaying
   musicEvents/
     node/               nodeConnect, nodeError
@@ -38,16 +39,21 @@ src/
     mongo.ts            connectToMongo()
     redis.ts            connectToRedis(), getRedis()
     poru.ts             createPoru() — Lavalink node config
-  models/
-    guild/              schema, guild.model, guild.service, music.service,
-                        jtc.service, autoGamble.service
-    lockdown/           schema, lockdown.model, lockdown.service, lockdown.restore
+  models/                            # domain slice per folder — only *.{schema,model,service,types}.ts + index.ts
+    guild/
+      guild.{schema,model,service,types}.ts + index.ts
+      jtc/        jtc.{schema,service,types}.ts + index.ts      (subdoc of guild)
+      music/      music.{schema,service,types}.ts + index.ts    (subdoc of guild)
+      autoGamble/ autoGamble.{schema,service,types}.ts + index.ts (subdoc of guild)
+    lockdown/     lockdown.{schema,model,service,types}.ts + index.ts
+    counter/      counter.{schema,model,service,types}.ts + index.ts
   services/
-    discord/            embed.builder, button.builder, interaction.collector,
-                        discord.permissions, guild.player
-    redis/              cooldown.redis, jtc.redis, gamble.redis
+    discord/            embed.builder, button.builder, select.builder, modal.builder,
+                        interaction.collector, discord.permissions, guild.player,
+                        counter.access, lockdown.restore
+    redis/              cooldown.redis, jtc.redis, gamble.redis, guild.redis
     general.utils.ts
-  types/                ButtonOpts, EmbedOpts, MusicContext, ChannelSnapshot, etc.
+  types/                ButtonOpts, EmbedOpts, ModalOpts, MusicContext, etc.
 ```
 
 ## Interaction Routing Pipeline (`interactionCreate`)
@@ -78,6 +84,10 @@ All updates use dot-notation `$set` to avoid wiping sibling fields:
 ### MongoDB — Lockdown document
 
 `guildId`, `enabled`, `lockedAt`, `expiresAt?`, `channels[]` — permission snapshots store BigInt bitfields as strings.
+
+### MongoDB — Counter document
+
+`guildId`, `name` (lowercased), `value`, `actor { type, targetId? }`, `createdBy` — compound unique index on `{guildId, name}`. `actor.type` ∈ `everyone | role | user | admin`.
 
 ### Redis keys
 

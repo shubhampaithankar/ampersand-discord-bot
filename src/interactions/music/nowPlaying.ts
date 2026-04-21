@@ -1,31 +1,18 @@
-import {
-  ButtonStyle,
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
-} from "discord.js";
+import { ButtonStyle, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { MainInteraction } from "../../classes";
 import Client from "../../client";
 import { botAuthor, musicEmbed } from "../../services/discord/embed.builder";
 import { buildButton, buildRow } from "../../services/discord/button.builder";
 import { validateMusicContext } from "../../services/discord/guild.player";
 import { formatDuration } from "../../services/general.utils";
-import {
-  buildCustomIds,
-  createButtonHandler,
-} from "../../services/discord/interaction.collector";
+import { buildCustomIds, createButtonHandler } from "../../services/discord/interaction.collector";
 
 const BAR_LENGTH = 22;
 
 const buildProgressBar = (position: number, duration: number): string => {
   const ratio = duration > 0 ? Math.max(0, Math.min(position / duration, 1)) : 0;
   const filled = Math.round(ratio * BAR_LENGTH);
-  return (
-    "`" +
-    "▰".repeat(filled) +
-    "◉" +
-    "▱".repeat(BAR_LENGTH - filled) +
-    "`"
-  );
+  return "`" + "▰".repeat(filled) + "◉" + "▱".repeat(BAR_LENGTH - filled) + "`";
 };
 
 const LOOP_LABELS: Record<string, string> = {
@@ -87,7 +74,10 @@ export default class NowPlayingInteraction extends MainInteraction {
         });
       };
 
-      const ids = buildCustomIds({ interaction, actions: ["skip", "stop", "loop", "shuffle"] as const });
+      const ids = buildCustomIds({
+        interaction,
+        actions: ["skip", "stop", "loop", "shuffle"] as const,
+      });
 
       const buttonRow = buildRow(
         buildButton({ label: "⏭ Skip", style: ButtonStyle.Primary, customId: ids.skip }),
@@ -123,7 +113,7 @@ export default class NowPlayingInteraction extends MainInteraction {
           [ids.loop]: async (i) => {
             await i.deferUpdate();
             const modes = ["NONE", "TRACK", "QUEUE"] as const;
-            const current = modes.indexOf((player.loop ?? "NONE") as typeof modes[number]);
+            const current = modes.indexOf((player.loop ?? "NONE") as (typeof modes)[number]);
             player.setLoop(modes[(current + 1) % modes.length]);
             await interaction.editReply({ embeds: [buildEmbed()], components: [buttonRow] });
           },

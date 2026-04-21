@@ -37,6 +37,5 @@ export const cleanupJTCChannels = async (client: BaseClient) => {
     }
   }
 
-  if (removed > 0)
-    console.log(`Cleaned up ${removed} stale JTC channel(s) from Redis`);
+  if (removed > 0) console.log(`Cleaned up ${removed} stale JTC channel(s) from Redis`);
 };

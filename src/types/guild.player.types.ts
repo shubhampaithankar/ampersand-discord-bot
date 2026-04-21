@@ -1,4 +1,9 @@
-import type { ChatInputCommandInteraction, Guild, GuildMember, VoiceBasedChannel } from "discord.js";
+import type {
+  ChatInputCommandInteraction,
+  Guild,
+  GuildMember,
+  VoiceBasedChannel,
+} from "discord.js";
 import type { Player } from "poru";
 import type BaseClient from "../client";
 

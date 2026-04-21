@@ -27,11 +27,8 @@ export default class QueueEndEvent extends MainMusicEvent {
             guildPlayer.loop === "NONE" &&
             !guildPlayer.currentTrack
           ) {
-            const channel = this.client.channels.cache.get(
-              player.textChannel,
-            ) as TextChannel;
-            if (channel)
-              await channel.send("Queue has ended, disconnecting...");
+            const channel = this.client.channels.cache.get(player.textChannel) as TextChannel;
+            if (channel) await channel.send("Queue has ended, disconnecting...");
             guildPlayer.destroy();
           }
         } catch (error) {

@@ -21,9 +21,7 @@ export default class GambletopInteraction extends MainInteraction {
       const entries = await getGambleLeaderboard(guild.id, 10);
 
       if (entries.length === 0) {
-        await interaction.editReply(
-          "No gamble data yet — no one has been timed out!",
-        );
+        await interaction.editReply("No gamble data yet — no one has been timed out!");
         return;
       }
 
