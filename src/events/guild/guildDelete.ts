@@ -2,7 +2,7 @@ import { Events, Guild } from "discord.js";
 import { MainEvent } from "@/classes";
 import Client from "@/client";
 import { GuildService } from "@/models/guild";
-import { removeBotGuild, evictGuildCache } from "@/services/redis/guild.redis";
+import { evictGuildCache, removeBotGuild } from "@/services/redis/guild.redis";
 
 // Emitted whenever a guild kicks the client or the guild is deleted/left.
 export default class GuildDeleteEvent extends MainEvent {

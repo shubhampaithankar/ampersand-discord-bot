@@ -1,7 +1,7 @@
-import Client from "@/client";
-import { MainInteraction } from "@/classes";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import moment from "moment";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
 
 export default class UptimeInteraction extends MainInteraction {
   constructor(client: Client) {

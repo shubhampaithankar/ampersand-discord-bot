@@ -1,6 +1,6 @@
-import Client from "@/client";
-import { MainInteraction } from "@/classes";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
 
 export default class PingInteraction extends MainInteraction {
   constructor(client: Client) {

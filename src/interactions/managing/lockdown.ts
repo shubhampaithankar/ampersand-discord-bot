@@ -7,7 +7,7 @@ import {
 } from "discord.js";
 import { MainInteraction } from "@/classes";
 import Client from "@/client";
-import { type ChannelSnapshot, LockdownService } from "@/models/lockdown";
+import { type ChannelSnapshot, LOCKDOWN_ACTIONS, LockdownService } from "@/models/lockdown";
 import { buildButton, buildRow } from "@/services/discord/button.builder";
 import { botAuthor, errorEmbed } from "@/services/discord/embed.builder";
 import { buildCustomIds, createButtonHandler } from "@/services/discord/interaction.collector";
@@ -86,21 +86,18 @@ export default class LockdownInteraction extends MainInteraction {
         channels: channelSnapshots,
       });
 
-      const ids = buildCustomIds({
-        interaction,
-        actions: ["removeLockdown", "removeLockdownAfterSchedule"] as const,
-      });
+      const ids = buildCustomIds({ interaction, actions: LOCKDOWN_ACTIONS });
 
       const row = buildRow(
         buildButton({
           label: "Remove Lockdown",
           style: ButtonStyle.Danger,
-          customId: ids.removeLockdown,
+          customId: ids[LOCKDOWN_ACTIONS.REMOVE],
         }),
         buildButton({
           label: "Schedule Remove (6h)",
           style: ButtonStyle.Secondary,
-          customId: ids.removeLockdownAfterSchedule,
+          customId: ids[LOCKDOWN_ACTIONS.REMOVE_AFTER_SCHEDULE],
         }),
       );
 
@@ -109,7 +106,7 @@ export default class LockdownInteraction extends MainInteraction {
       createButtonHandler({
         channel: interaction.channel!,
         handlers: {
-          [ids.removeLockdown]: async (i) => {
+          [ids[LOCKDOWN_ACTIONS.REMOVE]]: async (i) => {
             await i.deferUpdate();
             await restoreGuildLockdown({
               client: this.client,
@@ -121,7 +118,7 @@ export default class LockdownInteraction extends MainInteraction {
               components: [],
             });
           },
-          [ids.removeLockdownAfterSchedule]: async (i) => {
+          [ids[LOCKDOWN_ACTIONS.REMOVE_AFTER_SCHEDULE]]: async (i) => {
             const expiresAt = new Date(Date.now() + 1e3 * 60 * 60 * 6);
             await LockdownService.updateLockdown(guild.id, { expiresAt });
             setTimeout(
@@ -140,8 +137,9 @@ export default class LockdownInteraction extends MainInteraction {
           },
         },
         filter: (i) =>
-          [ids.removeLockdown, ids.removeLockdownAfterSchedule].includes(i.customId) &&
-          i.user.id === interaction.user.id,
+          [ids[LOCKDOWN_ACTIONS.REMOVE], ids[LOCKDOWN_ACTIONS.REMOVE_AFTER_SCHEDULE]].includes(
+            i.customId,
+          ) && i.user.id === interaction.user.id,
         max: 1,
         time: 1e3 * 60 * 60 * 12, // 12 hours
         onEnd: async () => {

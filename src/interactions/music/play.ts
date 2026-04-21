@@ -2,17 +2,9 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { Response } from "poru";
 import { MainInteraction } from "@/classes";
 import Client from "@/client";
-import {
-  botAuthor,
-  errorEmbed,
-  musicEmbed,
-} from "@/services/discord/embed.builder";
+import { botAuthor, errorEmbed, musicEmbed } from "@/services/discord/embed.builder";
 import { getMusicPlayer } from "@/services/discord/guild.player";
-import {
-  isSpotifyUrl,
-  resolveSpotifyUrl,
-  spotifyKind,
-} from "@/services/music/spotify.resolver";
+import { isSpotifyUrl, resolveSpotifyUrl, spotifyKind } from "@/services/music/spotify.resolver";
 
 export default class PlayInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -23,10 +15,7 @@ export default class PlayInteraction extends MainInteraction {
         .setName("play")
         .setDescription("plays music in user's voice channel")
         .addStringOption((option) =>
-          option
-            .setName("song")
-            .setDescription("plays the song by name or url")
-            .setRequired(true),
+          option.setName("song").setDescription("plays the song by name or url").setRequired(true),
         ),
     });
   }
@@ -163,8 +152,7 @@ export default class PlayInteraction extends MainInteraction {
             embeds: [
               errorEmbed({
                 author: botAuthor(this.client),
-                description:
-                  "Couldn't find YouTube matches for those Spotify tracks",
+                description: "Couldn't find YouTube matches for those Spotify tracks",
                 footer: member.user.username,
               }),
             ],

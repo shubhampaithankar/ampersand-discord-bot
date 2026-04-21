@@ -2,10 +2,7 @@ import { CacheType, Events, RepliableInteraction } from "discord.js";
 import { MainEvent } from "@/classes";
 import Client from "@/client";
 import { MusicService } from "@/models/guild";
-import {
-  checkPermissions,
-  formatMissingPermissions,
-} from "@/services/discord/discord.permissions";
+import { checkPermissions, formatMissingPermissions } from "@/services/discord/discord.permissions";
 import { getRemainingCooldown, setCooldown } from "@/services/redis/cooldown.redis";
 import { isBotInGuild } from "@/services/redis/guild.redis";
 import type { HandleCooldownParams } from "@/types/cooldown.types";

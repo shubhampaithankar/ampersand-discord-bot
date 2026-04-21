@@ -1,6 +1,6 @@
-import { escapeRegex } from "@/services/general.utils";
 import Counter from "@/models/counter/counter.model";
 import type { CounterActor, CounterData } from "@/models/counter/counter.types";
+import { escapeRegex } from "@/services/general.utils";
 
 export const getCounter = (guildId: string, name: string) =>
   Counter.findOne({ guildId, name: name.toLowerCase() })

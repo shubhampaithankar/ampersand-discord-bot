@@ -1,8 +1,8 @@
 import {
-  ComponentType,
-  InteractionCollector,
   ButtonInteraction,
   ChatInputCommandInteraction,
+  ComponentType,
+  InteractionCollector,
   MessageComponentInteraction,
 } from "discord.js";
 import type {
@@ -12,6 +12,12 @@ import type {
   CreateChainedCollectorParams,
   CreatePaginatorParams,
 } from "@/types/collector.types";
+
+type ActionValues<T> = T extends readonly (infer U)[]
+  ? U
+  : T extends Readonly<Record<string, infer U>>
+    ? U
+    : never;
 
 export type { ButtonHandlerMap };
 
@@ -23,16 +29,18 @@ export type { ButtonHandlerMap };
  * const ids = buildCustomIds(interaction, 'prevPage', 'nextPage', 'cancel');
  * // ids.prevPage === `${channelId}_${interactionId}_prevPage`
  */
-export const buildCustomIds = <T extends string>({
+export const buildCustomIds = <T extends readonly string[] | Readonly<Record<string, string>>>({
   interaction,
   actions,
 }: {
   interaction: ChatInputCommandInteraction;
-  actions: readonly T[];
-}): Record<T, string> =>
-  Object.fromEntries(
-    actions.map((action) => [action, `${interaction.channelId}_${interaction.id}_${action}`]),
-  ) as Record<T, string>;
+  actions: T;
+}): Record<ActionValues<T> & string, string> => {
+  const values = (Array.isArray(actions) ? actions : Object.values(actions)) as string[];
+  return Object.fromEntries(
+    values.map((action) => [action, `${interaction.channelId}_${interaction.id}_${action}`]),
+  ) as Record<ActionValues<T> & string, string>;
+};
 
 /**
  * Create a self-contained paginator for a set of embed pages.

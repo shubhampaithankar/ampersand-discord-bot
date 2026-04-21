@@ -68,7 +68,11 @@ buildTextInput({ customId, label, style?, placeholder?, required?, minLength?, m
 - `createButtonHandler` — persistent panels (omit `max`) or one-shot confirms (`max: 1`)
 - `createPaginator` — paginated embeds with prev/next/cancel buttons
 - `createChainedCollector` — multi-step flows (e.g. button → channel select)
-- `buildCustomIds({ interaction, actions })` — always use this for custom IDs, never hardcode
+- `buildCustomIds({ interaction, actions })` — always use this for custom IDs, never hardcode. `actions` accepts either a `readonly string[]` or an `as const` object (preferred — pass the module's `*_ACTIONS` constant)
+
+## Action Constants
+
+customId action strings live in `src/models/<domain>/<domain>.constants.ts` as `as const` objects (SCREAMING_SNAKE keys → camelCase string values), exported via the barrel `index.ts`. Shared paginator actions (`prevPage`/`nextPage`/`cancel`) in `@/constants` as `PAGINATION_ACTIONS`. Modal input customIds go in the same file (e.g. `COUNTER_MODAL_INPUTS`). Pass the object directly to `buildCustomIds`; access returned record with either `ids.<action>` (TS-verified via Record key) or `ids[ACTIONS.KEY]` (explicit — use for clarity in shared-string blocks).
 
 **Timing rule:** never read DB state inside `onEnd` that was written inside `collect`.
 Discord fires `end` without awaiting the async `collect` handler. Do all DB reads + re-renders

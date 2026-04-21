@@ -13,8 +13,21 @@ import {
 } from "discord.js";
 import { MainInteraction } from "@/classes";
 import Client from "@/client";
-import { type CounterActor, type CounterActorType, CounterService } from "@/models/counter";
-import { AutoGambleService, JTCService, MusicService } from "@/models/guild";
+import {
+  COUNTER_MODAL_INPUTS,
+  COUNTER_PANEL_ACTIONS,
+  type CounterActor,
+  type CounterActorType,
+  CounterService,
+} from "@/models/counter";
+import {
+  AUTOGAMBLE_PANEL_ACTIONS,
+  AutoGambleService,
+  JTC_PANEL_ACTIONS,
+  JTCService,
+  MUSIC_PANEL_ACTIONS,
+  MusicService,
+} from "@/models/guild";
 import { buildButton, buildRow, toggleButton } from "@/services/discord/button.builder";
 import { describeActor } from "@/services/discord/counter.access";
 import { botAuthor, errorEmbed, infoEmbed } from "@/services/discord/embed.builder";
@@ -86,7 +99,7 @@ export default class InitInteraction extends MainInteraction {
     const guildId = interaction.guildId!;
     const ids = buildCustomIds({
       interaction,
-      actions: ["toggle", "addChannel", "removeChannel", "selectAdd", "selectRemove"] as const,
+      actions: MUSIC_PANEL_ACTIONS,
     });
 
     const fetchData = () => MusicService.getMusic(guildId);
@@ -284,7 +297,7 @@ export default class InitInteraction extends MainInteraction {
     const guildId = interaction.guildId!;
     const ids = buildCustomIds({
       interaction,
-      actions: ["toggle", "setChannel", "selectChannel"] as const,
+      actions: JTC_PANEL_ACTIONS,
     });
 
     const fetchData = () => JTCService.getJTC(guildId);
@@ -447,16 +460,7 @@ export default class InitInteraction extends MainInteraction {
     const guildId = interaction.guildId!;
     const ids = buildCustomIds({
       interaction,
-      actions: [
-        "toggle",
-        "addChannel",
-        "removeChannel",
-        "settings",
-        "selectAdd",
-        "selectRemove",
-        "selectChance",
-        "selectDuration",
-      ] as const,
+      actions: AUTOGAMBLE_PANEL_ACTIONS,
     });
 
     const fetchData = () => AutoGambleService.getAutoGamble(guildId);
@@ -738,19 +742,7 @@ export default class InitInteraction extends MainInteraction {
     const guildId = interaction.guildId!;
     const ids = buildCustomIds({
       interaction,
-      actions: [
-        "create",
-        "edit",
-        "delete",
-        "reset",
-        "setValue",
-        "nameModal",
-        "valueModal",
-        "selectCounter",
-        "selectActorType",
-        "selectRole",
-        "selectUser",
-      ] as const,
+      actions: COUNTER_PANEL_ACTIONS,
     });
 
     const fetchCounters = () => CounterService.listCounters(guildId);
@@ -961,7 +953,7 @@ export default class InitInteraction extends MainInteraction {
             title: "New Counter",
             inputs: [
               {
-                customId: "name",
+                customId: COUNTER_MODAL_INPUTS.NAME,
                 label: "Counter name (a-z, 0-9, _-)",
                 required: true,
                 minLength: 1,
@@ -979,7 +971,7 @@ export default class InitInteraction extends MainInteraction {
           if (!submit) return;
           await submit.deferUpdate();
 
-          const name = submit.fields.getTextInputValue("name").trim();
+          const name = submit.fields.getTextInputValue(COUNTER_MODAL_INPUTS.NAME).trim();
           if (!COUNTER_NAME_PATTERN.test(name)) {
             await showError("Invalid name", "Use 1–32 chars from `a–z`, `0–9`, `_`, `-`.");
             return;
@@ -1063,7 +1055,7 @@ export default class InitInteraction extends MainInteraction {
             // shows the modal. Simpler path: chain an extra button step.
             const openIds = buildCustomIds({
               interaction,
-              actions: ["openValueModal"] as const,
+              actions: { OPEN_VALUE_MODAL: COUNTER_PANEL_ACTIONS.OPEN_VALUE_MODAL },
             });
             await interaction.editReply({
               content: `Click below to set the value for \`${name}\``,
@@ -1092,7 +1084,7 @@ export default class InitInteraction extends MainInteraction {
                     title: `Set ${name}`,
                     inputs: [
                       {
-                        customId: "value",
+                        customId: COUNTER_MODAL_INPUTS.VALUE,
                         label: "New value (integer)",
                         required: true,
                         maxLength: 11,
@@ -1112,7 +1104,7 @@ export default class InitInteraction extends MainInteraction {
                     return null;
                   }
                   await submit.deferUpdate();
-                  const raw = submit.fields.getTextInputValue("value").trim();
+                  const raw = submit.fields.getTextInputValue(COUNTER_MODAL_INPUTS.VALUE).trim();
                   const parsed = Number(raw);
                   if (!Number.isInteger(parsed) || Math.abs(parsed) > 1_000_000) {
                     await showError(
