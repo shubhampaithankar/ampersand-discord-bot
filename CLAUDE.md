@@ -2,30 +2,28 @@
 
 ## Stack
 
-- Runtime: Bun (never npm/pnpm/yarn)
-- Language: TypeScript 5.x
+- Runtime: Bun (never npm/pnpm/yarn) · TypeScript 5.x
 - Discord: discord.js v14 + @discordjs/rest v2
-- Music: Poru v5 (Lavalink). Spotify resolved **server-side** via the LavaSrc Lavalink plugin — client has no Spotify code. poru-spotify was removed (its v4 poru dep broke the runtime resolve hook against v5).
-- Database: MongoDB via Mongoose v7
-- Cache: Redis via ioredis v5
-- Container: Docker — `oven/bun:alpine` multi-stage
+- Music: Poru v5 (Lavalink). Spotify URLs resolved **client-side** via `spotify-url-info` (public oEmbed, no auth) → each track re-searched on Lavalink's YouTube Music source. poru-spotify + LavaSrc both abandoned (v4/v5 mismatch + premium-owner requirement).
+- DB: MongoDB (Mongoose v7) · Cache: Redis (ioredis v5)
+- Container: `oven/bun:alpine` multi-stage
 
 ## Build & Run
 
 ```bash
-bun --watch app.ts              # development (hot-reload)
-NODE_ENV=PROD bun run app.ts    # production
+bun --watch app.ts              # dev (hot-reload)
+NODE_ENV=PROD bun run app.ts    # prod
 docker compose up -d            # containerised
 bun run format                  # biome format --write .
 bun run lint                    # oxlint
 bun run check                   # biome check --write + oxlint
 ```
 
-No test suite configured. Formatter is Biome, linter is Oxlint (eslint + prettier removed).
+No test suite. Biome formats, Oxlint lints. eslint + prettier removed.
 
 ## Environment Variables
 
-All env vars read via `src/constants.ts` — never `process.env.*` directly in app code.
+All env read via `@/constants` — never `process.env.*` in app code.
 
 ```
 DISCORD_CLIENT_ID  DISCORD_CLIENT_NAME  DISCORD_TOKEN  DISCORD_PERMISSION_INTEGER
@@ -34,25 +32,24 @@ LAVALINK_HOST  LAVALINK_PORT  LAVALINK_PASSWORD
 SPOTIFY_CLIENT_ID  SPOTIFY_CLIENT_SECRET  NODE_ENV
 ```
 
+## Module Aliases
+
+`tsconfig.json`: `@/*` → `src/*`. All static imports use `@/...`; relative `../../...` forbidden. Dynamic imports in `src/loader.ts` still use `path.join(__dirname, ...)` — filesystem walk only, aliases apply to static imports.
+
 ## Architecture
 
 @.claude/rules/architecture.md
 
 ## Key Files
 
-- `app.ts` — entry point
-- `src/loader.ts` — auto-discovers and registers all events, interactions, music events
-- `src/classes.ts` — `MainInteraction`, `MainEvent`, `MainMusicEvent`, `MainShardEvent`
-- `src/client.ts` — `BaseClient` extending discord.js `Client`
-- `src/constants.ts` — single source of truth for env vars
-- `src/services/discord/embed.builder.ts` — never use `EmbedBuilder` directly
-- `src/services/discord/button.builder.ts` — never use `ButtonBuilder`/`ActionRowBuilder<ButtonBuilder>` directly
-- `src/services/discord/select.builder.ts` — never use `ChannelSelectMenuBuilder`/`StringSelectMenuBuilder`/`RoleSelectMenuBuilder`/`UserSelectMenuBuilder`/`ActionRowBuilder<SelectMenu>` directly
-- `src/services/discord/modal.builder.ts` — never use `ModalBuilder`/`TextInputBuilder` directly
-- `src/services/discord/interaction.collector.ts` — all collector/paginator patterns
-- `src/services/discord/guild.player.ts` — `getMusicPlayer`, `validateMusicContext`
-- `src/services/discord/counter.access.ts` — `canActOnCounter`, `describeActor`
-- `src/services/discord/lockdown.restore.ts` — `restoreGuildLockdown`, `recoverLockdowns`
+- `app.ts` · `src/loader.ts` (auto-discovers events/interactions/music events, not alias-aware)
+- `src/classes.ts` — `MainInteraction/MainEvent/MainMusicEvent/MainShardEvent`
+- `src/client.ts` — `BaseClient` extending `Client`
+- `src/constants.ts` — env var source of truth
+- `src/services/general.utils.ts` — `capitalizeString`, `getError`, `formatDuration`, `sleepFor`, `escapeRegex`, `mapInChunks` (bounded-parallel batch async)
+- `src/services/music/spotify.resolver.ts` — Spotify metadata scrape → YT Music re-search
+- `src/services/discord/` — `embed/button/select/modal.builder` (never raw), `interaction.collector` (`buildCustomIds` accepts array OR `as const` object), `guild.player`, `counter.access`, `lockdown.restore` (parallelised)
+- `src/models/<domain>/<domain>.constants.ts` — action/modal customId constants
 
 ## Conventions
 
@@ -60,27 +57,29 @@ SPOTIFY_CLIENT_ID  SPOTIFY_CLIENT_SECRET  NODE_ENV
 
 ## Do NOT
 
-- Use `npm`, `pnpm`, or `yarn`
-- Use `ephemeral: true` — use `flags: MessageFlags.Ephemeral`
-- Construct `EmbedBuilder`, `ButtonBuilder`, `ChannelSelectMenuBuilder`, `StringSelectMenuBuilder`, `RoleSelectMenuBuilder`, `UserSelectMenuBuilder`, `ModalBuilder`, `TextInputBuilder`, or any `ActionRowBuilder` directly
-- Use `$set: { subdoc: fullObject }` — use dot-notation keys to avoid wiping sibling fields
-- Skip `deferReply()` at the start of any interaction `run()`
-- Read DB state written inside `collect` from an `onEnd` callback
-- Use `any` type
-- Put anything except `*.schema.ts`, `*.model.ts`, `*.service.ts`, `*.types.ts`, `index.ts` under `src/models/**` — Discord side-effect code lives in `src/services/discord/`
-- Import from `src/models/<x>/<y>.service.ts` directly — use the barrel: `import { XService } from "../../models/x"`
-- Read `process.env.*` directly in app code — import from `src/constants.ts`
+- `npm` / `pnpm` / `yarn`
+- `ephemeral: true` — use `flags: MessageFlags.Ephemeral`
+- Construct `EmbedBuilder / ButtonBuilder / {Channel,String,Role,User}SelectMenuBuilder / ModalBuilder / TextInputBuilder / ActionRowBuilder` directly
+- `$set: { subdoc: fullObject }` — dot-notation keys only
+- Skip `deferReply()` at start of `run()`
+- Read DB state inside `onEnd` that was written inside `collect`
+- Use `any`
+- Put non-`{schema,model,service,types,constants,index}.ts` files under `src/models/**`
+- Import `src/models/<x>/<y>.service.ts` directly — use barrel (`@/models/x`)
+- Use relative imports — always `@/*`
+- `process.env.*` — import from `@/constants`
+- Serial `await` over an array — use `mapInChunks` from `@/services/general.utils`
 
 ## MCP Plugins
 
-| Plugin | When to use |
+| Plugin | Use |
 |---|---|
-| **code-review-graph** | Before reviewing changes — `get_review_context_tool` + `get_impact_radius_tool`. Use `semantic_search_nodes_tool` to find classes/functions, `query_graph_tool` for call chains (`callers_of`, `callees_of`, `file_summary`). Run `build_or_update_graph_tool` after big refactors. |
-| **bun-docs-mcp** (`SearchBun`) | Any question about Bun APIs, runtime behaviour, `bun test`, bundler, or `Bun.*` globals — search docs before guessing. |
-| **mcp-server-github** | Creating PRs, viewing checks, managing issues. Use `pull_request_review_write` for code reviews, `create_pull_request` for PRs (check for `.github/PULL_REQUEST_TEMPLATE` first). |
+| **code-review-graph** | `get_review_context_tool` + `get_impact_radius_tool` before reviews; `semantic_search_nodes_tool` + `query_graph_tool` (`callers_of/callees_of/file_summary`) for lookups; `build_or_update_graph_tool` after big refactors |
+| **bun-docs-mcp** | Bun APIs, `Bun.*` globals, bundler, `bun test` |
+| **mcp-server-github** | PRs, checks, issues; `pull_request_review_write`, `create_pull_request` (check `.github/PULL_REQUEST_TEMPLATE` first) |
 
 ## On Compaction, Preserve
 
-- Current branch and in-progress feature context
-- Unresolved TypeScript errors or runtime issues
-- Pending schema changes or new env vars needed
+- Current branch + in-progress feature context
+- Unresolved TypeScript / runtime issues
+- Pending schema changes or new env vars

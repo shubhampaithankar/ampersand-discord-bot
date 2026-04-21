@@ -1,6 +1,7 @@
 import type { GuildChannel } from "discord.js";
 import Client from "@/client";
 import { type ChannelSnapshot, LockdownService } from "@/models/lockdown";
+import { mapInChunks } from "@/services/general.utils";
 
 export const restoreGuildLockdown = async ({
   client,
@@ -14,9 +15,9 @@ export const restoreGuildLockdown = async ({
   const guild = client.guilds.cache.get(guildId);
   if (!guild) return;
 
-  for (const snapshot of channels) {
+  await mapInChunks(channels, 5, async (snapshot) => {
     const channel = guild.channels.cache.get(snapshot.channelId) as GuildChannel | undefined;
-    if (!channel || !("permissionOverwrites" in channel)) continue;
+    if (!channel || !("permissionOverwrites" in channel)) return;
 
     await channel.permissionOverwrites
       .set(
@@ -28,7 +29,7 @@ export const restoreGuildLockdown = async ({
         })),
       )
       .catch(() => {});
-  }
+  });
 
   await LockdownService.updateLockdown(guildId, {
     enabled: false,
@@ -43,8 +44,8 @@ export const recoverLockdowns = async (client: Client) => {
 
   const now = Date.now();
 
-  for (const lockdown of activeLockdowns) {
-    if (!lockdown.expiresAt) continue;
+  await mapInChunks(activeLockdowns, 5, async (lockdown) => {
+    if (!lockdown.expiresAt) return;
 
     const expiresAt = new Date(lockdown.expiresAt).getTime();
 
@@ -66,5 +67,5 @@ export const recoverLockdowns = async (client: Client) => {
         remaining,
       );
     }
-  }
+  });
 };

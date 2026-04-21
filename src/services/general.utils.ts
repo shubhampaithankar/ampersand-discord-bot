@@ -33,3 +33,23 @@ export const formatDuration = (milliseconds: number): string => {
 export const sleepFor = (time: number) => new Promise((resolve) => setTimeout(resolve, time));
 
 export const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Map an array in chunks of parallel `size`, preserving input order.
+ * Each chunk awaits `Promise.all(fn)` before the next chunk starts.
+ * `fn` should handle its own errors if per-item failures must not abort the batch.
+ */
+export const mapInChunks = async <T, R>(
+  items: T[],
+  size: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> => {
+  if (size <= 0) throw new Error("mapInChunks: size must be > 0");
+  const out: R[] = [];
+  for (let i = 0; i < items.length; i += size) {
+    const slice = items.slice(i, i + size);
+    const results = await Promise.all(slice.map((item, j) => fn(item, i + j)));
+    out.push(...results);
+  }
+  return out;
+};

@@ -1,15 +1,12 @@
 # Conventions
 
-## Interaction Handler Template
-
-Every `run()` follows this exact shape:
+## Handler Template
 
 ```ts
 run = async (interaction: ChatInputCommandInteraction) => {
   await interaction.deferReply();
   try {
-    // ... logic
-    await interaction.editReply({ embeds: [...] });
+    // ... logic → interaction.editReply({ embeds: [...] })
   } catch (error: any) {
     console.log("There was an error in <Name> command: ", error);
     await interaction.editReply(`There was an error \`${error.message}\``);
@@ -17,106 +14,72 @@ run = async (interaction: ChatInputCommandInteraction) => {
 };
 ```
 
-Every button/select handler inside a collector:
-```ts
-async (i) => {
-  await i.deferUpdate(); // always first
-  // ...
-}
-```
+Button/select handler inside a collector: `await i.deferUpdate()` **first**, always.
 
-## Ephemeral Replies
+## Ephemeral
 
-```ts
-flags: MessageFlags.Ephemeral  // ✅ v14
-ephemeral: true                // ❌ deprecated
-```
+`flags: MessageFlags.Ephemeral` ✅ · `ephemeral: true` ❌ (deprecated)
 
-## Builders — Always Use Wrappers
+## Builder Wrappers — Never Construct Raw
 
-```ts
-// ❌ Never
-new EmbedBuilder().setTitle("...")
-new ButtonBuilder().setLabel("...")
-new ActionRowBuilder().addComponents(...)
-new ChannelSelectMenuBuilder().setCustomId(...)
-new StringSelectMenuBuilder().setCustomId(...)
-new RoleSelectMenuBuilder().setCustomId(...)
-new UserSelectMenuBuilder().setCustomId(...)
-new ModalBuilder().setCustomId(...)
-new TextInputBuilder().setLabel(...)
+Never `new EmbedBuilder/ButtonBuilder/ActionRowBuilder/{Channel,String,Role,User}SelectMenuBuilder/ModalBuilder/TextInputBuilder`.
 
-// ✅ Always
-infoEmbed({ title: "..." })          // blue
-successEmbed({ ... })                 // green
-errorEmbed({ ... })                   // red
-warnEmbed({ ... })                    // yellow
-musicEmbed({ ... })                   // Spotify green
-buildButton({ label, style, customId })
-buildRow(btn1, btn2)
-toggleButton(enabled, customId)       // green Enable / red Disable
-buildChannelSelectRow({ customId, types, placeholder? })
-buildStringSelectRow({ customId, options, placeholder? })
-buildRoleSelectRow({ customId, placeholder? })
-buildUserSelectRow({ customId, placeholder? })
-buildModal({ customId, title, inputs: [{ customId, label, ... }] })
-buildTextInput({ customId, label, style?, placeholder?, required?, minLength?, maxLength? })
-```
+Use: `infoEmbed/successEmbed/errorEmbed/warnEmbed/musicEmbed`, `buildButton`, `buildRow`, `toggleButton`, `build{Channel,String,Role,User}SelectRow`, `buildModal`, `buildTextInput`.
 
-## Collector Patterns
+## Collectors
 
-- `createButtonHandler` — persistent panels (omit `max`) or one-shot confirms (`max: 1`)
-- `createPaginator` — paginated embeds with prev/next/cancel buttons
-- `createChainedCollector` — multi-step flows (e.g. button → channel select)
-- `buildCustomIds({ interaction, actions })` — always use this for custom IDs, never hardcode. `actions` accepts either a `readonly string[]` or an `as const` object (preferred — pass the module's `*_ACTIONS` constant)
+- `createButtonHandler` — persistent panel (omit `max`) or confirm (`max: 1`)
+- `createPaginator` — prev/next/cancel pages
+- `createChainedCollector` — multi-step flows
+- `buildCustomIds({ interaction, actions })` — never hardcode. `actions` = `readonly string[]` OR `as const` object (preferred: pass module's `*_ACTIONS` constant)
+
+**Timing rule:** never read DB state inside `onEnd` that was written inside `collect` — Discord fires `end` without awaiting the async `collect`. Do reads + re-renders inside the handler body after `await`-ing the DB op. `onEnd` only for cleanup.
 
 ## Action Constants
 
-customId action strings live in `src/models/<domain>/<domain>.constants.ts` as `as const` objects (SCREAMING_SNAKE keys → camelCase string values), exported via the barrel `index.ts`. Shared paginator actions (`prevPage`/`nextPage`/`cancel`) in `@/constants` as `PAGINATION_ACTIONS`. Modal input customIds go in the same file (e.g. `COUNTER_MODAL_INPUTS`). Pass the object directly to `buildCustomIds`; access returned record with either `ids.<action>` (TS-verified via Record key) or `ids[ACTIONS.KEY]` (explicit — use for clarity in shared-string blocks).
+customId action strings live in `src/models/<domain>/<domain>.constants.ts` as `as const` objects (SCREAMING_SNAKE → camelCase values), exported via barrel. Modal input customIds in the same file. Pass the object to `buildCustomIds`; access via `ids.<action>` or `ids[ACTIONS.KEY]`. Paginator `prevPage/nextPage/cancel` stays inline.
 
-**Timing rule:** never read DB state inside `onEnd` that was written inside `collect`.
-Discord fires `end` without awaiting the async `collect` handler. Do all DB reads + re-renders
-inside the handler body after `await`-ing the DB op. Use `onEnd` only for cleanup (remove buttons).
+## Imports
 
-## MongoDB Updates
+- Always `@/*` alias. Never relative `../../...`.
+- Models via barrel: `import { XService, X_ACTIONS } from "@/models/x"` — never `"@/models/x/x.service"`.
+- Env vars via `@/constants`.
 
-Always dot-notation `$set` — never replace the full subdocument:
+## Batch Async
+
+For independent async ops over an array, use `mapInChunks` from `@/services/general.utils` — never serial `for...await`:
 
 ```ts
-// ✅ preserves sibling fields
-{ $set: { "autoGamble.enabled": true } }
+await mapInChunks(items, 5, async (item) => work(item));
+```
 
-// ❌ wipes chance, timeoutDuration, channelIds
-{ $set: { autoGamble: { enabled: true } } }
+`fn` should `.catch()` per-item if partial failure is acceptable. Size: 5 for Discord API, higher for DB/Redis.
+
+## MongoDB
+
+Dot-notation `$set` only — never replace a subdoc:
+
+```ts
+{ $set: { "autoGamble.enabled": true } }     // ✅
+{ $set: { autoGamble: { enabled: true } } }  // ❌ wipes siblings
 ```
 
 ## Naming
 
-- camelCase variables, PascalCase classes/types/interfaces
-- Interaction class names: `<Name>Interaction`
-- Event class names: `<Name>Event`
-- Event filenames must equal the Discord.js/Poru event name exactly
+camelCase vars · PascalCase classes/types · `<Name>Interaction` / `<Name>Event` · event filenames **must equal** the Discord.js/Poru event name exactly.
 
 ## Function Parameters
 
-Destructured options object for any function with >2 params — all services follow this.
-Exception: variadic rest params and simple 2-param functions.
+Destructured options object for any function with >2 params. Exception: variadic rest + simple 2-param fns.
 
-## Adding a New Slash Command
+## Adding a Slash Command
 
-1. `src/interactions/<category>/<name>.ts`
-2. Default-export class extending `MainInteraction`
-3. Set `category: "Music"` for music commands (triggers channel check in routing)
-4. `deferReply()` first, `editReply()` throughout, try/catch wrapping
-5. For autocomplete on a string option: `.setAutocomplete(true)` on the option, then add `autocomplete = async (i: AutocompleteInteraction) => { await i.respond([{ name, value }]) }` as a method on the class. Routing dispatches it before guild/perm/cooldown checks.
-6. Import models via the barrel: `import { XService } from "../../models/x"` — never `import * as XService from ".../x.service"`.
+1. `src/interactions/<category>/<name>.ts` — default-export class extending `MainInteraction`
+2. `category: "Music"` for music commands (triggers channel check)
+3. `deferReply()` first, `editReply()` throughout, try/catch wrapping
+4. Autocomplete: `.setAutocomplete(true)` + `autocomplete = async (i: AutocompleteInteraction) => { await i.respond([{ name, value }]) }` method. Routing dispatches before guild/perm/cooldown.
+5. Import models via barrel (`@/models/x`), never service file directly.
 
-## Adding a New Event
+## Adding an Event / Music Event
 
-1. `src/events/<subdir>/<EventName>.ts` — filename **must equal** the event name
-2. Default-export class extending `MainEvent`, `super(client, Events.EventName)`
-
-## Adding a New Music Event
-
-1. `src/musicEvents/<subdir>/<eventName>.ts` — filename **must equal** Poru's event name
-2. Default-export class extending `MainMusicEvent`
+`src/events/<subdir>/<EventName>.ts` or `src/musicEvents/<subdir>/<eventName>.ts` — filename **must equal** the event name. Default-export class extending `MainEvent` / `MainMusicEvent`.
