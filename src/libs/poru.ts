@@ -16,7 +16,7 @@ export const createPoru = (client: BaseClient) =>
         port: Number(LAVALINK_PORT),
         password: `${LAVALINK_PASSWORD}`,
         secure: false,
-        name: `${DISCORD_CLIENT_NAME}-discord-client`,
+        name: `${DISCORD_CLIENT_NAME}-poru-client`,
       },
     ],
     {
