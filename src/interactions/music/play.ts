@@ -1,18 +1,18 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { Response } from "poru";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
 import {
   botAuthor,
   errorEmbed,
   musicEmbed,
-} from "../../services/discord/embed.builder";
-import { getMusicPlayer } from "../../services/discord/guild.player";
+} from "@/services/discord/embed.builder";
+import { getMusicPlayer } from "@/services/discord/guild.player";
 import {
   isSpotifyUrl,
   resolveSpotifyUrl,
   spotifyKind,
-} from "../../services/music/spotify.resolver";
+} from "@/services/music/spotify.resolver";
 
 export default class PlayInteraction extends MainInteraction {
   constructor(client: Client) {

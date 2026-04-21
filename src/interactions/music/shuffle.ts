@@ -1,8 +1,8 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
-import { botAuthor, successEmbed } from "../../services/discord/embed.builder";
-import { validateMusicContext } from "../../services/discord/guild.player";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { botAuthor, successEmbed } from "@/services/discord/embed.builder";
+import { validateMusicContext } from "@/services/discord/guild.player";
 
 export default class ShuffleInteraction extends MainInteraction {
   constructor(client: Client) {

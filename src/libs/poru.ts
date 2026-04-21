@@ -1,11 +1,11 @@
 import { Poru } from "poru";
-import type BaseClient from "../client";
+import type BaseClient from "@/client";
 import {
   DISCORD_CLIENT_NAME,
   LAVALINK_HOST,
   LAVALINK_PASSWORD,
   LAVALINK_PORT,
-} from "../constants";
+} from "@/constants";
 
 export const createPoru = (client: BaseClient) =>
   new Poru(

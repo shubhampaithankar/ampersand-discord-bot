@@ -11,25 +11,25 @@ import {
   UserSelectMenuInteraction,
   VoiceChannel,
 } from "discord.js";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
-import { type CounterActor, type CounterActorType, CounterService } from "../../models/counter";
-import { AutoGambleService, JTCService, MusicService } from "../../models/guild";
-import { buildButton, buildRow, toggleButton } from "../../services/discord/button.builder";
-import { describeActor } from "../../services/discord/counter.access";
-import { botAuthor, errorEmbed, infoEmbed } from "../../services/discord/embed.builder";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { type CounterActor, type CounterActorType, CounterService } from "@/models/counter";
+import { AutoGambleService, JTCService, MusicService } from "@/models/guild";
+import { buildButton, buildRow, toggleButton } from "@/services/discord/button.builder";
+import { describeActor } from "@/services/discord/counter.access";
+import { botAuthor, errorEmbed, infoEmbed } from "@/services/discord/embed.builder";
 import {
   buildCustomIds,
   createButtonHandler,
   createChainedCollector,
-} from "../../services/discord/interaction.collector";
-import { buildModal } from "../../services/discord/modal.builder";
+} from "@/services/discord/interaction.collector";
+import { buildModal } from "@/services/discord/modal.builder";
 import {
   buildChannelSelectRow,
   buildRoleSelectRow,
   buildStringSelectRow,
   buildUserSelectRow,
-} from "../../services/discord/select.builder";
+} from "@/services/discord/select.builder";
 
 type ModuleKey = "music" | "jtc" | "autogamble" | "counter";
 

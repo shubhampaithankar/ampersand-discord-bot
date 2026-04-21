@@ -4,13 +4,13 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
 } from "discord.js";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
-import { botAuthor, musicEmbed } from "../../services/discord/embed.builder";
-import { buildButton, buildRow } from "../../services/discord/button.builder";
-import { validateMusicContext } from "../../services/discord/guild.player";
-import { formatDuration } from "../../services/general.utils";
-import { buildCustomIds, createPaginator } from "../../services/discord/interaction.collector";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { botAuthor, musicEmbed } from "@/services/discord/embed.builder";
+import { buildButton, buildRow } from "@/services/discord/button.builder";
+import { validateMusicContext } from "@/services/discord/guild.player";
+import { formatDuration } from "@/services/general.utils";
+import { buildCustomIds, createPaginator } from "@/services/discord/interaction.collector";
 
 export default class QueueInteraction extends MainInteraction {
   constructor(client: Client) {

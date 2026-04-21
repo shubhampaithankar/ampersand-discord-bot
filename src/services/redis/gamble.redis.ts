@@ -1,4 +1,4 @@
-import { getRedis } from "../../libs/redis";
+import { getRedis } from "@/libs/redis";
 
 const leaderboardKey = (guildId: string) => `gamble:leaderboard:${guildId}`;
 

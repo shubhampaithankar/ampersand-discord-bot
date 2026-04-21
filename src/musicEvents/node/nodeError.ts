@@ -1,6 +1,6 @@
 import { Node } from "poru";
-import { MainMusicEvent } from "../../classes";
-import Client from "../../client";
+import { MainMusicEvent } from "@/classes";
+import Client from "@/client";
 
 export default class NodeErrorEvent extends MainMusicEvent {
   constructor(client: Client) {

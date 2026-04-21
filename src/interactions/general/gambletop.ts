@@ -1,8 +1,8 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
-import { botAuthor, infoEmbed } from "../../services/discord/embed.builder";
-import { getGambleLeaderboard } from "../../services/redis/gamble.redis";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { botAuthor, infoEmbed } from "@/services/discord/embed.builder";
+import { getGambleLeaderboard } from "@/services/redis/gamble.redis";
 
 export default class GambletopInteraction extends MainInteraction {
   constructor(client: Client) {

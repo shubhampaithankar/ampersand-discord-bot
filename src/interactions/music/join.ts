@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
-import { getMusicPlayer } from "../../services/discord/guild.player";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { getMusicPlayer } from "@/services/discord/guild.player";
 
 export default class JoinInteraction extends MainInteraction {
   constructor(client: Client) {

@@ -1,7 +1,7 @@
 import { Schema } from "mongoose";
-import { AutoGambleSchema } from "./autoGamble/autoGamble.schema";
-import { JTCSchema } from "./jtc/jtc.schema";
-import { MusicSchema } from "./music/music.schema";
+import { AutoGambleSchema } from "@/models/guild/autoGamble/autoGamble.schema";
+import { JTCSchema } from "@/models/guild/jtc/jtc.schema";
+import { MusicSchema } from "@/models/guild/music/music.schema";
 
 export default new Schema({
   guildId: {

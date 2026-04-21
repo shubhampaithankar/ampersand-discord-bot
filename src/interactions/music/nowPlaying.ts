@@ -1,11 +1,11 @@
 import { ButtonStyle, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
-import { botAuthor, musicEmbed } from "../../services/discord/embed.builder";
-import { buildButton, buildRow } from "../../services/discord/button.builder";
-import { validateMusicContext } from "../../services/discord/guild.player";
-import { formatDuration } from "../../services/general.utils";
-import { buildCustomIds, createButtonHandler } from "../../services/discord/interaction.collector";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { botAuthor, musicEmbed } from "@/services/discord/embed.builder";
+import { buildButton, buildRow } from "@/services/discord/button.builder";
+import { validateMusicContext } from "@/services/discord/guild.player";
+import { formatDuration } from "@/services/general.utils";
+import { buildCustomIds, createButtonHandler } from "@/services/discord/interaction.collector";
 
 const BAR_LENGTH = 22;
 

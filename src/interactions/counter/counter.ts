@@ -6,15 +6,15 @@ import {
   SlashCommandBuilder,
   type SlashCommandSubcommandBuilder,
 } from "discord.js";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
-import { CounterService } from "../../models/counter";
-import { buildButton, buildRow } from "../../services/discord/button.builder";
-import { canActOnCounter, describeActor } from "../../services/discord/counter.access";
-import { botAuthor, errorEmbed, infoEmbed } from "../../services/discord/embed.builder";
-import { buildCustomIds, createPaginator } from "../../services/discord/interaction.collector";
-import { getError } from "../../services/general.utils";
-import { getRemainingCooldown, setCooldown } from "../../services/redis/cooldown.redis";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { CounterService } from "@/models/counter";
+import { buildButton, buildRow } from "@/services/discord/button.builder";
+import { canActOnCounter, describeActor } from "@/services/discord/counter.access";
+import { botAuthor, errorEmbed, infoEmbed } from "@/services/discord/embed.builder";
+import { buildCustomIds, createPaginator } from "@/services/discord/interaction.collector";
+import { getError } from "@/services/general.utils";
+import { getRemainingCooldown, setCooldown } from "@/services/redis/cooldown.redis";
 
 const LIST_PAGE_SIZE = 25;
 const COUNTER_COOLDOWN_SECONDS = 3;

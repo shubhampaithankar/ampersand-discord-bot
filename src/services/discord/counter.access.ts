@@ -1,5 +1,5 @@
 import { type GuildMember, PermissionFlagsBits } from "discord.js";
-import type { CounterActor } from "../../models/counter";
+import type { CounterActor } from "@/models/counter";
 
 export const canActOnCounter = ({
   member,

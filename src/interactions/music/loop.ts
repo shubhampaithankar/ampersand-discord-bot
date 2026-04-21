@@ -1,8 +1,8 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
-import { botAuthor, successEmbed } from "../../services/discord/embed.builder";
-import { validateMusicContext } from "../../services/discord/guild.player";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { botAuthor, successEmbed } from "@/services/discord/embed.builder";
+import { validateMusicContext } from "@/services/discord/guild.player";
 
 const MODE_LABELS = { NONE: "Off", TRACK: "Track", QUEUE: "Queue" } as const;
 const MODE_ICONS = { NONE: "➡️", TRACK: "🔂", QUEUE: "🔁" } as const;

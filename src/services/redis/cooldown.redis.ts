@@ -1,5 +1,5 @@
-import { getRedis } from "../../libs/redis";
-import type { SetCooldownParams } from "../../types/cooldown.types";
+import { getRedis } from "@/libs/redis";
+import type { SetCooldownParams } from "@/types/cooldown.types";
 
 const cooldownKey = (commandName: string, userId: string) => `cooldown:${commandName}:${userId}`;
 

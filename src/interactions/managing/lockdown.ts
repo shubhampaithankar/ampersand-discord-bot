@@ -5,13 +5,13 @@ import {
   MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
-import { type ChannelSnapshot, LockdownService } from "../../models/lockdown";
-import { buildButton, buildRow } from "../../services/discord/button.builder";
-import { botAuthor, errorEmbed } from "../../services/discord/embed.builder";
-import { buildCustomIds, createButtonHandler } from "../../services/discord/interaction.collector";
-import { restoreGuildLockdown } from "../../services/discord/lockdown.restore";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { type ChannelSnapshot, LockdownService } from "@/models/lockdown";
+import { buildButton, buildRow } from "@/services/discord/button.builder";
+import { botAuthor, errorEmbed } from "@/services/discord/embed.builder";
+import { buildCustomIds, createButtonHandler } from "@/services/discord/interaction.collector";
+import { restoreGuildLockdown } from "@/services/discord/lockdown.restore";
 
 export default class LockdownInteraction extends MainInteraction {
   constructor(client: Client) {

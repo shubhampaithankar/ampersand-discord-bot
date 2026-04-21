@@ -1,6 +1,6 @@
 import type { ChatInputCommandInteraction } from "discord.js";
-import type BaseClient from "../../client";
-import type { GetMusicPlayerParams, MusicContext } from "../../types/guild.player.types";
+import type BaseClient from "@/client";
+import type { GetMusicPlayerParams, MusicContext } from "@/types/guild.player.types";
 
 export const getMusicPlayer = ({
   client,

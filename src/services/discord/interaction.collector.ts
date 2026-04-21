@@ -11,7 +11,7 @@ import type {
   CreateButtonHandlerParams,
   CreateChainedCollectorParams,
   CreatePaginatorParams,
-} from "../../types/collector.types";
+} from "@/types/collector.types";
 
 export type { ButtonHandlerMap };
 

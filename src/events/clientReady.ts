@@ -1,9 +1,9 @@
 import { ActivityType, Events } from "discord.js";
-import { MainEvent } from "../classes";
-import Client from "../client";
-import { cleanupJTCChannels } from "../services/redis/jtc.redis";
-import { seedBotGuilds } from "../services/redis/guild.redis";
-import { recoverLockdowns } from "../services/discord/lockdown.restore";
+import { MainEvent } from "@/classes";
+import Client from "@/client";
+import { cleanupJTCChannels } from "@/services/redis/jtc.redis";
+import { seedBotGuilds } from "@/services/redis/guild.redis";
+import { recoverLockdowns } from "@/services/discord/lockdown.restore";
 
 export default class ReadyEvent extends MainEvent {
   constructor(client: Client) {

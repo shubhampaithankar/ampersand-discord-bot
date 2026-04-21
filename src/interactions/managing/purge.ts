@@ -1,5 +1,5 @@
-import Client from "../../client";
-import { MainInteraction } from "../../classes";
+import Client from "@/client";
+import { MainInteraction } from "@/classes";
 import { BaseGuildTextChannel, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class PurgeInteraction extends MainInteraction {

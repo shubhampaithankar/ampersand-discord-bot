@@ -1,9 +1,9 @@
 import { APIEmbedField, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { MainInteraction } from "../../classes";
-import Client from "../../client";
-import { botAuthor, infoEmbed } from "../../services/discord/embed.builder";
-import { capitalizeString } from "../../services/general.utils";
-import { HelpInteractionType } from "../../types/interaction.types";
+import { MainInteraction } from "@/classes";
+import Client from "@/client";
+import { botAuthor, infoEmbed } from "@/services/discord/embed.builder";
+import { capitalizeString } from "@/services/general.utils";
+import { HelpInteractionType } from "@/types/interaction.types";
 
 export default class HelpInteraction extends MainInteraction {
   constructor(client: Client) {

@@ -1,4 +1,4 @@
-import { getRedis } from "../../libs/redis";
+import { getRedis } from "@/libs/redis";
 
 const BOT_GUILDS_KEY = "bot:guilds";
 const guildDbKey = (guildId: string) => `guild:db:${guildId}`;

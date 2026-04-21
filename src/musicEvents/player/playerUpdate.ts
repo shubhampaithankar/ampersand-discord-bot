@@ -1,4 +1,4 @@
-import { MainMusicEvent } from "../../classes";
+import { MainMusicEvent } from "@/classes";
 import { Player } from "poru";
 
 export default class PlayerUpdateEvent extends MainMusicEvent {

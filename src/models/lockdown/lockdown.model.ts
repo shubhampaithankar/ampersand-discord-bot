@@ -1,4 +1,4 @@
 import { model } from "mongoose";
-import lockdownSchema from "./lockdown.schema";
+import lockdownSchema from "@/models/lockdown/lockdown.schema";
 
 export default model("Lockdown", lockdownSchema);

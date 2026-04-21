@@ -1,10 +1,10 @@
 import { randomInt } from "crypto";
 import { Events, Message } from "discord.js";
-import { MainEvent } from "../../classes";
-import Client from "../../client";
-import { AutoGambleService, GuildService } from "../../models/guild";
-import { incrementGambleScore } from "../../services/redis/gamble.redis";
-import { cacheGuildExists, getCachedGuildExists } from "../../services/redis/guild.redis";
+import { MainEvent } from "@/classes";
+import Client from "@/client";
+import { AutoGambleService, GuildService } from "@/models/guild";
+import { incrementGambleScore } from "@/services/redis/gamble.redis";
+import { cacheGuildExists, getCachedGuildExists } from "@/services/redis/guild.redis";
 
 export default class MessageCreate extends MainEvent {
   constructor(client: Client) {
