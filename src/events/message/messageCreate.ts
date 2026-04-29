@@ -46,11 +46,8 @@ const handleAutoGamble = async (message: Message) => {
     const member = message.member;
     if (!member) return;
 
-    // Don't timeout admins or the bot
     if (member.permissions.has("Administrator")) return;
-
-    const bot = message.guild!.members.me;
-    if (!bot?.permissions.has("ModerateMembers")) return;
+    if (!member.moderatable) return;
 
     await member.timeout(timeoutDuration * 1000, "Auto Gamble: unlucky roll");
     await incrementGambleScore(message.guildId!, member.id);

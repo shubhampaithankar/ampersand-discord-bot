@@ -2,7 +2,7 @@ import {
   ApplicationCommandDataResolvable,
   AutocompleteInteraction,
   GuildMember,
-  InteractionCollector,
+  MessageFlags,
   PermissionResolvable,
   ShardingManager,
 } from "discord.js";
@@ -14,11 +14,9 @@ import type { EventConfig, InteractionConfig, RejectPayload } from "@/types/inte
 export class MainInteraction {
   client: Client;
   type: number;
-  enabled?: boolean;
   aliases?: string[];
   category?: string;
   cooldown?: number;
-  collector?: InteractionCollector<any>;
   permissions?: PermissionResolvable;
   bot?: GuildMember;
   data: ApplicationCommandDataResolvable;
@@ -27,11 +25,9 @@ export class MainInteraction {
   constructor(client: Client, config: InteractionConfig) {
     this.client = client;
     this.type = config.type;
-    this.enabled = config.enabled || true;
     this.category = config.category || "";
     this.aliases = config.aliases || [];
     this.cooldown = config.cooldown;
-    this.collector = config.collector;
     this.permissions = config.permissions;
     this.data = config.data;
   }
@@ -50,24 +46,9 @@ export class MainInteraction {
     }
   }
 
-  async followUp(prevInteraction: any, ...args: any[]): Promise<any> {
-    try {
-      const collector = this.collector!;
-      collector.on("collect", (interaction: any) => {});
-    } catch (error: unknown) {
-      const message = getError(error);
-      console.log(`There was an error in ${this.data} followUp: `, error);
-      await prevInteraction.editReply({
-        content: `There was an error \`${message}\``,
-        components: [],
-      });
-      return;
-    }
-  }
-
   async reject({ interaction, message }: RejectPayload) {
     try {
-      await interaction.reply(message);
+      await interaction.reply({ content: message, flags: MessageFlags.Ephemeral });
     } catch (error) {
       console.log(error);
     }

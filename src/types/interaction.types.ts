@@ -4,7 +4,6 @@ import {
   Collection,
   GuildMember,
   Interaction,
-  InteractionCollector,
   Message,
   PermissionResolvable,
   RepliableInteraction,
@@ -14,11 +13,9 @@ import {
 
 export type InteractionConfig = {
   type: number;
-  enabled?: boolean;
   category?: string;
   aliases?: string[];
   cooldown?: number;
-  collector?: InteractionCollector<any>;
   permissions?: PermissionResolvable;
   bot?: GuildMember;
   data: ApplicationCommandDataResolvable;
