@@ -21,4 +21,5 @@ export type DisconnectPlayerParams = {
   client: BaseClient;
   guild: Guild;
   oldState: VoiceState;
+  newState: VoiceState;
 };

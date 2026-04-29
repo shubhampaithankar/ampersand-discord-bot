@@ -19,7 +19,7 @@ export default class VoiceStateUpdateEvent extends MainEvent {
     if (newState.member?.guild === null) return;
     const { guild } = newState.member! || oldState.member!;
 
-    disconnectPlayer({ client: this.client, guild, oldState });
+    disconnectPlayer({ client: this.client, guild, oldState, newState });
 
     handleJTC({
       client: this.client,
@@ -142,20 +142,22 @@ const deleteJTCChannel = async (guild: Guild, oldState: VoiceState) => {
   }
 };
 
-const disconnectPlayer = ({ client, guild, oldState }: DisconnectPlayerParams) => {
-  if (!oldState.channel) return;
-
+const disconnectPlayer = ({ client, guild, oldState, newState }: DisconnectPlayerParams) => {
   const botId = client.user!.id;
-  const { members } = oldState.channel;
-
-  // Only act if bot is in the channel that was just left
-  if (!members.has(botId)) return;
-
-  // Bot is the only one left
-  if (members.size !== 1) return;
-
   const player = client.poru?.get(guild.id);
   if (!player) return;
+
+  // Bot itself was disconnected (force-disconnected, moved, kicked)
+  if (oldState.id === botId && oldState.channelId && !newState.channelId) {
+    player.destroy();
+    return;
+  }
+
+  // Bot left alone in VC after another user departed
+  if (!oldState.channel) return;
+  const { members } = oldState.channel;
+  if (!members.has(botId)) return;
+  if (members.size !== 1) return;
 
   player.destroy();
 };

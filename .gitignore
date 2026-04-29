@@ -3,3 +3,4 @@
 node_modules
 build
 settings.local.json
+.claude/tdd-guard
