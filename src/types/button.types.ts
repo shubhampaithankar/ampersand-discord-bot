@@ -1,7 +1,7 @@
 import type { ButtonStyle } from "discord.js";
 
 export type ButtonOpts = {
-  label: string;
+  label?: string;
   style: ButtonStyle;
   customId?: string;
   url?: string;

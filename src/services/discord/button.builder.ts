@@ -4,8 +4,9 @@ import type { ButtonOpts } from "@/types/button.types";
 export type { ButtonOpts };
 
 export const buildButton = (opts: ButtonOpts): ButtonBuilder => {
-  const btn = new ButtonBuilder().setLabel(opts.label).setStyle(opts.style);
+  const btn = new ButtonBuilder().setStyle(opts.style);
 
+  if (opts.label) btn.setLabel(opts.label);
   if (opts.customId) btn.setCustomId(opts.customId);
   if (opts.url) btn.setURL(opts.url);
   if (opts.emoji) btn.setEmoji(opts.emoji);
