@@ -4,6 +4,7 @@ import { MainInteraction } from "@/classes";
 import Client from "@/client";
 import { botAuthor, errorEmbed, musicEmbed } from "@/services/discord/embed.builder";
 import { getMusicPlayer } from "@/services/discord/guild.player";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 import { mapInChunks } from "@/services/general.utils";
 import { isSpotifyUrl, resolveSpotifyUrl, spotifyKind } from "@/services/music/spotify.resolver";
 
@@ -328,7 +329,11 @@ export default class PlayInteraction extends MainInteraction {
         }
       }
     } catch (error: any) {
-      console.log("There was an error in Play command: ", error);
+      await reportError({
+        source: "interaction.play",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.editReply(`There was an error \`${error.message}\``);
     }
   };

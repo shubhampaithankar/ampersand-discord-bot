@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import moment from "moment";
 import { MainInteraction } from "@/classes";
 import Client from "@/client";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 
 export default class UptimeInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -20,7 +21,11 @@ export default class UptimeInteraction extends MainInteraction {
 
       await interaction.reply(`**Uptime:** \`${formattedUptime}\``);
     } catch (error: any) {
-      console.log("There was an error in Uptime command: ", error);
+      await reportError({
+        source: "interaction.uptime",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.reply(`There was an error \`${error.message}\``);
       return;
     }

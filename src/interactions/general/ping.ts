@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { MainInteraction } from "@/classes";
 import Client from "@/client";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 
 export default class PingInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -20,7 +21,11 @@ export default class PingInteraction extends MainInteraction {
         `Pong! \nLatency is ${reply.createdTimestamp - interaction.createdTimestamp}ms. \nAPI Latency is ${Math.round(this.client.ws.ping)}ms`,
       );
     } catch (error: any) {
-      console.log("There was an error in Ping command: ", error);
+      await reportError({
+        source: "interaction.ping",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.reply(`There was an error \`${error.message}\``);
       return;
     }

@@ -10,6 +10,7 @@ import { buildButton, buildRow } from "@/services/discord/button.builder";
 import { botAuthor, musicEmbed } from "@/services/discord/embed.builder";
 import { validateMusicContext } from "@/services/discord/guild.player";
 import { buildCustomIds, createPaginator } from "@/services/discord/interaction.collector";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 import { formatDuration } from "@/services/general.utils";
 
 export default class QueueInteraction extends MainInteraction {
@@ -82,7 +83,11 @@ export default class QueueInteraction extends MainInteraction {
         });
       }
     } catch (error: any) {
-      console.log("There was an error in Queue command: ", error);
+      await reportError({
+        source: "interaction.queue",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.editReply(`There was an error \`${error.message}\``);
     }
   };

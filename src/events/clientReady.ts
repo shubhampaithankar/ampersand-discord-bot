@@ -2,6 +2,7 @@ import { ActivityType, Events } from "discord.js";
 import { MainEvent } from "@/classes";
 import Client from "@/client";
 import { recoverLockdowns } from "@/services/discord/lockdown.restore";
+import { reportError } from "@/services/error.reporter";
 import { seedBotGuilds } from "@/services/redis/guild.redis";
 import { cleanupJTCChannels } from "@/services/redis/jtc.redis";
 
@@ -53,7 +54,7 @@ export default class ReadyEvent extends MainEvent {
         ],
       });
     } catch (error) {
-      console.log("Ready Event Error:\n", error);
+      await reportError({ source: "event.clientReady", error });
     }
   };
 }

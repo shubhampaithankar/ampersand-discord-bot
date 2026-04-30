@@ -7,7 +7,6 @@ import { DISCORD_CLIENT_ID, DISCORD_TOKEN } from "@/constants";
 import { connectToMongo } from "@/libs/mongo";
 import { createPoru } from "@/libs/poru";
 import { connectToRedis } from "@/libs/redis";
-
 export default class Loader {
   client: Client;
   fileExtension: string;
@@ -40,7 +39,7 @@ export default class Loader {
       });
       console.log(`Loaded ${this.client.interactions.size} Interaction(s)`);
     } catch (error) {
-      console.log("Loader Error:\n", error);
+      console.log("[loader.init]", error);
     }
   };
 
@@ -52,7 +51,7 @@ export default class Loader {
         totalShards: "auto",
       });
     } catch (error) {
-      console.log("There was en error loading sahrding manager:\n", error);
+      console.log("[loader.loadShardManager]", error);
     }
   };
 
@@ -74,7 +73,7 @@ export default class Loader {
         }
       }
     } catch (error) {
-      console.log("There was an error loading interactions:\n", error);
+      console.log("[loader.loadInteractionHandler]", error);
     }
   };
 
@@ -96,7 +95,7 @@ export default class Loader {
         }
       }
     } catch (error) {
-      console.log("There was en error loading events:\n", error);
+      console.log("[loader.loadEventHandler]", error);
     }
   };
 
@@ -118,7 +117,7 @@ export default class Loader {
         }
       }
     } catch (error) {
-      console.log("There was en error loading music events:\n", error);
+      console.log("[loader.loadMusicEventHandler]", error);
     }
   };
 
@@ -140,7 +139,7 @@ export default class Loader {
         }
       }
     } catch (error) {
-      console.log("There was en error loading events:\n", error);
+      console.log("[loader.loadShardEventHandler]", error);
     }
   };
 }

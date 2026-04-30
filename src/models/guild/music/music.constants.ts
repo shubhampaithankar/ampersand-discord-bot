@@ -7,8 +7,11 @@ export const MUSIC_PANEL_ACTIONS = {
 } as const;
 
 export const MUSIC_PLAYER_ACTIONS = {
+  PAUSE: "pause",
+  PREVIOUS: "previous",
   SKIP: "skip",
   STOP: "stop",
   LOOP: "loop",
   SHUFFLE: "shuffle",
+  QUEUE: "queue",
 } as const;

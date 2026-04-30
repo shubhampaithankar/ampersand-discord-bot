@@ -43,6 +43,7 @@ import {
   buildStringSelectRow,
   buildUserSelectRow,
 } from "@/services/discord/select.builder";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 
 type ModuleKey = "music" | "jtc" | "autogamble" | "counter";
 
@@ -88,7 +89,11 @@ export default class InitInteraction extends MainInteraction {
       if (module === "counter") return await this.handleCounter(interaction);
       return await this.handleAutoGamble(interaction);
     } catch (error: any) {
-      console.log("There was an error in Init command: ", error);
+      await reportError({
+        source: "interaction.init",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.editReply(`There was an error \`${error.message}\``);
     }
   };

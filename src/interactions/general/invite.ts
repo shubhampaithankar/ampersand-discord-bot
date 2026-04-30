@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { MainInteraction } from "@/classes";
 import Client from "@/client";
 import { DISCORD_CLIENT_ID } from "@/constants";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 
 export default class InviteInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -18,7 +19,11 @@ export default class InviteInteraction extends MainInteraction {
       const URI = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&permissions=8&scope=bot`;
       await interaction.reply(URI);
     } catch (error: any) {
-      console.log("There was an error in Invite command: ", error);
+      await reportError({
+        source: "interaction.invite",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.reply(`There was an error \`${error.message}\``);
       return;
     }

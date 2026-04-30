@@ -20,3 +20,5 @@ export const LAVALINK_PASSWORD = process.env.LAVALINK_PASSWORD;
 
 export const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 export const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+
+export const ERROR_WEBHOOK_URL = process.env.ERROR_WEBHOOK_URL;

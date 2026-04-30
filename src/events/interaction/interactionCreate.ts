@@ -3,6 +3,7 @@ import { MainEvent } from "@/classes";
 import Client from "@/client";
 import { MusicService } from "@/models/guild";
 import { checkPermissions, formatMissingPermissions } from "@/services/discord/discord.permissions";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 import { getRemainingCooldown, setCooldown } from "@/services/redis/cooldown.redis";
 import { isBotInGuild } from "@/services/redis/guild.redis";
 import type { HandleCooldownParams } from "@/types/cooldown.types";
@@ -109,8 +110,11 @@ export default class InteractionCreate extends MainEvent {
         await command.run(interaction);
       }
     } catch (error) {
-      console.log(`There was an error in ${this.name}`);
-      console.log(error);
+      await reportError({
+        source: "event.interactionCreate",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
     }
   }
 }

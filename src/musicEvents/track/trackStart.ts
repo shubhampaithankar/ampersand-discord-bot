@@ -1,19 +1,15 @@
-import { TextChannel } from "discord.js";
-import { Player, Track } from "poru";
+import { Player } from "poru";
 import { MainMusicEvent } from "@/classes";
+import { upsertPanel } from "@/services/music/now.playing.panel";
 
 export default class TrackStartEvent extends MainMusicEvent {
-  async run(player: Player, track: Track) {
+  async run(player: Player) {
     const timeout = player.get("queueEndTimeout") as NodeJS.Timeout | null;
     if (timeout) {
       clearTimeout(timeout);
       player.set("queueEndTimeout", null);
     }
 
-    const channel = this.client.channels.cache.get(player.textChannel!) as TextChannel;
-
-    if (!channel) return;
-
-    channel.send(`Now playing: \`${track.info.title}\`, requested by \`${track.info.requester}\`.`);
+    await upsertPanel({ client: this.client, player });
   }
 }

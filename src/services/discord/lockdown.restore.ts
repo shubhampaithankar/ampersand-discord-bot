@@ -1,6 +1,7 @@
 import type { GuildChannel } from "discord.js";
 import Client from "@/client";
 import { type ChannelSnapshot, LockdownService } from "@/models/lockdown";
+import { reportError } from "@/services/error.reporter";
 import { mapInChunks } from "@/services/general.utils";
 
 export const restoreGuildLockdown = async ({
@@ -61,11 +62,19 @@ export const recoverLockdowns = async (client: Client) => {
       console.log(
         `[Lockdown] Scheduling restore for guild ${lockdown.guildId} in ${Math.round(remaining / 60000)}m`,
       );
-      setTimeout(
-        () =>
-          restoreGuildLockdown({ client, guildId: lockdown.guildId, channels: lockdown.channels }),
-        remaining,
-      );
+      setTimeout(() => {
+        restoreGuildLockdown({
+          client,
+          guildId: lockdown.guildId,
+          channels: lockdown.channels,
+        }).catch((error) =>
+          reportError({
+            source: "lockdown.scheduledRestore",
+            error,
+            context: { guildId: lockdown.guildId },
+          }),
+        );
+      }, remaining);
     }
   });
 };

@@ -3,6 +3,7 @@ import { MainInteraction } from "@/classes";
 import Client from "@/client";
 import { botAuthor, successEmbed } from "@/services/discord/embed.builder";
 import { validateMusicContext } from "@/services/discord/guild.player";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 
 export default class SkipInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -37,7 +38,11 @@ export default class SkipInteraction extends MainInteraction {
         ],
       });
     } catch (error: any) {
-      console.log("There was an error in Skip command: ", error);
+      await reportError({
+        source: "interaction.skip",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.editReply(`There was an error \`${error.message}\``);
     }
   };

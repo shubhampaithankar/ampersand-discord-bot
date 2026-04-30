@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { MainInteraction } from "@/classes";
 import Client from "@/client";
 import { botAuthor, infoEmbed } from "@/services/discord/embed.builder";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 import { getGambleLeaderboard } from "@/services/redis/gamble.redis";
 
 export default class GambletopInteraction extends MainInteraction {
@@ -45,7 +46,11 @@ export default class GambletopInteraction extends MainInteraction {
 
       await interaction.editReply({ embeds: [embed] });
     } catch (error: any) {
-      console.log("There was an error in Gambletop command: ", error);
+      await reportError({
+        source: "interaction.gambletop",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.editReply(`There was an error \`${error.message}\``);
     }
   };

@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { MainInteraction } from "@/classes";
 import Client from "@/client";
 import { getMusicPlayer } from "@/services/discord/guild.player";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 
 export default class JoinInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -52,7 +53,11 @@ export default class JoinInteraction extends MainInteraction {
       await interaction.editReply(`Joined **${channel.name}**`);
       return;
     } catch (error: any) {
-      console.log("There was an error in Join command: ", error);
+      await reportError({
+        source: "interaction.join",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.editReply(`There was an error \`${error.message}\``);
       return;
     }
