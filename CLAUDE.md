@@ -30,6 +30,7 @@ DISCORD_CLIENT_ID  DISCORD_CLIENT_NAME  DISCORD_TOKEN  DISCORD_PERMISSION_INTEGE
 MONGO_URL  REDIS_URL  REDIS_USERNAME  REDIS_PASSWORD
 LAVALINK_HOST  LAVALINK_PORT  LAVALINK_PASSWORD
 SPOTIFY_CLIENT_ID  SPOTIFY_CLIENT_SECRET  NODE_ENV
+ERROR_WEBHOOK_URL  (optional — webhook for error reporter; falls back to console)
 ```
 
 ## Module Aliases
@@ -47,8 +48,11 @@ SPOTIFY_CLIENT_ID  SPOTIFY_CLIENT_SECRET  NODE_ENV
 - `src/client.ts` — `BaseClient` extending `Client`
 - `src/constants.ts` — env var source of truth
 - `src/services/general.utils.ts` — `capitalizeString`, `getError`, `formatDuration`, `sleepFor`, `escapeRegex`, `mapInChunks` (bounded-parallel batch async)
+- `src/services/error.reporter.ts` — `reportError({ source, error, context? })` + `ctxFromInteraction`/`ctxFromPlayer` helpers; webhook + dedup + rate-limit, falls back to console if `ERROR_WEBHOOK_URL` unset
+- `src/services/process.handlers.ts` — `registerProcessHandlers()` for `unhandledRejection` + `uncaughtException` (called from `app.ts`)
 - `src/services/music/spotify.resolver.ts` — Spotify metadata scrape → YT Music re-search
-- `src/services/discord/` — `embed/button/select/modal.builder` (never raw), `interaction.collector` (`buildCustomIds` accepts array OR `as const` object), `guild.player`, `counter.access`, `lockdown.restore` (parallelised)
+- `src/services/music/now.playing.panel.ts` — persistent self-editing now-playing embed + emoji-only control buttons (`upsertPanel`/`clearPanel`), 5s live ticker, per-player action lock
+- `src/services/discord/` — `embed/button/select/modal.builder` (never raw), `interaction.collector` (`buildCustomIds` accepts array OR `as const` object), `guild.player`, `counter.access`, `lockdown.restore` (parallelised), `presence` (rotating bot status)
 - `src/models/<domain>/<domain>.constants.ts` — action/modal customId constants
 
 ## Conventions

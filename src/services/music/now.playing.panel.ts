@@ -114,43 +114,43 @@ const buildPanelComponents = (player: Player) => {
 
   const primary = buildRow(
     buildButton({
-      label: player.isPaused ? "▶ Resume" : "⏸ Pause",
-      style: player.isPaused ? ButtonStyle.Success : ButtonStyle.Secondary,
-      customId: id(MUSIC_PLAYER_ACTIONS.PAUSE),
+      emoji: "🔀",
+      style: ButtonStyle.Secondary,
+      customId: id(MUSIC_PLAYER_ACTIONS.SHUFFLE),
     }),
     buildButton({
-      label: "⏮ Previous",
+      emoji: "⏮️",
       style: ButtonStyle.Secondary,
       customId: id(MUSIC_PLAYER_ACTIONS.PREVIOUS),
       disabled: !hasPrevious,
     }),
     buildButton({
-      label: "⏭ Skip",
-      style: ButtonStyle.Primary,
+      emoji: player.isPaused ? "▶️" : "⏸️",
+      style: player.isPaused ? ButtonStyle.Success : ButtonStyle.Primary,
+      customId: id(MUSIC_PLAYER_ACTIONS.PAUSE),
+    }),
+    buildButton({
+      emoji: "⏭️",
+      style: ButtonStyle.Secondary,
       customId: id(MUSIC_PLAYER_ACTIONS.SKIP),
     }),
     buildButton({
-      label: "⏹ Stop",
-      style: ButtonStyle.Danger,
-      customId: id(MUSIC_PLAYER_ACTIONS.STOP),
+      emoji: "🔁",
+      style: ButtonStyle.Secondary,
+      customId: id(MUSIC_PLAYER_ACTIONS.LOOP),
     }),
   );
 
   const secondary = buildRow(
     buildButton({
-      label: "🔀 Shuffle",
-      style: ButtonStyle.Secondary,
-      customId: id(MUSIC_PLAYER_ACTIONS.SHUFFLE),
-    }),
-    buildButton({
-      label: "🔁 Loop",
-      style: ButtonStyle.Secondary,
-      customId: id(MUSIC_PLAYER_ACTIONS.LOOP),
-    }),
-    buildButton({
-      label: "📋 Queue",
+      emoji: "📋",
       style: ButtonStyle.Secondary,
       customId: id(MUSIC_PLAYER_ACTIONS.QUEUE),
+    }),
+    buildButton({
+      emoji: "⏹️",
+      style: ButtonStyle.Danger,
+      customId: id(MUSIC_PLAYER_ACTIONS.STOP),
     }),
   );
 
