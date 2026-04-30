@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { MainInteraction } from "@/classes";
 import Client from "@/client";
 import { getMusicPlayer } from "@/services/discord/guild.player";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 
 export default class ClearQueueInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -50,7 +51,11 @@ export default class ClearQueueInteraction extends MainInteraction {
         return;
       }
     } catch (error: any) {
-      console.log("There was an error in ClearQueue command: ", error);
+      await reportError({
+        source: "interaction.clearqueue",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.editReply(`There was an error \`${error.message}\``);
       return;
     }

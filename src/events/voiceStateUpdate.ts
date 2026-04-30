@@ -3,6 +3,7 @@ import { MainEvent } from "@/classes";
 import { default as Client } from "@/client";
 import { JTCService } from "@/models/guild";
 import { checkSinglePermissions } from "@/services/discord/discord.permissions";
+import { reportError } from "@/services/error.reporter";
 import { sleepFor } from "@/services/general.utils";
 import { clearPanel } from "@/services/music/now.playing.panel";
 import * as jtc from "@/services/redis/jtc.redis";
@@ -20,13 +21,25 @@ export default class VoiceStateUpdateEvent extends MainEvent {
     if (newState.member?.guild === null) return;
     const { guild } = newState.member! || oldState.member!;
 
-    disconnectPlayer({ client: this.client, guild, oldState, newState });
+    disconnectPlayer({ client: this.client, guild, oldState, newState }).catch((error) => {
+      reportError({
+        source: "voice.disconnectPlayer",
+        error,
+        context: { guildId: guild?.id, guildName: guild?.name },
+      }).catch(() => {});
+    });
 
     handleJTC({
       client: this.client,
       guild,
       oldState,
       newState,
+    }).catch((error) => {
+      reportError({
+        source: "voice.handleJTC",
+        error,
+        context: { guildId: guild?.id, guildName: guild?.name },
+      }).catch(() => {});
     });
   }
 }
@@ -53,7 +66,11 @@ const handleJTC = async ({ client, guild, oldState, newState }: HandleJTCParams)
       deleteJTCChannel(guild, oldState),
     ]);
   } catch (error) {
-    console.log(error);
+    await reportError({
+      source: "voice.handleJTC",
+      error,
+      context: { guildId: guild?.id, guildName: guild?.name },
+    });
   }
 };
 
@@ -116,7 +133,11 @@ const createJTCChannel = async ({
       Connect: null,
     });
   } catch (error) {
-    console.log(error);
+    await reportError({
+      source: "voice.createJTCChannel",
+      error,
+      context: { guildId: guild?.id, guildName: guild?.name },
+    });
   }
 };
 
@@ -136,10 +157,18 @@ const deleteJTCChannel = async (guild: Guild, oldState: VoiceState) => {
     try {
       await Promise.all([channel.delete(), jtc.removeFromSet(guild.id, channel.id)]);
     } catch (err) {
-      console.log(err);
+      await reportError({
+        source: "voice.deleteJTCChannel",
+        error: err,
+        context: { guildId: guild?.id, guildName: guild?.name },
+      });
     }
   } catch (error) {
-    console.log(error);
+    await reportError({
+      source: "voice.deleteJTCChannel",
+      error,
+      context: { guildId: guild?.id, guildName: guild?.name },
+    });
   }
 };
 

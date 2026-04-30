@@ -13,6 +13,7 @@ import { buildButton, buildRow } from "@/services/discord/button.builder";
 import { canActOnCounter, describeActor } from "@/services/discord/counter.access";
 import { botAuthor, errorEmbed, infoEmbed } from "@/services/discord/embed.builder";
 import { buildCustomIds, createPaginator } from "@/services/discord/interaction.collector";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 import { getError } from "@/services/general.utils";
 import { getRemainingCooldown, setCooldown } from "@/services/redis/cooldown.redis";
 
@@ -70,7 +71,11 @@ export default class CounterInteraction extends MainInteraction {
           });
       }
     } catch (error) {
-      console.log("There was an error in Counter command: ", error);
+      await reportError({
+        source: "interaction.counter",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.editReply(`There was an error \`${getError(error)}\``);
     }
   };

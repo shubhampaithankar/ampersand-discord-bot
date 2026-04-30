@@ -3,6 +3,7 @@ import { MainInteraction } from "@/classes";
 import Client from "@/client";
 import { botAuthor, successEmbed } from "@/services/discord/embed.builder";
 import { validateMusicContext } from "@/services/discord/guild.player";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 
 export default class StopInteraction extends MainInteraction {
   constructor(client: Client) {
@@ -32,7 +33,11 @@ export default class StopInteraction extends MainInteraction {
       });
       ctx.player.destroy();
     } catch (error: any) {
-      console.log("There was an error in Stop command: ", error);
+      await reportError({
+        source: "interaction.stop",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.editReply(`There was an error \`${error.message}\``);
     }
   };

@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { MainInteraction } from "@/classes";
 import Client from "@/client";
 import { validateMusicContext } from "@/services/discord/guild.player";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 import { upsertPanel } from "@/services/music/now.playing.panel";
 
 export default class NowPlayingInteraction extends MainInteraction {
@@ -31,7 +32,11 @@ export default class NowPlayingInteraction extends MainInteraction {
       await upsertPanel({ client: this.client, player, channelId: interaction.channelId });
       await interaction.editReply("📻 Anchored now-playing panel here.");
     } catch (error: any) {
-      console.log("There was an error in NowPlaying command: ", error);
+      await reportError({
+        source: "interaction.nowplaying",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.editReply(`There was an error \`${error.message}\``);
     }
   };

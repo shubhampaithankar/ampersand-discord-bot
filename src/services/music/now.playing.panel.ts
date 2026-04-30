@@ -12,6 +12,7 @@ import type BaseClient from "@/client";
 import { MUSIC_PLAYER_ACTIONS } from "@/models/guild";
 import { buildButton, buildRow } from "@/services/discord/button.builder";
 import { botAuthor, musicEmbed } from "@/services/discord/embed.builder";
+import { ctxFromPlayer, reportError } from "@/services/error.reporter";
 import { formatDuration } from "@/services/general.utils";
 
 const QUEUE_PREVIEW_LIMIT = 10;
@@ -207,7 +208,11 @@ const attachCollector = (client: BaseClient, player: Player, message: Message) =
       const action = i.customId.slice(prefix.length);
       await handlePanelAction({ client, player, interaction: i, action });
     } catch (error) {
-      console.log("There was an error in NowPlaying panel:", error);
+      await reportError({
+        source: "musicPanel.action",
+        error,
+        context: ctxFromPlayer(client, player),
+      });
     }
   });
 
@@ -302,7 +307,13 @@ const ensureTicker = (client: BaseClient, player: Player) => {
       return;
     }
     if (!player.currentTrack || player.isPaused) return;
-    renderPanel(client, player).catch(() => {});
+    renderPanel(client, player).catch((error) =>
+      reportError({
+        source: "music.npTicker",
+        error,
+        context: ctxFromPlayer(client, player),
+      }),
+    );
   }, TICK_INTERVAL_MS);
   player.set("npTicker", interval);
 };

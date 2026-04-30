@@ -12,6 +12,7 @@ import { buildButton, buildRow } from "@/services/discord/button.builder";
 import { botAuthor, errorEmbed } from "@/services/discord/embed.builder";
 import { buildCustomIds, createButtonHandler } from "@/services/discord/interaction.collector";
 import { restoreGuildLockdown } from "@/services/discord/lockdown.restore";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 import { mapInChunks } from "@/services/general.utils";
 
 export default class LockdownInteraction extends MainInteraction {
@@ -154,7 +155,11 @@ export default class LockdownInteraction extends MainInteraction {
         },
       });
     } catch (error: any) {
-      console.log("There was an error in Lockdown command: ", error);
+      await reportError({
+        source: "interaction.lockdown",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.editReply(`There was an error \`${error.message}\``);
     }
   };

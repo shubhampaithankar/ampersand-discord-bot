@@ -2,6 +2,7 @@ import { Events, Guild } from "discord.js";
 import { MainEvent } from "@/classes";
 import Client from "@/client";
 import { GuildService } from "@/models/guild";
+import { reportError } from "@/services/error.reporter";
 import { addBotGuild, cacheGuildExists } from "@/services/redis/guild.redis";
 
 // Emitted whenever the client joins a guild.
@@ -10,7 +11,15 @@ export default class GuildCreateEvent extends MainEvent {
     super(client, Events.GuildCreate);
   }
   async run(guild: Guild) {
-    await onJoin(guild);
+    try {
+      await onJoin(guild);
+    } catch (error) {
+      await reportError({
+        source: "event.guildCreate",
+        error,
+        context: { guildId: guild.id, guildName: guild.name },
+      });
+    }
   }
 }
 

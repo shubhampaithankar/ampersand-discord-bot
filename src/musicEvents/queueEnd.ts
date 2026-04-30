@@ -2,6 +2,7 @@ import { Player, Track } from "poru";
 import { MainMusicEvent } from "@/classes";
 import Client from "@/client";
 import { getMusicPlayer } from "@/services/discord/guild.player";
+import { ctxFromPlayer, reportError } from "@/services/error.reporter";
 import { clearPanel } from "@/services/music/now.playing.panel";
 
 export default class QueueEndEvent extends MainMusicEvent {
@@ -31,13 +32,21 @@ export default class QueueEndEvent extends MainMusicEvent {
             guildPlayer.destroy();
           }
         } catch (error) {
-          console.log(error);
+          await reportError({
+            source: "musicEvent.queueEnd",
+            error,
+            context: ctxFromPlayer(this.client, player),
+          });
         }
       }, 1e3 * 180);
 
       player.set("queueEndTimeout", timeout);
     } catch (error) {
-      console.log(error);
+      await reportError({
+        source: "musicEvent.queueEnd",
+        error,
+        context: ctxFromPlayer(this.client, player),
+      });
     }
   }
 }

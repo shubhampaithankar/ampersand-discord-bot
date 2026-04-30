@@ -3,6 +3,7 @@ import { MainInteraction } from "@/classes";
 import Client from "@/client";
 import { botAuthor, successEmbed } from "@/services/discord/embed.builder";
 import { validateMusicContext } from "@/services/discord/guild.player";
+import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 
 const MODE_LABELS = { NONE: "Off", TRACK: "Track", QUEUE: "Queue" } as const;
 const MODE_ICONS = { NONE: "➡️", TRACK: "🔂", QUEUE: "🔁" } as const;
@@ -53,7 +54,11 @@ export default class LoopInteraction extends MainInteraction {
         ],
       });
     } catch (error: any) {
-      console.log("There was an error in Loop command: ", error);
+      await reportError({
+        source: "interaction.loop",
+        error,
+        context: ctxFromInteraction(interaction),
+      });
       await interaction.editReply(`There was an error \`${error.message}\``);
     }
   };

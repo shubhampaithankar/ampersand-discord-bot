@@ -54,7 +54,7 @@ export default class BaseClient extends Client {
 
       await super.login(DISCORD_TOKEN);
     } catch (error) {
-      console.log(error);
+      console.log("[client.initialize]", error);
     }
   }
 }
