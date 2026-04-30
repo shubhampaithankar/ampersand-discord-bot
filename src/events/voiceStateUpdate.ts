@@ -4,6 +4,7 @@ import { default as Client } from "@/client";
 import { JTCService } from "@/models/guild";
 import { checkSinglePermissions } from "@/services/discord/discord.permissions";
 import { sleepFor } from "@/services/general.utils";
+import { clearPanel } from "@/services/music/now.playing.panel";
 import * as jtc from "@/services/redis/jtc.redis";
 import type {
   CreateJTCChannelParams,
@@ -142,13 +143,14 @@ const deleteJTCChannel = async (guild: Guild, oldState: VoiceState) => {
   }
 };
 
-const disconnectPlayer = ({ client, guild, oldState, newState }: DisconnectPlayerParams) => {
+const disconnectPlayer = async ({ client, guild, oldState, newState }: DisconnectPlayerParams) => {
   const botId = client.user!.id;
   const player = client.poru?.get(guild.id);
   if (!player) return;
 
   // Bot itself was disconnected (force-disconnected, moved, kicked)
   if (oldState.id === botId && oldState.channelId && !newState.channelId) {
+    await clearPanel(client, player);
     player.destroy();
     return;
   }
@@ -159,5 +161,6 @@ const disconnectPlayer = ({ client, guild, oldState, newState }: DisconnectPlaye
   if (!members.has(botId)) return;
   if (members.size !== 1) return;
 
+  await clearPanel(client, player);
   player.destroy();
 };

@@ -1,15 +1,15 @@
-import { TextChannel } from "discord.js";
 import { Player, Track } from "poru";
 import { MainMusicEvent } from "@/classes";
 import Client from "@/client";
 import { getMusicPlayer } from "@/services/discord/guild.player";
+import { clearPanel } from "@/services/music/now.playing.panel";
 
 export default class QueueEndEvent extends MainMusicEvent {
   constructor(client: Client) {
     super(client, "queueEnd");
   }
 
-  async run(player: Player, track: Track) {
+  async run(player: Player, _track: Track) {
     try {
       const existing = player.get("queueEndTimeout") as NodeJS.Timeout | null;
       if (existing) clearTimeout(existing);
@@ -27,8 +27,7 @@ export default class QueueEndEvent extends MainMusicEvent {
             guildPlayer.loop === "NONE" &&
             !guildPlayer.currentTrack
           ) {
-            const channel = this.client.channels.cache.get(player.textChannel) as TextChannel;
-            if (channel) await channel.send("Queue has ended, disconnecting...");
+            await clearPanel(this.client, guildPlayer, "Queue has ended, disconnecting...");
             guildPlayer.destroy();
           }
         } catch (error) {
