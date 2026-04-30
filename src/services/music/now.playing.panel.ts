@@ -170,13 +170,23 @@ const formatQueuePreview = (player: Player): string => {
   return lines.join("\n");
 };
 
+const resolveTextChannel = async (
+  client: BaseClient,
+  channelId: string,
+): Promise<TextChannel | null> => {
+  const cached = client.channels.cache.get(channelId);
+  if (cached?.isTextBased()) return cached as TextChannel;
+  const fetched = await client.channels.fetch(channelId).catch(() => null);
+  return fetched?.isTextBased() ? (fetched as TextChannel) : null;
+};
+
 const fetchPanelMessage = async (client: BaseClient, player: Player): Promise<Message | null> => {
   const channelId = player.get("npChannelId") as string | undefined;
   const messageId = player.get("npMessageId") as string | undefined;
   if (!channelId || !messageId) return null;
 
-  const channel = client.channels.cache.get(channelId) as TextChannel | undefined;
-  if (!channel?.isTextBased()) return null;
+  const channel = await resolveTextChannel(client, channelId);
+  if (!channel) return null;
 
   return channel.messages.fetch(messageId).catch(() => null);
 };
@@ -212,53 +222,64 @@ type PanelActionParams = {
 };
 
 const handlePanelAction = async ({ client, player, interaction, action }: PanelActionParams) => {
-  switch (action) {
-    case MUSIC_PLAYER_ACTIONS.PAUSE: {
-      await interaction.deferUpdate();
-      await player.pause(!player.isPaused);
-      await renderPanel(client, player);
-      return;
+  if (action === MUSIC_PLAYER_ACTIONS.QUEUE) {
+    await interaction.reply({
+      content: formatQueuePreview(player),
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  if (player.get("npActionLock")) {
+    await interaction.deferUpdate().catch(() => {});
+    return;
+  }
+  player.set("npActionLock", true);
+
+  try {
+    switch (action) {
+      case MUSIC_PLAYER_ACTIONS.PAUSE: {
+        await interaction.deferUpdate();
+        await player.pause(!player.isPaused);
+        await renderPanel(client, player);
+        return;
+      }
+      case MUSIC_PLAYER_ACTIONS.PREVIOUS: {
+        await interaction.deferUpdate();
+        const prev = player.previousTrack;
+        const cur = player.currentTrack;
+        if (!prev || !cur) return;
+        player.queue.unshift(cur, prev);
+        await player.skip();
+        return;
+      }
+      case MUSIC_PLAYER_ACTIONS.SKIP: {
+        await interaction.deferUpdate();
+        await player.skip();
+        return;
+      }
+      case MUSIC_PLAYER_ACTIONS.STOP: {
+        await interaction.deferUpdate();
+        await clearPanel(client, player, "⏹ Stopped playing and disconnected");
+        await player.destroy();
+        return;
+      }
+      case MUSIC_PLAYER_ACTIONS.LOOP: {
+        await interaction.deferUpdate();
+        const current = LOOP_MODES.indexOf((player.loop ?? "NONE") as LoopMode);
+        player.setLoop(LOOP_MODES[(current + 1) % LOOP_MODES.length]);
+        await renderPanel(client, player);
+        return;
+      }
+      case MUSIC_PLAYER_ACTIONS.SHUFFLE: {
+        await interaction.deferUpdate();
+        player.queue.shuffle();
+        await renderPanel(client, player);
+        return;
+      }
     }
-    case MUSIC_PLAYER_ACTIONS.PREVIOUS: {
-      await interaction.deferUpdate();
-      const prev = player.previousTrack;
-      const cur = player.currentTrack;
-      if (!prev || !cur) return;
-      player.queue.unshift(cur, prev);
-      await player.skip();
-      return;
-    }
-    case MUSIC_PLAYER_ACTIONS.SKIP: {
-      await interaction.deferUpdate();
-      await player.skip();
-      return;
-    }
-    case MUSIC_PLAYER_ACTIONS.STOP: {
-      await interaction.deferUpdate();
-      await clearPanel(client, player, "⏹ Stopped playing and disconnected");
-      await player.destroy();
-      return;
-    }
-    case MUSIC_PLAYER_ACTIONS.LOOP: {
-      await interaction.deferUpdate();
-      const current = LOOP_MODES.indexOf((player.loop ?? "NONE") as LoopMode);
-      player.setLoop(LOOP_MODES[(current + 1) % LOOP_MODES.length]);
-      await renderPanel(client, player);
-      return;
-    }
-    case MUSIC_PLAYER_ACTIONS.SHUFFLE: {
-      await interaction.deferUpdate();
-      player.queue.shuffle();
-      await renderPanel(client, player);
-      return;
-    }
-    case MUSIC_PLAYER_ACTIONS.QUEUE: {
-      await interaction.reply({
-        content: formatQueuePreview(player),
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
+  } finally {
+    player.set("npActionLock", false);
   }
 };
 
@@ -309,8 +330,8 @@ export const upsertPanel = async ({
   if (!embed) return;
 
   const components = buildPanelComponents(player);
-  const channel = client.channels.cache.get(targetChannelId) as TextChannel | undefined;
-  if (!channel?.isTextBased()) return;
+  const channel = await resolveTextChannel(client, targetChannelId);
+  if (!channel) return;
 
   const existing = await fetchPanelMessage(client, player);
   const sameChannel = existing?.channelId === targetChannelId;
