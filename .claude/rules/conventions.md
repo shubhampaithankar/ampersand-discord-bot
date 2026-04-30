@@ -8,7 +8,11 @@ run = async (interaction: ChatInputCommandInteraction) => {
   try {
     // ... logic → interaction.editReply({ embeds: [...] })
   } catch (error: any) {
-    console.log("There was an error in <Name> command: ", error);
+    await reportError({
+      source: "interaction.<commandName>",
+      error,
+      context: ctxFromInteraction(interaction),
+    });
     await interaction.editReply(`There was an error \`${error.message}\``);
   }
 };
@@ -44,6 +48,12 @@ customId action strings live in `src/models/<domain>/<domain>.constants.ts` as `
 - Always `@/*` alias. Never relative `../../...`.
 - Models via barrel: `import { XService, X_ACTIONS } from "@/models/x"` — never `"@/models/x/x.service"`.
 - Env vars via `@/constants`.
+
+## Error Reporting
+
+Use `reportError({ source, error, context? })` from `@/services/error.reporter` inside catch blocks — never bare `console.log`. Source labels follow `<domain>.<name>` shape: `interaction.<commandName>`, `event.<eventName>`, `musicEvent.<eventName>`, `voice.<helperName>`, `music.<subsystem>`, `lockdown.<task>`. Context helpers: `ctxFromInteraction(i)` for interaction sites, `ctxFromPlayer(client, player)` for music sites; otherwise pass a literal `{ guildId, guildName, channelId, userId, ... }`.
+
+Don't add belt-and-suspenders outer wraps — if a function's body is just calls to async helpers that already have their own catches (or are awaited inside another try/catch), trust the global `unhandledRejection` handler in `app.ts`. Boot-time code (`loader.ts`, `client.initialize`) uses plain `console.log` — failures are terminal-visible and pre-startup.
 
 ## Batch Async
 
