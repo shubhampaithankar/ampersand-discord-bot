@@ -1,7 +1,8 @@
-import { ActivityType, Events } from "discord.js";
+import { Events } from "discord.js";
 import { MainEvent } from "@/classes";
 import Client from "@/client";
 import { recoverLockdowns } from "@/services/discord/lockdown.restore";
+import { startPresenceRotation } from "@/services/discord/presence";
 import { reportError } from "@/services/error.reporter";
 import { seedBotGuilds } from "@/services/redis/guild.redis";
 import { cleanupJTCChannels } from "@/services/redis/jtc.redis";
@@ -40,19 +41,7 @@ export default class ReadyEvent extends MainEvent {
 
       if (this.client.poru) await this.client.poru.init();
 
-      this.client.user!.setPresence({
-        status: "dnd",
-        activities: [
-          {
-            name: `${this.client.guilds.cache.size} Guilds`,
-            type: ActivityType.Competing,
-          },
-          {
-            name: "/invite",
-            type: ActivityType.Listening,
-          },
-        ],
-      });
+      startPresenceRotation(this.client);
     } catch (error) {
       await reportError({ source: "event.clientReady", error });
     }
