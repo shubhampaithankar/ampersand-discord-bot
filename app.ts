@@ -8,8 +8,7 @@ import { registerProcessHandlers } from "@/services/process.handlers";
 
     const client = new Client();
     client.initialize();
-
-    // test
+    
   } catch (error) {
     console.log(error);
   }
