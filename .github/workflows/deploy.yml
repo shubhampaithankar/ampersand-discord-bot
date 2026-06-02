@@ -1,0 +1,35 @@
+name: deploy
+on:
+  push:
+    branches: [master]
+concurrency:
+  group: deploy-master
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: [self-hosted, minipc]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install deps
+        run: bun install --frozen-lockfile
+      - name: Lint
+        run: bun run lint
+      - name: Typecheck
+        run: bunx tsc --noEmit
+      - name: Deploy
+        run: docker compose --env-file /home/shubham/ampersand/.env -f docker-compose.yaml up -d --build
+      - name: Health check
+        run: bash scripts/healthcheck.sh ampersand-discord-client 30
+      - name: Notify success
+        if: success()
+        env:
+          DEPLOY_WEBHOOK: ${{ secrets.DEPLOY_WEBHOOK }}
+        run: bash scripts/notify.sh "✅ ampersand deployed" "${{ github.sha }}" "${{ github.actor }}" "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      - name: Notify failure
+        if: failure()
+        env:
+          DEPLOY_WEBHOOK: ${{ secrets.DEPLOY_WEBHOOK }}
+        run: bash scripts/notify.sh "❌ ampersand deploy FAILED" "${{ github.sha }}" "${{ github.actor }}" "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
