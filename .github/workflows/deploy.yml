@@ -17,6 +17,8 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Lint
         run: bun run lint
+      - name: Typecheck
+        run: bunx tsc --noEmit
       # Deploy + health-check ON the mini-pc, reached via the VPS frp SSH tunnel.
       # Secrets aren't exposed to fork PRs, and this only runs on push to master → safe on a public repo.
       - name: Deploy over SSH (VPS:7222 → mini-pc)

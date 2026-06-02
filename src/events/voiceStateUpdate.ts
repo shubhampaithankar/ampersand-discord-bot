@@ -62,7 +62,7 @@ const handleJTC = async ({ client, guild, oldState, newState }: HandleJTCParams)
     if (oldState.channelId === jtcData.jtc.channelId) return; // No action on leaving jtc channel
 
     await Promise.all([
-      createJTCChannel({ guild, newState, jtcData: jtcData.jtc, bot, client }),
+      createJTCChannel({ guild, newState, jtcData: { guildId: guild.id, channelId: jtcData.jtc.channelId, enabled: jtcData.jtc.enabled }, bot, client }),
       deleteJTCChannel(guild, oldState),
     ]);
   } catch (error) {

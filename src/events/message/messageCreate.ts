@@ -67,7 +67,7 @@ const handleAutoGamble = async (message: Message) => {
     await member.timeout(timeoutDuration * 1000, "Auto Gamble: unlucky roll");
     await incrementGambleScore(message.guildId!, member.id);
 
-    await message.channel.send(
+    if ("send" in message.channel) await message.channel.send(
       `🎲 ${member} rolled unlucky and got timed out for **${timeoutDuration}s**!`,
     );
   } catch (error) {
