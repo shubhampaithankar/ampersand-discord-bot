@@ -7,7 +7,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
-    runs-on: [self-hosted, minipc]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -19,10 +19,23 @@ jobs:
         run: bun run lint
       - name: Typecheck
         run: bunx tsc --noEmit
-      - name: Deploy
-        run: docker compose --env-file /home/shubham/ampersand/.env -f docker-compose.yaml up -d --build
-      - name: Health check
-        run: bash scripts/healthcheck.sh ampersand-discord-client 30
+      # Deploy + health-check ON the mini-pc, reached via the VPS frp SSH tunnel.
+      # Secrets aren't exposed to fork PRs, and this only runs on push to master → safe on a public repo.
+      - name: Deploy over SSH (VPS:7222 → mini-pc)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: 139.59.27.226
+          port: 7222
+          username: shubham
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 10m
+          script: |
+            set -euo pipefail
+            cd /home/shubham/ampersand
+            git fetch --all --prune
+            git reset --hard origin/master
+            docker compose --env-file .env up -d --build
+            bash scripts/healthcheck.sh ampersand-discord-client 30
       - name: Notify success
         if: success()
         env:
