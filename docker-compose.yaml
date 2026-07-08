@@ -1,5 +1,65 @@
-version: "3.8"
 services:
+  valkey:
+    container_name: ampersand-valkey
+    image: valkey/valkey:8-alpine
+    command: ["valkey-server", "--appendonly", "yes"]
+    restart: unless-stopped
+    mem_limit: 256m
+    memswap_limit: 512m
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - secure-net
+
+  mongo:
+    container_name: ampersand-mongo
+    image: mongo:7
+    restart: unless-stopped
+    mem_limit: 2g
+    memswap_limit: 4g
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - secure-net
+
+  lavalink:
+    container_name: ampersand-lavalink
+    image: ghcr.io/lavalink-devs/lavalink:4
+    restart: unless-stopped
+    mem_limit: 1g
+    memswap_limit: 2g
+    environment:
+      _JAVA_OPTIONS: "-Xms256m -Xmx512m -XX:+UseG1GC"
+      SERVER_PORT: "2333"
+      # real application.yml resolves these three from the container env:
+      LAVALINK_PASSWORD: ${LAVALINK_PASSWORD}
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
+    volumes:
+      - ./application.yml:/opt/Lavalink/application.yml:ro
+      # persistent plugin cache — Lavalink auto-downloads the youtube/lavasrc jars here on first boot
+      - lavalink-plugins:/opt/Lavalink/plugins
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:2333/version || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - secure-net
+
   client:
     container_name: ampersand-discord-client
     build:
@@ -9,6 +69,15 @@ services:
       - "3000:3000"
     pull_policy: build
     restart: unless-stopped
+    mem_limit: 512m
+    memswap_limit: 1g
+    depends_on:
+      valkey:
+        condition: service_healthy
+      lavalink:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
     environment:
       DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
       DISCORD_CLIENT_NAME: ${DISCORD_CLIENT_NAME}
@@ -25,6 +94,11 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     networks:
       - secure-net
+
+volumes:
+  valkey-data:
+  mongo-data:
+  lavalink-plugins:
 
 networks:
   secure-net:

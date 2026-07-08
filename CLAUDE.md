@@ -1,11 +1,13 @@
 # Ampersand Discord Bot
 
+> Follow global rules at @~/.claude/CLAUDE.md. They govern HOW to work here - tool routing (ctx_*/rtk over native Read/Grep/Bash), inline-by-default with subagent delegation + intent-based model routing (code exec -> Sonnet, bulk -> Haiku, reasoning/review -> Opus), ponytail build discipline, caveman tone, memory, and commit conventions. This file only adds project-specific facts and overrides; it never relaxes or contradicts a global rule.
+
 ## Stack
 
 - Runtime: Bun (never npm/pnpm/yarn) · TypeScript 5.x
 - Discord: discord.js v14 + @discordjs/rest v2
 - Music: Poru v5 (Lavalink). Spotify URLs resolved **client-side** via `spotify-url-info` (public oEmbed, no auth) → each track re-searched on Lavalink's YouTube Music source. poru-spotify + LavaSrc both abandoned (v4/v5 mismatch + premium-owner requirement).
-- DB: MongoDB (Mongoose v7) · Cache: Redis (ioredis v5)
+- DB: MongoDB (Mongoose v7) · Cache: Valkey — Redis-protocol, via ioredis v5 (env vars keep REDIS_* names)
 - Container: `oven/bun:alpine` multi-stage
 
 ## Build & Run
