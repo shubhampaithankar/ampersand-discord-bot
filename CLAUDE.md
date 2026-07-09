@@ -6,7 +6,7 @@
 
 - Runtime: Bun (never npm/pnpm/yarn) · TypeScript 5.x
 - Discord: discord.js v14 + @discordjs/rest v2
-- Music: Poru v5 (Lavalink). Spotify URLs resolved **client-side** via `spotify-url-info` (public oEmbed, no auth) → each track re-searched on Lavalink's YouTube Music source. poru-spotify + LavaSrc both abandoned (v4/v5 mismatch + premium-owner requirement).
+- Music: Poru v5 (Lavalink). Spotify URLs resolved **client-side** via `spotify-url-info` (public oEmbed, no auth) → each track re-searched on Lavalink's YouTube Music source. **Spotify is never an audio source** — only track name + artist are scraped; playback is always from YouTube. (The Lavalink `application.yml` ships the `lavasrc` Spotify plugin and reads `SPOTIFY_CLIENT_*`, but the bot never sends Spotify URLs to Lavalink, so both stay inert.)
 - DB: MongoDB (Mongoose v7) · Cache: Valkey — Redis-protocol, via ioredis v5 (env vars keep REDIS_* names)
 - Container: `oven/bun:alpine` multi-stage
 
