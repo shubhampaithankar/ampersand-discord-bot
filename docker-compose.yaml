@@ -49,10 +49,10 @@ services:
       SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
     volumes:
       - ./application.yml:/opt/Lavalink/application.yml:ro
-      # persistent plugin cache — Lavalink auto-downloads the youtube/lavasrc jars here on first boot
-      - lavalink-plugins:/opt/Lavalink/plugins
+      # pre-baked plugin jars, read-only — auto-download into a fresh named volume fails (root-owned, lavalink runs non-root)
+      - ./plugins:/opt/Lavalink/plugins:ro
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:2333/version || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null --header=\"Authorization: $$LAVALINK_PASSWORD\" http://localhost:2333/version || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -98,7 +98,6 @@ services:
 volumes:
   valkey-data:
   mongo-data:
-  lavalink-plugins:
 
 networks:
   secure-net:
