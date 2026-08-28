@@ -1,0 +1,11 @@
+.env*
+!.env.example
+coverage/
+.code-review-graph/
+.serena/cache/
+graphify-out/
+node_modules/
+dist/
+build/
+bun.lock
+plugins/*.jar
