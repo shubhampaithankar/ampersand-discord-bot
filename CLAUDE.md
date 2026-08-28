@@ -43,6 +43,10 @@ ERROR_WEBHOOK_URL  (optional — webhook for error reporter; falls back to conso
 
 @.claude/rules/architecture.md
 
+## Language Rules
+
+@.claude/rules/lang.md
+
 ## Key Files
 
 - `app.ts` · `src/loader.ts` (auto-discovers events/interactions/music events, not alias-aware)
@@ -61,6 +65,14 @@ ERROR_WEBHOOK_URL  (optional — webhook for error reporter; falls back to conso
 
 @.claude/rules/conventions.md
 
+## Project Slash Commands
+
+Live in `.claude/commands/`, on top of the user-scope ones. Prefer these over hand-rolling the same flow:
+
+`/new-command` (slash command scaffold) · `/new-event` (event or music-event scaffold) · `/new-module` (`/init` panel module) · `/debug-music` (Lavalink / Poru pipeline triage) · `/review` (current diff) · `/pr`
+
+No project agents or hooks — user-scope ones apply unchanged (code writes → `sonnet-executor`, research → `opus-researcher`/`Explore`, PreToolUse still blocks native `Read`/`Grep`/`Glob`).
+
 ## Do NOT
 
 - `npm` / `pnpm` / `yarn`
@@ -78,11 +90,13 @@ ERROR_WEBHOOK_URL  (optional — webhook for error reporter; falls back to conso
 
 ## MCP Plugins
 
-| Plugin | Use |
+> `code-review-graph` and `bun-docs-mcp` are **gone** — do not call `mcp__plugin_code-review-graph_*` or bun-docs tools. Stale allow-entries for them still sit in `.claude/settings.local.json`, and `.code-review-graph/` at the repo root is a dead artifact.
+
+| Server | Use |
 |---|---|
-| **code-review-graph** | `get_review_context_tool` + `get_impact_radius_tool` before reviews; `semantic_search_nodes_tool` + `query_graph_tool` (`callers_of/callees_of/file_summary`) for lookups; `build_or_update_graph_tool` after big refactors |
-| **bun-docs-mcp** | Bun APIs, `Bun.*` globals, bundler, `bun test` |
-| **mcp-server-github** | PRs, checks, issues; `pull_request_review_write`, `create_pull_request` (check `.github/PULL_REQUEST_TEMPLATE` first) |
+| **graphify** | Call structure: `query_graph`, `get_neighbors`, `get_pr_impact`, `god_nodes`. This repo has real call edges (loader -> classes -> interactions/events), so per @~/.claude/rules/code-graph.md ask the graph before grepping the tree. Re-extract after refactors that move files. |
+| **context7** | Any discord.js / Poru / Mongoose / ioredis / Bun question — `resolve-library-id` then `query-docs`. Never answer library API questions from memory; discord.js v14 and Poru v5 both moved fast. |
+| **github** | PRs, checks, issues; `pull_request_review_write`, `create_pull_request` (check `.github/PULL_REQUEST_TEMPLATE` first) |
 
 ## On Compaction, Preserve
 
