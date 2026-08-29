@@ -22,3 +22,5 @@ export const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 export const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 
 export const ERROR_WEBHOOK_URL = process.env.ERROR_WEBHOOK_URL;
+
+export const HEALTH_PORT = Number(process.env.HEALTH_PORT ?? 3000);

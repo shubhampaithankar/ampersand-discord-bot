@@ -33,6 +33,7 @@ MONGO_URL  REDIS_URL  REDIS_USERNAME  REDIS_PASSWORD
 LAVALINK_HOST  LAVALINK_PORT  LAVALINK_PASSWORD
 SPOTIFY_CLIENT_ID  SPOTIFY_CLIENT_SECRET  NODE_ENV
 ERROR_WEBHOOK_URL  (optional — webhook for error reporter; falls back to console)
+HEALTH_PORT        (optional — shard-state liveness probe port, default 3000; container healthcheck wgets it)
 ```
 
 ## Module Aliases
