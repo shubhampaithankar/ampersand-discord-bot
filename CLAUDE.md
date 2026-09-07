@@ -6,7 +6,8 @@
 
 - Runtime: Bun (never npm/pnpm/yarn) · TypeScript 5.x
 - Discord: discord.js v14 + @discordjs/rest v2
-- Music: Poru v5 (Lavalink). Spotify URLs resolved **client-side** via `spotify-url-info` (public oEmbed, no auth) → each track re-searched on Lavalink's YouTube Music source. **Spotify is never an audio source** — only track name + artist are scraped; playback is always from YouTube. (The Lavalink `application.yml` ships the `lavasrc` Spotify plugin and reads `SPOTIFY_CLIENT_*`, but the bot never sends Spotify URLs to Lavalink, so both stay inert.)
+- Music: Poru v5 (Lavalink). Spotify URLs resolved **client-side** via `spotify-url-info` (public oEmbed, no auth) → each track re-searched on Lavalink's **SoundCloud** source (`scsearch`). **Spotify is never an audio source** — only track name + artist are scraped. (`application.yml` ships the `lavasrc` Spotify plugin and reads `SPOTIFY_CLIENT_*`, but the bot never sends Spotify URLs to Lavalink, so both stay inert.)
+- **YouTube playback is dead, deliberately unused.** InnerTube returns SABR-only responses (`serverAbrStreamingUrl`, empty format arrays — verified against ANDROID_VR from the Lavalink host 2026-09-07) and youtube-source 1.18.x cannot consume SABR. YT *search* still works, so never fall back to `ytsearch`/`ytmsearch`: it queues tracks that fail at play time. Revisit when youtube-source ships SABR support (`defaultPlatform` in `src/libs/poru.ts`, `source:` in `play.ts`, providers in `application.yml`).
 - DB: MongoDB (Mongoose v7) · Cache: Valkey — Redis-protocol, via ioredis v5 (env vars keep REDIS_* names)
 - Container: `oven/bun:alpine` multi-stage
 
@@ -22,6 +23,14 @@ bun run check                   # biome check --write + oxlint
 ```
 
 No test suite. Biome formats, Oxlint lints. eslint + prettier removed.
+
+## Deploy
+
+Push to `master` -> `.github/workflows/deploy.yml`: `bun install --frozen-lockfile` -> `bun run lint` -> `bunx tsc --noEmit` -> SSH (VPS `139.59.27.226:7222` frp tunnel -> mini-pc) -> `git reset --hard origin/master` + `docker compose --env-file .env up -d --build` -> `scripts/healthcheck.sh ampersand-discord-client 30`. Success/failure pinged by `scripts/notify.sh`.
+
+- Merging a PR to master = live bot restart. Verify on the mini-pc (homelab MCP), not on CI's green tick.
+- `scripts/healthcheck.sh` polls Docker's own health verdict (container healthcheck wgets `HEALTH_PORT`); `app.ts` serves 200 only when `client.ws.status === Status.Ready`. `Running == true` is not proof of life - that hid a 3-day outage.
+- Lavalink side: `application.yml` + `plugins/*.jar` (lavasrc, youtube) live in this repo and ship with the compose stack.
 
 ## Environment Variables
 
@@ -40,20 +49,14 @@ HEALTH_PORT        (optional — shard-state liveness probe port, default 3000; 
 
 `tsconfig.json`: `@/*` → `src/*`. All static imports use `@/...`; relative `../../...` forbidden. Dynamic imports in `src/loader.ts` still use `path.join(__dirname, ...)` — filesystem walk only, aliases apply to static imports.
 
-## Architecture
+## Reference
 
-@.claude/rules/architecture.md
-
-## Language Rules
-
-@.claude/rules/lang.md
+@.claude/rules/architecture.md · @.claude/rules/lang.md · @.claude/rules/conventions.md
 
 ## Key Files
 
-- `app.ts` · `src/loader.ts` (auto-discovers events/interactions/music events, not alias-aware)
-- `src/classes.ts` — `MainInteraction/MainEvent/MainMusicEvent/MainShardEvent`
-- `src/client.ts` — `BaseClient` extending `Client`
-- `src/constants.ts` — env var source of truth
+- `app.ts` — process handlers + `Bun.serve` liveness probe on `HEALTH_PORT` · `src/loader.ts` (auto-discovers events/interactions/music events, not alias-aware)
+- `src/classes.ts` (`MainInteraction/MainEvent/MainMusicEvent/MainShardEvent`) · `src/client.ts` (`BaseClient`) · `src/constants.ts` (env source of truth)
 - `src/services/general.utils.ts` — `capitalizeString`, `getError`, `formatDuration`, `sleepFor`, `escapeRegex`, `mapInChunks` (bounded-parallel batch async)
 - `src/services/error.reporter.ts` — `reportError({ source, error, context? })` + `ctxFromInteraction`/`ctxFromPlayer` helpers; webhook + dedup + rate-limit, falls back to console if `ERROR_WEBHOOK_URL` unset
 - `src/services/process.handlers.ts` — `registerProcessHandlers()` for `unhandledRejection` + `uncaughtException` (called from `app.ts`)
@@ -62,42 +65,24 @@ HEALTH_PORT        (optional — shard-state liveness probe port, default 3000; 
 - `src/services/discord/` — `embed/button/select/modal.builder` (never raw), `interaction.collector` (`buildCustomIds` accepts array OR `as const` object), `guild.player`, `counter.access`, `lockdown.restore` (parallelised), `presence` (rotating bot status)
 - `src/models/<domain>/<domain>.constants.ts` — action/modal customId constants
 
-## Conventions
-
-@.claude/rules/conventions.md
-
 ## Project Slash Commands
 
-Live in `.claude/commands/`, on top of the user-scope ones. Prefer these over hand-rolling the same flow:
-
-`/new-command` (slash command scaffold) · `/new-event` (event or music-event scaffold) · `/new-module` (`/init` panel module) · `/debug-music` (Lavalink / Poru pipeline triage) · `/review` (current diff) · `/pr`
-
-No project agents or hooks — user-scope ones apply unchanged (code writes → `sonnet-executor`, research → `opus-researcher`/`Explore`, PreToolUse still blocks native `Read`/`Grep`/`Glob`).
+In `.claude/commands/`, prefer over hand-rolling: `/new-command` · `/new-event` · `/new-module` (`/init` panel module) · `/debug-music` (Lavalink / Poru triage) · `/review` · `/pr`. No project agents or hooks — user-scope ones apply unchanged.
 
 ## Do NOT
 
-- `npm` / `pnpm` / `yarn`
-- `ephemeral: true` — use `flags: MessageFlags.Ephemeral`
-- Construct `EmbedBuilder / ButtonBuilder / {Channel,String,Role,User}SelectMenuBuilder / ModalBuilder / TextInputBuilder / ActionRowBuilder` directly
-- `$set: { subdoc: fullObject }` — dot-notation keys only
-- Skip `deferReply()` at start of `run()`
-- Read DB state inside `onEnd` that was written inside `collect`
-- Use `any`
+- `npm` / `pnpm` / `yarn` · `any` · raw `process.env.*` · relative imports
 - Put non-`{schema,model,service,types,constants,index}.ts` files under `src/models/**`
-- Import `src/models/<x>/<y>.service.ts` directly — use barrel (`@/models/x`)
-- Use relative imports — always `@/*`
-- `process.env.*` — import from `@/constants`
-- Serial `await` over an array — use `mapInChunks` from `@/services/general.utils`
+- Everything in `conventions.md` marked ❌ (raw builders, `ephemeral: true`, subdoc `$set`, skipped `deferReply`, `onEnd` DB reads, serial `await`, direct service imports)
 
 ## MCP Plugins
-
-> `code-review-graph` and `bun-docs-mcp` are **gone** — do not call `mcp__plugin_code-review-graph_*` or bun-docs tools. Stale allow-entries for them still sit in `.claude/settings.local.json`, and `.code-review-graph/` at the repo root is a dead artifact.
 
 | Server | Use |
 |---|---|
 | **graphify** | Call structure: `query_graph`, `get_neighbors`, `get_pr_impact`, `god_nodes`. This repo has real call edges (loader -> classes -> interactions/events), so per @~/.claude/rules/code-graph.md ask the graph before grepping the tree. Re-extract after refactors that move files. |
 | **context7** | Any discord.js / Poru / Mongoose / ioredis / Bun question — `resolve-library-id` then `query-docs`. Never answer library API questions from memory; discord.js v14 and Poru v5 both moved fast. |
 | **github** | PRs, checks, issues; `pull_request_review_write`, `create_pull_request` (check `.github/PULL_REQUEST_TEMPLATE` first) |
+| **homelab** | The deploy target. `homelab_status` / `homelab_sh` on the mini-pc to check containers + logs after a merge — this is how you verify a deploy, not the Actions run. |
 
 ## On Compaction, Preserve
 
