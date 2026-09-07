@@ -134,13 +134,13 @@ export default class PlayInteraction extends MainInteraction {
           player
             .resolve({
               query: `${t.artists} ${t.name}`,
-              source: "ytmsearch",
+              source: "scsearch",
               requester: member.user.username,
             })
             .then((r) => r?.tracks?.[0])
             .catch(() => undefined);
 
-        // Resolve the first track that YouTube Music can match, so playback
+        // Resolve the first track that SoundCloud can match, so playback
         // starts ASAP (within ~1 Lavalink round-trip) instead of after all N.
         let firstIdx = -1;
         let firstTrack: Awaited<ReturnType<typeof resolveYt>>;

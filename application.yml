@@ -10,8 +10,9 @@ plugins:
 
   lavasrc:
     providers:
-      - 'ytsearch:"%ISRC%"'
-      - "ytsearch:%QUERY%"
+      # YouTube returns SABR-only player responses that youtube-source 1.18.x cannot play,
+      # so every yt* provider resolves a track that then fails at playback. SoundCloud only.
+      - "scsearch:%QUERY%"
     sources:
       spotify: true
       applemusic: false

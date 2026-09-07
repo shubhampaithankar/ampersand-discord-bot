@@ -6,7 +6,7 @@
 
 `init()` order: `connectToMongo` + `connectToRedis` → scan `src/events/` → `createPoru` + scan `src/musicEvents/` → scan `src/interactions/` + PUT slash commands globally.
 
-**Critical:** event / music-event filenames must equal the Discord.js / Poru event name exactly — loader keys by filename. Sharding infra commented out.
+**Critical:** event / music-event filenames must equal the Discord.js / Poru event name exactly — loader keys by filename. Sharding is half-wired: `MainShardEvent` + `src/shardEvents/` exist and `loader` can load them, but the `loadShardEventHandler` call is commented out (`loader.ts:32`) and no `client.manager` is created — shard events never fire.
 
 ## Folder Structure
 
@@ -62,7 +62,7 @@ src/
 
 1. `/play <query>` → `getMusicPlayer` (creates Poru player, connects to VC)
 2. Spotify URL → `resolveSpotifyUrl` (spotify-url-info oEmbed scrape, no auth) → `{name, artists}[]`
-3. Sequential resolve until first YT Music hit → queue + `player.play()` (~1s start)
+3. Sequential resolve until first SoundCloud hit → queue + `player.play()` (~1s start)
 4. Rest via `mapInChunks(rest, 5, resolveYt)` in background — parallel batches, order preserved
 5. Non-Spotify → single `player.resolve({ query })`; Lavalink picks source
 
