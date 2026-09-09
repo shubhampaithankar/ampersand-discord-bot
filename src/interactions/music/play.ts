@@ -108,7 +108,7 @@ export default class PlayInteraction extends MainInteraction {
               errorEmbed({
                 author: botAuthor(this.client),
                 description:
-                  "Couldn't read that Spotify link. Try a direct song name or a YouTube URL.",
+                  "Couldn't read that Spotify link. Try a direct song name or a SoundCloud URL.",
                 footer: member.user.username,
               }),
             ],
@@ -130,7 +130,7 @@ export default class PlayInteraction extends MainInteraction {
           return;
         }
 
-        const resolveYt = (t: { artists: string; name: string }) =>
+        const resolveOnSoundCloud = (t: { artists: string; name: string }) =>
           player
             .resolve({
               query: `${t.artists} ${t.name}`,
@@ -143,9 +143,9 @@ export default class PlayInteraction extends MainInteraction {
         // Resolve the first track that SoundCloud can match, so playback
         // starts ASAP (within ~1 Lavalink round-trip) instead of after all N.
         let firstIdx = -1;
-        let firstTrack: Awaited<ReturnType<typeof resolveYt>>;
+        let firstTrack: Awaited<ReturnType<typeof resolveOnSoundCloud>>;
         for (let i = 0; i < resolved.length; i++) {
-          firstTrack = await resolveYt(resolved[i]);
+          firstTrack = await resolveOnSoundCloud(resolved[i]);
           if (firstTrack) {
             firstIdx = i;
             break;
@@ -158,7 +158,7 @@ export default class PlayInteraction extends MainInteraction {
             embeds: [
               errorEmbed({
                 author: botAuthor(this.client),
-                description: "Couldn't find YouTube matches for those Spotify tracks",
+                description: "Couldn't find SoundCloud matches for those Spotify tracks",
                 footer: member.user.username,
               }),
             ],
@@ -201,7 +201,7 @@ export default class PlayInteraction extends MainInteraction {
         const rest = resolved.filter((_, i) => i !== firstIdx);
         let queued = 1;
         (async () => {
-          const tracks = await mapInChunks(rest, 5, resolveYt);
+          const tracks = await mapInChunks(rest, 5, resolveOnSoundCloud);
           for (const track of tracks) {
             if (!track) continue;
             player.queue.add(track);
@@ -227,6 +227,10 @@ export default class PlayInteraction extends MainInteraction {
       try {
         res = await player.resolve({
           query: search,
+          // Poru 5.3.0's Player.resolve ignores options.defaultPlatform and hardcodes
+          // `source || 'ytsearch'`, so the source must be passed explicitly here or a
+          // plain-text search silently queues an unplayable SABR-only YouTube track.
+          source: "scsearch",
           requester: member.user.username,
         });
       } catch (err) {
