@@ -8,6 +8,29 @@ import { ctxFromInteraction, reportError } from "@/services/error.reporter";
 import { mapInChunks } from "@/services/general.utils";
 import { isSpotifyUrl, resolveSpotifyUrl, spotifyKind } from "@/services/music/spotify.resolver";
 
+// dzsearch first (full tracks), scsearch as fallback when Deezer is unavailable --
+// the ARL cookie expires periodically and a bare dzsearch would then return nothing.
+const SEARCH_SOURCES = ["dzsearch", "scsearch"] as const;
+
+// Tries each search source in order, skipping empty/error results, and returns the
+// first usable Response. Poru 5.3.0's Player.resolve ignores options.defaultPlatform
+// and hardcodes `source || 'ytsearch'`, so an explicit source must be passed on every
+// call here or a plain-text search silently queues an unplayable SABR-only YouTube
+// track. Poru skips the source prefix entirely for http(s) URLs, so passing a source
+// on a URL query is safe too.
+const resolveWithFallback = async (
+  player: NonNullable<ReturnType<typeof getMusicPlayer>>,
+  query: string,
+  requester: string,
+  sourceIndex = 0,
+): Promise<Response | undefined> => {
+  if (sourceIndex >= SEARCH_SOURCES.length) return undefined;
+  const source = SEARCH_SOURCES[sourceIndex];
+  const result = await player.resolve({ query, source, requester }).catch(() => undefined);
+  if (result && result.loadType !== "empty" && result.loadType !== "error") return result;
+  return resolveWithFallback(player, query, requester, sourceIndex + 1);
+};
+
 export default class PlayInteraction extends MainInteraction {
   constructor(client: Client) {
     super(client, {
@@ -108,7 +131,7 @@ export default class PlayInteraction extends MainInteraction {
               errorEmbed({
                 author: botAuthor(this.client),
                 description:
-                  "Couldn't read that Spotify link. Try a direct song name or a SoundCloud URL.",
+                  "Couldn't read that Spotify link. Try a direct song name or URL.",
                 footer: member.user.username,
               }),
             ],
@@ -130,22 +153,17 @@ export default class PlayInteraction extends MainInteraction {
           return;
         }
 
-        const resolveOnSoundCloud = (t: { artists: string; name: string }) =>
-          player
-            .resolve({
-              query: `${t.artists} ${t.name}`,
-              source: "scsearch",
-              requester: member.user.username,
-            })
-            .then((r) => r?.tracks?.[0])
-            .catch(() => undefined);
+        const resolveTrack = (t: { artists: string; name: string }) =>
+          resolveWithFallback(player, `${t.artists} ${t.name}`, member.user.username).then(
+            (r) => r?.tracks?.[0],
+          );
 
-        // Resolve the first track that SoundCloud can match, so playback
+        // Resolve the first track any search source can match, so playback
         // starts ASAP (within ~1 Lavalink round-trip) instead of after all N.
         let firstIdx = -1;
-        let firstTrack: Awaited<ReturnType<typeof resolveOnSoundCloud>>;
+        let firstTrack: Awaited<ReturnType<typeof resolveTrack>>;
         for (let i = 0; i < resolved.length; i++) {
-          firstTrack = await resolveOnSoundCloud(resolved[i]);
+          firstTrack = await resolveTrack(resolved[i]);
           if (firstTrack) {
             firstIdx = i;
             break;
@@ -158,7 +176,7 @@ export default class PlayInteraction extends MainInteraction {
             embeds: [
               errorEmbed({
                 author: botAuthor(this.client),
-                description: "Couldn't find SoundCloud matches for those Spotify tracks",
+                description: "Couldn't find playable matches for those Spotify tracks",
                 footer: member.user.username,
               }),
             ],
@@ -201,7 +219,7 @@ export default class PlayInteraction extends MainInteraction {
         const rest = resolved.filter((_, i) => i !== firstIdx);
         let queued = 1;
         (async () => {
-          const tracks = await mapInChunks(rest, 5, resolveOnSoundCloud);
+          const tracks = await mapInChunks(rest, 5, resolveTrack);
           for (const track of tracks) {
             if (!track) continue;
             player.queue.add(track);
@@ -225,14 +243,7 @@ export default class PlayInteraction extends MainInteraction {
       let res: Response | undefined;
 
       try {
-        res = await player.resolve({
-          query: search,
-          // Poru 5.3.0's Player.resolve ignores options.defaultPlatform and hardcodes
-          // `source || 'ytsearch'`, so the source must be passed explicitly here or a
-          // plain-text search silently queues an unplayable SABR-only YouTube track.
-          source: "scsearch",
-          requester: member.user.username,
-        });
+        res = await resolveWithFallback(player, search, member.user.username);
       } catch (err) {
         console.log(err);
         await interaction.editReply({

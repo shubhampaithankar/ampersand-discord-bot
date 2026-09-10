@@ -43,10 +43,12 @@ services:
     environment:
       _JAVA_OPTIONS: "-Xms256m -Xmx512m -XX:+UseG1GC"
       SERVER_PORT: "2333"
-      # real application.yml resolves these three from the container env:
+      # real application.yml resolves these five from the container env:
       LAVALINK_PASSWORD: ${LAVALINK_PASSWORD}
       SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
       SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
+      DEEZER_ARL: ${DEEZER_ARL}
+      DEEZER_MASTER_KEY: ${DEEZER_MASTER_KEY}
     volumes:
       - ./application.yml:/opt/Lavalink/application.yml:ro
       # pre-baked plugin jars, read-only — auto-download into a fresh named volume fails (root-owned, lavalink runs non-root)
