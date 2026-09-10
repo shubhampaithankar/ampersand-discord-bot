@@ -1,9 +1,11 @@
 import { Events } from "discord.js";
 import { MainEvent } from "@/classes";
 import Client from "@/client";
+import { syncGuild } from "@/services/discord/invite.tracker";
 import { recoverLockdowns } from "@/services/discord/lockdown.restore";
 import { startPresenceRotation } from "@/services/discord/presence";
 import { reportError } from "@/services/error.reporter";
+import { mapInChunks } from "@/services/general.utils";
 import { seedBotGuilds } from "@/services/redis/guild.redis";
 import { cleanupJTCChannels } from "@/services/redis/jtc.redis";
 
@@ -33,6 +35,7 @@ export default class ReadyEvent extends MainEvent {
       await seedBotGuilds([...this.client.guilds.cache.keys()]);
       await cleanupJTCChannels(this.client);
       await recoverLockdowns(this.client);
+      await mapInChunks([...this.client.guilds.cache.values()], 5, syncGuild);
 
       if (this.client.manager)
         await this.client.manager.spawn({

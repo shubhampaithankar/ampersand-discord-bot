@@ -2,6 +2,7 @@ import { Events, Guild } from "discord.js";
 import { MainEvent } from "@/classes";
 import Client from "@/client";
 import { GuildService } from "@/models/guild";
+import { dropGuild } from "@/services/discord/invite.tracker";
 import { reportError } from "@/services/error.reporter";
 import { evictGuildCache, removeBotGuild } from "@/services/redis/guild.redis";
 
@@ -27,6 +28,7 @@ export const onLeave = async (guild: Guild) => {
   const guildData = await GuildService.getGuild(guild.id);
   await removeBotGuild(guild.id);
   await evictGuildCache(guild.id);
+  await dropGuild(guild.id);
   if (!guildData) return;
   await GuildService.deleteGuild(guild.id);
 };

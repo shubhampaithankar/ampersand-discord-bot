@@ -62,9 +62,9 @@ src/
 
 1. `/play <query>` → `getMusicPlayer` (creates Poru player, connects to VC)
 2. Spotify URL → `resolveSpotifyUrl` (spotify-url-info oEmbed scrape, no auth) → `{name, artists}[]`
-3. Sequential resolve until first SoundCloud hit → queue + `player.play()` (~1s start)
-4. Rest via `mapInChunks(rest, 5, resolveYt)` in background — parallel batches, order preserved
-5. Non-Spotify → single `player.resolve({ query })`; Lavalink picks source
+3. Sequential resolve until first Deezer/SoundCloud hit (`resolveWithFallback`, dzsearch then scsearch) → queue + `player.play()` (~1s start)
+4. Rest via `mapInChunks(rest, 5, resolveTrack)` in background — parallel batches, order preserved
+5. Non-Spotify → `resolveWithFallback({ query })`; explicit source required, Poru ignores `defaultPlatform`
 
 ### Now Playing Panel
 

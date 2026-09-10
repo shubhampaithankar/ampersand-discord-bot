@@ -1,5 +1,5 @@
 # Lavalink v4 — real working config (copied from the mini-pc, replaces the fresh-authored stub).
-# Resolves ${LAVALINK_PASSWORD}/${SPOTIFY_CLIENT_ID}/${SPOTIFY_CLIENT_SECRET} from the container env.
+# Resolves ${LAVALINK_PASSWORD}/${SPOTIFY_CLIENT_ID}/${SPOTIFY_CLIENT_SECRET}/${DEEZER_ARL}/${DEEZER_MASTER_KEY} from the container env.
 server:
   port: 2333
   address: 0.0.0.0
@@ -11,12 +11,15 @@ plugins:
   lavasrc:
     providers:
       # YouTube returns SABR-only player responses that youtube-source 1.18.x cannot play,
-      # so every yt* provider resolves a track that then fails at playback. SoundCloud only.
+      # so every yt* provider resolves a track that then fails at playback. Deezer first
+      # (full tracks), SoundCloud as fallback for when Deezer is unavailable.
+      - "dzisrc:%ISRC%"
+      - "dzsearch:%QUERY%"
       - "scsearch:%QUERY%"
     sources:
       spotify: true
       applemusic: false
-      deezer: false
+      deezer: true
     spotify:
       clientId: "${SPOTIFY_CLIENT_ID}"
       clientSecret: "${SPOTIFY_CLIENT_SECRET}"
@@ -25,6 +28,11 @@ plugins:
       albumLoadLimit: 6
       resolveArtistsInSearch: true
       localFiles: false
+    deezer:
+      arl: "${DEEZER_ARL}"
+      masterDecryptionKey: "${DEEZER_MASTER_KEY}"
+      # ponytail: MP3_128 is the free-account tier; FLAC/MP3_320 need Deezer Premium on the ARL account -- upgrade path is bumping formats once that's available.
+      formats: ["MP3_128"]
 
 lavalink:
   plugins:
