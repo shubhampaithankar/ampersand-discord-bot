@@ -2,6 +2,7 @@ import { Events, Guild } from "discord.js";
 import { MainEvent } from "@/classes";
 import Client from "@/client";
 import { GuildService } from "@/models/guild";
+import { syncGuild } from "@/services/discord/invite.tracker";
 import { reportError } from "@/services/error.reporter";
 import { addBotGuild, cacheGuildExists } from "@/services/redis/guild.redis";
 
@@ -34,4 +35,5 @@ const onJoin = async (guild: Guild) => {
   await GuildService.createGuild(payload);
   await addBotGuild(guild.id);
   await cacheGuildExists(guild.id, true);
+  await syncGuild(guild);
 };

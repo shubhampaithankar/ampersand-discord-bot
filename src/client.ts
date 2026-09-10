@@ -31,6 +31,7 @@ export default class BaseClient extends Client {
       intents: [
         "Guilds",
         "GuildMembers",
+        "GuildInvites",
         "GuildMessages",
         "GuildMessageReactions",
         "GuildVoiceStates",
