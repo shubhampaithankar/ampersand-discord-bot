@@ -32,8 +32,17 @@ jobs:
           script: |
             set -euo pipefail
             cd /home/shubham/ampersand
+            before=$(git rev-parse HEAD)
             git fetch --all --prune
             git reset --hard origin/master
+            # Docker single-file bind-mounts stay attached to the OLD inode after git reset --hard
+            # replaces the file, and plain 'up -d' won't recreate a container whose spec is unchanged.
+            # So a changed application.yml silently never reaches a running lavalink -- that cost a
+            # manual --force-recreate on PR #26. Recreate it only when the file actually changed, so
+            # ordinary deploys don't needlessly drop the audio connection.
+            if ! git diff --quiet "$before" HEAD -- application.yml; then
+              docker compose --env-file .env up -d --build --force-recreate lavalink
+            fi
             docker compose --env-file .env up -d --build
             bash scripts/healthcheck.sh ampersand-discord-client 30
       - name: Notify success
